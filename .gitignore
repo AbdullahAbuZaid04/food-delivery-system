@@ -3,6 +3,8 @@
 
 # Environment
 **/.env
+**/.env.local
+**/.env.*.local
 
 # Logs
 *.log
@@ -12,10 +14,14 @@ npm-debug.log*
 client/.next
 client/out
 client/build
+server/dist
 
 # Prisma
 server/prisma/dev.db
 server/prisma/*.db
+
+# Generated
+server/src/generated/prisma
 
 # OS
 .DS_Store
