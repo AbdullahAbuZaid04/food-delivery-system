@@ -23,4 +23,6 @@ router.post(
 
 router.get("/profile", authenticate, authController.getProfile);
 
+router.post("/logout", authenticate, authController.logout);
+
 module.exports = router;
