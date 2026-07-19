@@ -20,9 +20,6 @@ server/dist
 server/prisma/dev.db
 server/prisma/*.db
 
-# Generated
-server/src/generated/prisma
-
 # OS
 .DS_Store
 Thumbs.db
