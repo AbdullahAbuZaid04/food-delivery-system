@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { generateToken } = require("../../utils/jwt");
+const { generateToken, generateRefreshToken } = require("../../utils/jwt");
 
 const authRepository = require("./auth.repository");
 
@@ -40,12 +40,15 @@ const register = async (userData) => {
     roleId: userRole.id,
   });
 
-  // Generate token
-  const token = generateToken({
+  // Generate tokens
+  const tokenPayload = {
     id: user.id,
     email: user.email,
     role: user.role.name,
-  });
+  };
+
+  const token = generateToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
 
   return {
     user: {
@@ -57,6 +60,7 @@ const register = async (userData) => {
       role: user.role.name,
     },
     token,
+    refreshToken,
   };
 };
 
@@ -80,12 +84,15 @@ const login = async (loginData) => {
   // Update lastLoginAt
   await authRepository.updateLastLoginAt(user.id);
 
-  // Generate token
-  const token = generateToken({
+  // Generate tokens
+  const tokenPayload = {
     id: user.id,
     role: user.role.name,
     email: user.email,
-  });
+  };
+
+  const token = generateToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
 
   return {
     user: {
@@ -97,6 +104,7 @@ const login = async (loginData) => {
       role: user.role.name,
     },
     token,
+    refreshToken,
   };
 };
 
