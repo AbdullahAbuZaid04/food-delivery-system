@@ -60,6 +60,47 @@ const register = async (userData) => {
   };
 };
 
+const login = async (loginData) => {
+  const { email, password } = loginData;
+
+  // Find user by email
+  const user = await authRepository.findUserWithRoleByEmail(email);
+
+  if (!user) {
+    throw new Error("Invalid email or password.");
+  }
+
+  // Check password
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    throw new Error("Invalid email or password.");
+  }
+
+  // Update lastLoginAt
+  await authRepository.updateLastLoginAt(user.id);
+
+  // Generate token
+  const token = generateToken({
+    id: user.id,
+    role: user.role.name,
+    email: user.email,
+  });
+
+  return {
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role.name,
+    },
+    token,
+  };
+};
+
 module.exports = {
   register,
+  login,
 };

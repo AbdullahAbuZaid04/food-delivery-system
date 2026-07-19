@@ -22,6 +22,12 @@ const registerSchema = z.object({
   role: z.enum(["CUSTOMER", "OWNER", "DRIVER"]).default("CUSTOMER"),
 });
 
+const loginSchema = z.object({
+  email: z.email("Invalid email address.").toLowerCase(),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+});
+
 module.exports = {
   registerSchema,
+  loginSchema,
 };

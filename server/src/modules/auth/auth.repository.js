@@ -33,9 +33,29 @@ const createUser = async (data) => {
   });
 };
 
+const findUserWithRoleByEmail = async (email) => {
+  return await prisma.user.findUnique({
+    where: {
+      email,
+    },
+    include: {
+      role: true,
+    },
+  });
+};
+
+const updateLastLoginAt = async (id) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { lastLoginAt: new Date() },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserByPhone,
   findRoleByName,
   createUser,
+  findUserWithRoleByEmail,
+  updateLastLoginAt,
 };
