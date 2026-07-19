@@ -34,7 +34,24 @@ const login = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const profile = await authService.getProfile(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      data: { user: profile },
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  getProfile,
 };

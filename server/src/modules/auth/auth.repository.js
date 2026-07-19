@@ -51,6 +51,16 @@ const updateLastLoginAt = async (id) => {
   });
 };
 
+const findUserById = async (id) => {
+  return await prisma.user.findUnique({
+    where: { id },
+    include: {
+      role: true,
+      addresses: true,
+    },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserByPhone,
@@ -58,4 +68,5 @@ module.exports = {
   createUser,
   findUserWithRoleByEmail,
   updateLastLoginAt,
+  findUserById,
 };

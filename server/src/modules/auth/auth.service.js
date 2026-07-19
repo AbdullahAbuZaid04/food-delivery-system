@@ -108,7 +108,31 @@ const login = async (loginData) => {
   };
 };
 
+const getProfile = async (userId) => {
+  const user = await authRepository.findUserById(userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  return {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone,
+    profileImage: user.profileImage,
+    status: user.status,
+    isVerified: user.isVerified,
+    role: user.role.name,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
+
 module.exports = {
   register,
   login,
+  getProfile,
 };
