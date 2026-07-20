@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const authRouter = require("./modules/auth/auth.routes");
+const restaurantRouter = require("./modules/restaurant/restaurant.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/restaurants", restaurantRouter);
 
 // Global Error Handler
 app.use(errorHandler);
