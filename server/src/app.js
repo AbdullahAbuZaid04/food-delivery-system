@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const authRouter = require("./modules/auth/auth.routes");
 const restaurantRouter = require("./modules/restaurant/restaurant.routes");
 const categoryRouter = require("./modules/category/category.routes");
+const mealRouter = require("./modules/meal/meal.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRouter);
 app.use("/api/restaurants", restaurantRouter);
 app.use("/api/categories", categoryRouter);
+app.use("/api/meals", mealRouter);
 
 // Global Error Handler
 app.use(errorHandler);
