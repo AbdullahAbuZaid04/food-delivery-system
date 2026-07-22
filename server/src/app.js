@@ -6,6 +6,7 @@ const authRouter = require("./modules/auth/auth.routes");
 const restaurantRouter = require("./modules/restaurant/restaurant.routes");
 const categoryRouter = require("./modules/category/category.routes");
 const mealRouter = require("./modules/meal/meal.routes");
+const cartRouter = require("./modules/cart/cart.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -21,6 +22,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/restaurants", restaurantRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/meals", mealRouter);
+app.use("/api/cart", cartRouter);
 
 // Global Error Handler
 app.use(errorHandler);
