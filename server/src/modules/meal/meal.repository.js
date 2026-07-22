@@ -51,10 +51,45 @@ const deleteMeal = async (id) => {
   });
 };
 
+const searchMeals = async (query, restaurantId = null, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const where = {
+    deletedAt: null,
+    name: { contains: query, mode: "insensitive" },
+    ...(restaurantId ? { restaurantId } : {}),
+  };
+
+  const [meals, total] = await Promise.all([
+    prisma.meal.findMany({
+      where,
+      include: {
+        category: { select: { id: true, name: true } },
+        restaurant: { select: { id: true, name: true, slug: true } },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.meal.count({ where }),
+  ]);
+
+  return {
+    meals,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
 module.exports = {
   createMeal,
   findMealById,
   findMealsByRestaurantId,
   updateMeal,
   deleteMeal,
+  searchMeals,
 };

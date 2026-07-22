@@ -10,6 +10,12 @@ const { authenticate, authorize } = require("../../middlewares/auth.middleware")
 const router = express.Router();
 
 // ========================
+// PUBLIC — SEARCH
+// ========================
+
+router.get("/search", mealController.searchMeals);
+
+// ========================
 // OWNER — MEAL
 // ========================
 

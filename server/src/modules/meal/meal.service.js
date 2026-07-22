@@ -92,6 +92,10 @@ const toggleFeatured = async (ownerId, mealId) => {
   });
 };
 
+const searchMeals = async (query, restaurantId, page, limit) => {
+  return await mealRepository.searchMeals(query, restaurantId, page, limit);
+};
+
 module.exports = {
   createMeal,
   getMyMeals,
@@ -99,4 +103,5 @@ module.exports = {
   updateMeal,
   deleteMeal,
   toggleFeatured,
+  searchMeals,
 };
