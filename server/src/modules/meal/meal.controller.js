@@ -108,6 +108,35 @@ const toggleFeatured = async (req, res) => {
   }
 };
 
+const searchMeals = async (req, res) => {
+  try {
+    const { q, restaurantId } = req.query;
+
+    if (!q || q.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required.",
+      });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const result = await mealService.searchMeals(q.trim(), restaurantId, page, limit);
+
+    return res.status(200).json({
+      success: true,
+      data: result.meals,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createMeal,
   getMyMeals,
@@ -115,4 +144,5 @@ module.exports = {
   updateMeal,
   deleteMeal,
   toggleFeatured,
+  searchMeals,
 };
