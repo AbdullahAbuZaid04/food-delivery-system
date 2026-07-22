@@ -38,8 +38,20 @@ const addAddressSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
+const updateAddressSchema = z.object({
+  label: z.string().trim().min(1, "Label is required.").optional(),
+  city: z.string().trim().min(1, "City is required.").optional(),
+  street: z.string().trim().min(1, "Street is required.").optional(),
+  building: z.string().trim().optional(),
+  details: z.string().trim().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  isDefault: z.boolean().optional(),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   addAddressSchema,
+  updateAddressSchema,
 };

@@ -82,6 +82,13 @@ const deleteAddress = async (id) => {
   });
 };
 
+const updateAddress = async (id, data) => {
+  return await prisma.address.update({
+    where: { id },
+    data,
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserByPhone,
@@ -93,4 +100,5 @@ module.exports = {
   createAddress,
   findAddressById,
   deleteAddress,
+  updateAddress,
 };
