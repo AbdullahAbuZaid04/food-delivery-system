@@ -98,6 +98,35 @@ const deleteAddress = async (req, res) => {
   }
 };
 
+const updateAddress = async (req, res) => {
+  try {
+    const address = await authService.updateAddress(
+      req.user.id,
+      req.params.id,
+      req.validatedData
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Address updated successfully.",
+      data: address,
+    });
+  } catch (error) {
+    if (error.message.includes("Access denied")) {
+      return res.status(403).json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -105,4 +134,5 @@ module.exports = {
   logout,
   addAddress,
   deleteAddress,
+  updateAddress,
 };

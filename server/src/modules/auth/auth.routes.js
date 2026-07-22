@@ -1,7 +1,7 @@
 const express = require("express");
 const authController = require("./auth.controller");
 const validate = require("./auth.validator");
-const { registerSchema, loginSchema, addAddressSchema } = require("./auth.schemas");
+const { registerSchema, loginSchema, addAddressSchema, updateAddressSchema } = require("./auth.schemas");
 const rateLimiter = require("../../middlewares/rateLimiter");
 const { authenticate } = require("../../middlewares/auth.middleware");
 
@@ -33,5 +33,12 @@ router.post(
 );
 
 router.delete("/profile/address/:id", authenticate, authController.deleteAddress);
+
+router.put(
+  "/profile/address/:id",
+  authenticate,
+  validate(updateAddressSchema),
+  authController.updateAddress
+);
 
 module.exports = router;
