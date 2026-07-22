@@ -61,6 +61,27 @@ const findUserById = async (id) => {
   });
 };
 
+const createAddress = async (userId, data) => {
+  return await prisma.address.create({
+    data: {
+      userId,
+      ...data,
+    },
+  });
+};
+
+const findAddressById = async (id) => {
+  return await prisma.address.findUnique({
+    where: { id },
+  });
+};
+
+const deleteAddress = async (id) => {
+  return await prisma.address.delete({
+    where: { id },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserByPhone,
@@ -69,4 +90,7 @@ module.exports = {
   findUserWithRoleByEmail,
   updateLastLoginAt,
   findUserById,
+  createAddress,
+  findAddressById,
+  deleteAddress,
 };

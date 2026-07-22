@@ -57,9 +57,52 @@ const logout = async (req, res) => {
   });
 };
 
+const addAddress = async (req, res) => {
+  try {
+    const address = await authService.addAddress(req.user.id, req.validatedData);
+
+    return res.status(201).json({
+      success: true,
+      message: "Address added successfully.",
+      data: address,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const deleteAddress = async (req, res) => {
+  try {
+    await authService.deleteAddress(req.user.id, req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Address deleted successfully.",
+    });
+  } catch (error) {
+    if (error.message.includes("Access denied")) {
+      return res.status(403).json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   logout,
+  addAddress,
+  deleteAddress,
 };

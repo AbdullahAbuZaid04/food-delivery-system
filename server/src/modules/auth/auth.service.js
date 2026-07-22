@@ -131,8 +131,28 @@ const getProfile = async (userId) => {
   };
 };
 
+const addAddress = async (userId, addressData) => {
+  return await authRepository.createAddress(userId, addressData);
+};
+
+const deleteAddress = async (userId, addressId) => {
+  const address = await authRepository.findAddressById(addressId);
+
+  if (!address) {
+    throw new Error("Address not found.");
+  }
+
+  if (address.userId !== userId) {
+    throw new Error("Access denied.");
+  }
+
+  return await authRepository.deleteAddress(addressId);
+};
+
 module.exports = {
   register,
   login,
   getProfile,
+  addAddress,
+  deleteAddress,
 };

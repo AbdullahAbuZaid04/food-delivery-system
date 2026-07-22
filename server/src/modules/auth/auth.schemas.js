@@ -27,7 +27,19 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
+const addAddressSchema = z.object({
+  label: z.string().trim().min(1, "Label is required."),
+  city: z.string().trim().min(1, "City is required."),
+  street: z.string().trim().min(1, "Street is required."),
+  building: z.string().trim().optional(),
+  details: z.string().trim().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  isDefault: z.boolean().optional(),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
+  addAddressSchema,
 };
