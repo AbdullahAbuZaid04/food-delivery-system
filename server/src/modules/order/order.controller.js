@@ -30,6 +30,14 @@ const getOrderById = async (req, res) => {
       data: order,
     });
   } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes("Access denied")) {
+      return res.status(403).json({ success: false, message: error.message });
+    }
+
     return res.status(400).json({
       success: false,
       message: error.message,

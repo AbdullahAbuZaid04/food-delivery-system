@@ -1,6 +1,6 @@
 const express = require("express");
 const restaurantController = require("./restaurant.controller");
-const validate = require("./restaurant.validator");
+const validate = require("../../middlewares/validate");
 const {
   createRestaurantSchema,
   updateRestaurantSchema,

@@ -1,6 +1,6 @@
 const express = require("express");
 const cartController = require("./cart.controller");
-const validate = require("./cart.validator");
+const validate = require("../../middlewares/validate");
 const { addItemSchema, updateItemSchema } = require("./cart.schemas");
 const { authenticate } = require("../../middlewares/auth.middleware");
 

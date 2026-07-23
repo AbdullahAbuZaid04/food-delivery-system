@@ -73,7 +73,7 @@ const updateUserStatus = async (id, status) => {
 const findAllRestaurants = async (page = 1, limit = 10, status = null) => {
   const skip = (page - 1) * limit;
 
-  const where = status ? { status } : {};
+  const where = { deletedAt: null, ...(status ? { status } : {}) };
 
   const [restaurants, total] = await Promise.all([
     prisma.restaurant.findMany({
@@ -97,8 +97,8 @@ const findAllRestaurants = async (page = 1, limit = 10, status = null) => {
 };
 
 const findRestaurantById = async (id) => {
-  return await prisma.restaurant.findUnique({
-    where: { id },
+  return await prisma.restaurant.findFirst({
+    where: { id, deletedAt: null },
     include: {
       owner: {
         select: {

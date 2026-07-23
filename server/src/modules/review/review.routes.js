@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const { authenticate } = require("../../middlewares/auth.middleware");
 const reviewController = require("./review.controller");
-const validate = require("./review.validator");
+const validate = require("../../middlewares/validate");
 const { createReviewSchema } = require("./review.schemas");
 
 const router = Router();
