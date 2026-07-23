@@ -15,6 +15,7 @@ const updateStatusSchema = z.object({
     "ACCEPTED",
     "PREPARING",
     "READY",
+    "ASSIGNED",
     "PICKED_UP",
     "ON_THE_WAY",
     "DELIVERED",
