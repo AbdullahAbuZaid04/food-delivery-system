@@ -9,6 +9,7 @@ const mealRouter = require("./modules/meal/meal.routes");
 const cartRouter = require("./modules/cart/cart.routes");
 const orderRouter = require("./modules/order/order.routes");
 const reviewRouter = require("./modules/review/review.routes");
+const adminRouter = require("./modules/admin/admin.routes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/meals", mealRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/admin", adminRouter);
 
 // Global Error Handler
 app.use(errorHandler);
