@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const { Pool } = require("pg");
+const bcrypt = require("bcrypt");
 
 // إنشاء الاتصال
 const pool = new Pool({
@@ -29,7 +30,25 @@ async function main() {
     });
   }
 
+  const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" } });
+
+  const hashedPassword = await bcrypt.hash("Admin$$123", 10);
+
+  await prisma.user.upsert({
+    where: { email: "admin@food.com" },
+    update: {},
+    create: {
+      firstName: "Admin",
+      lastName: "Admin",
+      email: "admin@food.com",
+      phone: "0590000000",
+      password: hashedPassword,
+      roleId: adminRole.id,
+    },
+  });
+
   console.log("✅ Roles seeded successfully.");
+  console.log("✅ Admin user seeded successfully.");
 }
 
 main()
