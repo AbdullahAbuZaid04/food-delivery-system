@@ -1,6 +1,6 @@
 const express = require("express");
 const categoryController = require("./category.controller");
-const validate = require("./category.validator");
+const validate = require("../../middlewares/validate");
 const {
   createCategorySchema,
   updateCategorySchema,

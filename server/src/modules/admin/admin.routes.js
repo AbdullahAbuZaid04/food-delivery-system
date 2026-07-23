@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
 const adminController = require("./admin.controller");
-const validate = require("./admin.validator");
+const validate = require("../../middlewares/validate");
 const {
   updateUserStatusSchema,
   updateRestaurantStatusSchema,

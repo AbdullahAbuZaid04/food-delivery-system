@@ -29,6 +29,10 @@ const getMyRestaurant = async (req, res) => {
       data: restaurant,
     });
   } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
     return res.status(400).json({
       success: false,
       message: error.message,
@@ -111,6 +115,10 @@ const getRestaurantBySlug = async (req, res) => {
       data: restaurant,
     });
   } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
     return res.status(400).json({
       success: false,
       message: error.message,

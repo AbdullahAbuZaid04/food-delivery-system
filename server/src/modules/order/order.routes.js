@@ -1,6 +1,6 @@
 const express = require("express");
 const orderController = require("./order.controller");
-const validate = require("./order.validator");
+const validate = require("../../middlewares/validate");
 const {
   createOrderSchema,
   updateStatusSchema,

@@ -27,8 +27,17 @@ const findRoleByName = async (name) => {
 const createUser = async (data) => {
   return await prisma.user.create({
     data,
-    include: {
-      role: true,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      status: true,
+      isVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      role: { select: { id: true, name: true } },
     },
   });
 };
@@ -54,8 +63,18 @@ const updateLastLoginAt = async (id) => {
 const findUserById = async (id) => {
   return await prisma.user.findUnique({
     where: { id },
-    include: {
-      role: true,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      profileImage: true,
+      status: true,
+      isVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      role: { select: { id: true, name: true } },
       addresses: true,
     },
   });
