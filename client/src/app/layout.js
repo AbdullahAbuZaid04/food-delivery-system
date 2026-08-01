@@ -1,4 +1,4 @@
-import { Tajawal, Inter } from "next/font/google";
+import { Tajawal, Inter, Cairo } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -16,9 +16,36 @@ const inter = Inter({
   display: "swap",
 });
 
+const cairo = Cairo({
+  variable: "--font-cairo",
+  subsets: ["arabic"],
+  weight: ["500", "600", "700", "800", "900"],
+  display: "swap",
+});
+
+const OG_IMAGE =
+  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80";
+
 export const metadata = {
-  title: "وجبة | توصيل طعام فلسطيني",
-  description: "اطلب أكلك المفضل من أفضل المطاعم الفلسطينية",
+  title: "وجبة | توصيل طعام فلسطيني في غزة",
+  description:
+    "اطلب من أكثر من ١٢٠ مطعم في غزة. توصيل سريع، منيو حقيقي، وأسعار شفافة.",
+  openGraph: {
+    type: "website",
+    locale: "ar_PS",
+    siteName: "وجبة",
+    title: "وجبة | توصيل طعام فلسطيني في غزة",
+    description:
+      "اطلب من أكثر من ١٢٠ مطعم في غزة. توصيل سريع، منيو حقيقي، وأسعار شفافة.",
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "وجبة — توصيل الطعام في غزة" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "وجبة | توصيل طعام فلسطيني في غزة",
+    description:
+      "اطلب من أكثر من ١٢٠ مطعم في غزة. توصيل سريع، منيو حقيقي، وأسعار شفافة.",
+    images: [OG_IMAGE],
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -26,7 +53,8 @@ export default function RootLayout({ children }) {
     <html
       lang="ar"
       dir="rtl"
-      className={`${tajawal.variable} ${inter.variable}`}
+      data-scroll-behavior="smooth"
+      className={`${tajawal.variable} ${inter.variable} ${cairo.variable}`}
     >
       <body className="min-h-screen bg-background text-foreground font-tajawal antialiased">
         {children}
