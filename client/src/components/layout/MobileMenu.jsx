@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { X, ChevronLeft, UserRound } from "lucide-react";
 import { useEffect, useRef } from "react";
 import BrandMark from "@components/ui/BrandMark";
@@ -107,13 +108,14 @@ function MobileMenu({ open, onClose }) {
         </nav>
 
         <div className="flex flex-col gap-3 mt-8">
-          <a
-            href="#"
+          <Link
+            href="/login"
+            onClick={onClose}
             className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
           >
             <UserRound className="w-5 h-5" />
             سجّل الدخول
-          </a>
+          </Link>
           <a
             href="#restaurants"
             onClick={onClose}
