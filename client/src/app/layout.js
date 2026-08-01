@@ -27,6 +27,7 @@ const OG_IMAGE =
   "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80";
 
 export const metadata = {
+  metadataBase: new URL("https://wajba.ps"),
   title: "وجبة | توصيل طعام فلسطيني في غزة",
   description:
     "اطلب من أكثر من ١٢٠ مطعم في غزة. توصيل سريع، منيو حقيقي، وأسعار شفافة.",

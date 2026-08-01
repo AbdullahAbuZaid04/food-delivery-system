@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ShoppingCart, UserRound, Menu } from "lucide-react";
 import { useRef, useState } from "react";
 import BrandMark from "@components/ui/BrandMark";
@@ -63,13 +64,13 @@ function Header() {
               <ShoppingCart className="w-5 h-5" />
             </button>
 
-            <a
-              href="#"
+            <Link
+              href="/login"
               className="hidden sm:inline-flex items-center gap-2 border-2 border-terra text-terra font-bold text-sm px-5 py-3 rounded-full hover:bg-terra/5 transition-colors"
             >
               <UserRound className="w-4 h-4" />
               سجّل الدخول
-            </a>
+            </Link>
 
             <a
               href="#restaurants"
