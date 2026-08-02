@@ -1,8 +1,19 @@
+import Link from "next/link";
 import { Star, Clock, Bike, Heart } from "lucide-react";
 
 function RestaurantCard({ restaurant, isFavorite = false, onToggleFavorite }) {
+  const href = restaurant.id ? `/restaurants/${restaurant.id}` : null;
+
   return (
     <div className="relative bg-cream-deep border border-clay/10 rounded-[24px] p-6 hover:-translate-y-1 hover:shadow-[0_24px_48px_-32px_rgba(42,36,28,0.45)] transition">
+      {href ? (
+        <Link
+          href={href}
+          aria-label={`اطلب من ${restaurant.name}`}
+          className="absolute inset-0 z-10 rounded-[24px] focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
+        />
+      ) : null}
+
       <div className="flex items-center gap-3">
         <span
           className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${restaurant.tone}`}
@@ -40,7 +51,7 @@ function RestaurantCard({ restaurant, isFavorite = false, onToggleFavorite }) {
                 ? `إزالة ${restaurant.name} من المفضلة`
                 : `إضافة ${restaurant.name} إلى المفضلة`
             }
-            className={`w-11 h-11 shrink-0 -me-1 rounded-full border-2 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
+            className={`relative z-20 w-11 h-11 shrink-0 -me-1 rounded-full border-2 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
               isFavorite
                 ? "border-terra bg-terra/10 text-terra"
                 : "border-clay/20 text-cocoa-soft hover:border-terra hover:text-terra"

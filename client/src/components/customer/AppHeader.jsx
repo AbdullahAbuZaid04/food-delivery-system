@@ -12,13 +12,34 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import BrandMark from "@components/ui/BrandMark";
+import { formatArabicCount, toArabicDigits } from "@lib/format";
+
+export const APP_HEADER_HEIGHT = 72;
 
 const MOCK_CART_COUNT = "٢";
 
-function AppHeader({ userName, searchQuery, onSearchChange }) {
+function AppHeader({
+  userName,
+  searchQuery,
+  onSearchChange,
+  cartCount,
+  showSearch = true,
+}) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const avatarButtonRef = useRef(null);
+
+  const hasLiveCart = typeof cartCount === "number";
+  const cartBadge = hasLiveCart
+    ? cartCount > 0
+      ? toArabicDigits(cartCount)
+      : null
+    : MOCK_CART_COUNT;
+  const cartLabel = hasLiveCart
+    ? cartCount > 0
+      ? `سلة الطلبات — فيك ${formatArabicCount(cartCount)}`
+      : "سلة الطلبات — فاضية"
+    : `سلة الطلبات — فيك ${MOCK_CART_COUNT} أصناف`;
 
   const closeUserMenu = () => {
     setIsUserMenuOpen(false);
@@ -61,49 +82,53 @@ function AppHeader({ userName, searchQuery, onSearchChange }) {
           </span>
         </Link>
 
-        <div role="search" className="flex-1 min-w-0 max-w-md mx-auto w-full">
-          <div className="relative w-full">
-            <Search
-              aria-hidden="true"
-              className="w-5 h-5 text-cocoa-soft absolute start-4 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
-            <input
-              type="text"
-              inputMode="search"
-              autoComplete="off"
-              spellCheck={false}
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="بدّك تطلب من مين؟"
-              aria-label="ابحث عن مطعم"
-              className="w-full rounded-full border-2 border-clay/20 bg-white/80 ps-11 pe-14 py-3 text-[14px] text-cocoa placeholder:text-cocoa-soft/70 transition-colors focus:border-terra focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-            />
-            {searchQuery ? (
-              <button
-                type="button"
-                onClick={() => onSearchChange("")}
-                aria-label="امسح البحث"
-                className="absolute end-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-terra hover:bg-terra/10 transition-colors"
-              >
-                <X className="w-4 h-4" aria-hidden="true" />
-              </button>
-            ) : null}
+        {showSearch ? (
+          <div role="search" className="flex-1 min-w-0 max-w-md mx-auto w-full">
+            <div className="relative w-full">
+              <Search
+                aria-hidden="true"
+                className="w-5 h-5 text-cocoa-soft absolute start-4 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+              <input
+                type="text"
+                inputMode="search"
+                autoComplete="off"
+                spellCheck={false}
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="بدّك تطلب من مين؟"
+                aria-label="ابحث عن مطعم"
+                className="w-full rounded-full border-2 border-clay/20 bg-white/80 ps-11 pe-14 py-3 text-[14px] text-cocoa placeholder:text-cocoa-soft/70 transition-colors focus:border-terra focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange("")}
+                  aria-label="امسح البحث"
+                  className="absolute end-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-terra hover:bg-terra/10 transition-colors"
+                >
+                  <X className="w-4 h-4" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
-            aria-label={`سلة الطلبات — فيك ${MOCK_CART_COUNT} أصناف`}
+            aria-label={cartLabel}
           >
             <ShoppingCart className="w-5 h-5" aria-hidden="true" />
-            <span
-              aria-hidden="true"
-              className="absolute -top-1 -end-1 min-w-5 h-5 px-1 rounded-full bg-terra text-cream text-[11px] font-bold flex items-center justify-center border-2 border-cream"
-            >
-              {MOCK_CART_COUNT}
-            </span>
+            {cartBadge ? (
+              <span
+                aria-hidden="true"
+                className="absolute -top-1 -end-1 min-w-5 h-5 px-1 rounded-full bg-terra text-cream text-[11px] font-bold flex items-center justify-center border-2 border-cream"
+              >
+                {cartBadge}
+              </span>
+            ) : null}
           </button>
 
           <div className="relative" ref={userMenuRef}>

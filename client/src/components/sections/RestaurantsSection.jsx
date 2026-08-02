@@ -1,6 +1,7 @@
 import Ornament from "@components/ui/Ornament";
 import RestaurantCard from "@components/ui/RestaurantCard";
 import { restaurants } from "@lib/constants";
+import Link from "next/link";
 
 /**
  * RestaurantsSection — grid of partner restaurants plus a "see all" CTA.
@@ -25,13 +26,13 @@ function RestaurantsSection() {
         </div>
 
         <div className="text-center mt-10">
-          <a
-            href="#"
+          <Link
+            href="/home"
             className="inline-flex items-center gap-2 border-2 border-terra text-terra font-bold text-[15px] px-8 py-3.5 rounded-full hover:bg-terra/5 transition-colors"
           >
             شوف كل المطاعم +١٢٠
             <span aria-hidden="true">←</span>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
