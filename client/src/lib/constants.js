@@ -48,6 +48,7 @@ export const marqueeItems = [
 
 export const restaurants = [
   {
+    id: "baladna",
     icon: <ChefHat className="w-6 h-6" strokeWidth={1.7} />,
     tone: "bg-terra/12 text-terra",
     name: "مطعم بلدنا",
@@ -58,6 +59,7 @@ export const restaurants = [
     dishes: ["مسخّن دجاج", "فته حمص", "منسف"],
   },
   {
+    id: "al-buhhar",
     icon: <FishSymbol className="w-6 h-6" strokeWidth={1.7} />,
     tone: "bg-olive/14 text-olive",
     name: "مطعم ومسمكة البحّار",
@@ -68,6 +70,7 @@ export const restaurants = [
     dishes: ["صيادية", "سمك مشوي", "جمبري"],
   },
   {
+    id: "al-taj",
     icon: <Sandwich className="w-6 h-6" strokeWidth={1.7} />,
     tone: "bg-gold/18 text-clay",
     name: "مطعم التاج",
@@ -78,6 +81,7 @@ export const restaurants = [
     dishes: ["شاورما خروف", "شاورما دجاج", "سندويش لحم"],
   },
   {
+    id: "abu-saud",
     icon: <IceCreamBowl className="w-6 h-6" strokeWidth={1.7} />,
     tone: "bg-gold/18 text-terra-dark",
     name: "حلويات أبو السعود",

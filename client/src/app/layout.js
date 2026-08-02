@@ -1,5 +1,6 @@
 import { Tajawal, Inter, Cairo } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import ScrollToTop from "@components/layout/ScrollToTop";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }) {
       className={`${tajawal.variable} ${inter.variable} ${cairo.variable}`}
     >
       <body className="min-h-screen bg-background text-foreground font-tajawal antialiased">
+        <ScrollToTop />
         {children}
         <Toaster
           position="top-center"
