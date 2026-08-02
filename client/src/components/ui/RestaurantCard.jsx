@@ -1,20 +1,8 @@
-import { Star, Clock, Bike } from "lucide-react";
+import { Star, Clock, Bike, Heart } from "lucide-react";
 
-/**
- * RestaurantCard — one restaurant summary card in the restaurants grid.
- * @param {Object} restaurant
- * @param {import("react").ReactNode} restaurant.icon - cuisine icon element.
- * @param {string} restaurant.tone - tailwind classes for the icon chip (bg + text).
- * @param {string} restaurant.name
- * @param {string} restaurant.cuisine
- * @param {string} restaurant.rating - Arabic-Indic rating.
- * @param {string} restaurant.time
- * @param {string} restaurant.delivery
- * @param {string[]} restaurant.dishes
- */
-function RestaurantCard({ restaurant }) {
+function RestaurantCard({ restaurant, isFavorite = false, onToggleFavorite }) {
   return (
-    <div className="bg-cream-deep border border-clay/10 rounded-[24px] p-6 hover:-translate-y-1 hover:shadow-[0_24px_48px_-32px_rgba(42,36,28,0.45)] transition">
+    <div className="relative bg-cream-deep border border-clay/10 rounded-[24px] p-6 hover:-translate-y-1 hover:shadow-[0_24px_48px_-32px_rgba(42,36,28,0.45)] transition">
       <div className="flex items-center gap-3">
         <span
           className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${restaurant.tone}`}
@@ -41,6 +29,29 @@ function RestaurantCard({ restaurant }) {
             {restaurant.time}
           </span>
         </div>
+
+        {onToggleFavorite ? (
+          <button
+            type="button"
+            onClick={onToggleFavorite}
+            aria-pressed={isFavorite}
+            aria-label={
+              isFavorite
+                ? `إزالة ${restaurant.name} من المفضلة`
+                : `إضافة ${restaurant.name} إلى المفضلة`
+            }
+            className={`w-11 h-11 shrink-0 -me-1 rounded-full border-2 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
+              isFavorite
+                ? "border-terra bg-terra/10 text-terra"
+                : "border-clay/20 text-cocoa-soft hover:border-terra hover:text-terra"
+            }`}
+          >
+            <Heart
+              className={`w-5 h-5 ${isFavorite ? "fill-terra" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4">
