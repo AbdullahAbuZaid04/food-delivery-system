@@ -1,0 +1,192 @@
+"use client";
+
+import Link from "next/link";
+import {
+  ChevronDown,
+  History,
+  LogOut,
+  Search,
+  ShoppingCart,
+  UserRound,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import BrandMark from "@components/ui/BrandMark";
+
+const MOCK_CART_COUNT = "٢";
+
+function AppHeader({ userName, searchQuery, onSearchChange }) {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const avatarButtonRef = useRef(null);
+
+  const closeUserMenu = () => {
+    setIsUserMenuOpen(false);
+    avatarButtonRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const onPointerDown = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        closeUserMenu();
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") closeUserMenu();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isUserMenuOpen]);
+
+  const initial = userName.trim().charAt(0) || "ز";
+
+  return (
+    <header className="sticky top-0 z-50 w-full bg-cream/90 backdrop-blur-md border-b border-clay/10">
+      <div className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 h-[72px] flex items-center justify-between gap-3">
+        <Link
+          href="/"
+          aria-label="وجبة — الرجوع للصفحة الرئيسية"
+          className="flex items-center gap-2.5 text-terra shrink-0"
+        >
+          <BrandMark />
+          <span className="hidden sm:inline font-display font-black text-2xl text-cocoa">
+            وجبة
+          </span>
+        </Link>
+
+        <div role="search" className="flex-1 min-w-0 max-w-md mx-auto w-full">
+          <div className="relative w-full">
+            <Search
+              aria-hidden="true"
+              className="w-5 h-5 text-cocoa-soft absolute start-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              type="text"
+              inputMode="search"
+              autoComplete="off"
+              spellCheck={false}
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="بدّك تطلب من مين؟"
+              aria-label="ابحث عن مطعم"
+              className="w-full rounded-full border-2 border-clay/20 bg-white/80 ps-11 pe-14 py-3 text-[14px] text-cocoa placeholder:text-cocoa-soft/70 transition-colors focus:border-terra focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => onSearchChange("")}
+                aria-label="امسح البحث"
+                className="absolute end-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-terra hover:bg-terra/10 transition-colors"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
+            aria-label={`سلة الطلبات — فيك ${MOCK_CART_COUNT} أصناف`}
+          >
+            <ShoppingCart className="w-5 h-5" aria-hidden="true" />
+            <span
+              aria-hidden="true"
+              className="absolute -top-1 -end-1 min-w-5 h-5 px-1 rounded-full bg-terra text-cream text-[11px] font-bold flex items-center justify-center border-2 border-cream"
+            >
+              {MOCK_CART_COUNT}
+            </span>
+          </button>
+
+          <div className="relative" ref={userMenuRef}>
+            <button
+              ref={avatarButtonRef}
+              type="button"
+              onClick={() => setIsUserMenuOpen((open) => !open)}
+              aria-haspopup="menu"
+              aria-expanded={isUserMenuOpen}
+              aria-label="قائمة الحساب"
+              className="flex items-center gap-2 ps-1.5 pe-2.5 py-1 rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
+            >
+              <span className="w-9 h-9 rounded-full bg-terra text-cream font-display font-bold text-sm flex items-center justify-center">
+                {initial}
+              </span>
+              <span className="hidden lg:block text-[14px] font-bold">
+                {userName}
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className={`w-4 h-4 transition-transform ${
+                  isUserMenuOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isUserMenuOpen ? (
+              <div
+                role="menu"
+                aria-label="قائمة الحساب"
+                className="absolute start-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
+              >
+                <a
+                  href="#"
+                  role="menuitem"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    closeUserMenu();
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
+                >
+                  <UserRound
+                    className="w-5 h-5 text-terra shrink-0"
+                    aria-hidden="true"
+                  />
+                  حسابي
+                </a>
+                <a
+                  href="#"
+                  role="menuitem"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    closeUserMenu();
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
+                >
+                  <History
+                    className="w-5 h-5 text-terra shrink-0"
+                    aria-hidden="true"
+                  />
+                  طلباتي
+                </a>
+                <div
+                  role="separator"
+                  aria-hidden="true"
+                  className="h-px bg-clay/10 my-1"
+                />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={closeUserMenu}
+                  className="w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-error hover:bg-error/10 transition-colors"
+                >
+                  <LogOut className="w-5 h-5 shrink-0" aria-hidden="true" />
+                  تسجيل خروج
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default AppHeader;

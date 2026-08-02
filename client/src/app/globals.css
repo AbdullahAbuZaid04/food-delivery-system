@@ -59,6 +59,11 @@
     background-color: var(--color-primary);
     color: white;
   }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 @layer base {
