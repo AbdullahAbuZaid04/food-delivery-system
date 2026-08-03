@@ -232,16 +232,25 @@ section on any page.
   the last placed order persists under the `wajba-last-order` localStorage key
   (deliberately separate from `wajba-cart`). No real API or payment gateway —
   replace with the real data layer before production (AGENTS.md §2/§10).
-- [ ] The orders history screen (`src/app/(customer)/orders/`) is UI-only this
-  phase: data is mock (`src/lib/mock/orders.js` — 6 orders with static dates
-  anchored to the authoring day so the statically prerendered route stays
-  hydration-safe, no real API). The "اطلب نفس الطلبية" button only
+- [ ] The orders screens (`src/app/(customer)/orders/` + the per-order tracking
+  page `/orders/[id]`) are UI-only this phase: data is mock
+  (`src/lib/mock/orders.js` — 6 orders with static dates/timestamps anchored to
+  the authoring day so the statically prerendered routes stay hydration-safe, no
+  real API). The tracking page is a static snapshot — no real-time updates, the
+  shown status never changes live. The "اطلب نفس الطلبية" button only
   `console.log`s the order id — later it should auto-fill `CartContext` with the
   previous order's items and navigate to that restaurant's page (TODO comment in
-  `src/components/orders/OrderHistoryCard.jsx`). Active orders (قيد التحضير /
-  بالطريق) temporarily make the whole card a Link to `/order-confirmation` —
-  replace with a dedicated per-order tracking page (`/orders/[id]`,
-  feature/order-tracking-ui) before production.
+  `src/components/orders/OrderHistoryCard.jsx`). The "إلغاء الطلب" button (shown
+  only for "قيد التحضير") and the courier "اتصال" button on the tracking page are
+  disabled placeholders with a "قريبًا" badge — they need a real cancellation
+  API / courier call system. The "تواصل مع الدعم" button links to `/account`,
+  which doesn't exist yet (the account screen with its "الدعم والمساعدة" section
+  is a future phase).
+- [ ] ~~Active orders (قيد التحضير / بالطريق) temporarily made the whole
+  `OrderHistoryCard` a Link to `/order-confirmation`~~ — DONE: active order cards
+  now link to the dedicated per-order tracking page `/orders/[id]`
+  (`feature/order-tracking-ui`), rendered by the shared
+  `components/orders/OrderProgressSteps.jsx`.
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 
