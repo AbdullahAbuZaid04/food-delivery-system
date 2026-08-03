@@ -170,13 +170,10 @@ function AppHeader({
                   />
                   حسابي
                 </a>
-                <a
-                  href="#"
+                <Link
+                  href="/orders"
                   role="menuitem"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    closeUserMenu();
-                  }}
+                  onClick={closeUserMenu}
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
                 >
                   <History
@@ -184,7 +181,7 @@ function AppHeader({
                     aria-hidden="true"
                   />
                   طلباتي
-                </a>
+                </Link>
                 <div
                   role="separator"
                   aria-hidden="true"

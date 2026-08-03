@@ -232,6 +232,16 @@ section on any page.
   the last placed order persists under the `wajba-last-order` localStorage key
   (deliberately separate from `wajba-cart`). No real API or payment gateway —
   replace with the real data layer before production (AGENTS.md §2/§10).
+- [ ] The orders history screen (`src/app/(customer)/orders/`) is UI-only this
+  phase: data is mock (`src/lib/mock/orders.js` — 6 orders with static dates
+  anchored to the authoring day so the statically prerendered route stays
+  hydration-safe, no real API). The "اطلب نفس الطلبية" button only
+  `console.log`s the order id — later it should auto-fill `CartContext` with the
+  previous order's items and navigate to that restaurant's page (TODO comment in
+  `src/components/orders/OrderHistoryCard.jsx`). Active orders (قيد التحضير /
+  بالطريق) temporarily make the whole card a Link to `/order-confirmation` —
+  replace with a dedicated per-order tracking page (`/orders/[id]`,
+  feature/order-tracking-ui) before production.
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 
