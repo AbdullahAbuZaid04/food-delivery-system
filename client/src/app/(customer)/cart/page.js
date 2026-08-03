@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { ChevronRight, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import AppHeader from "@components/customer/AppHeader";
 import { useCart } from "@context/CartContext";
@@ -282,16 +282,15 @@ function CartPage() {
             </span>
           </div>
 
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="mt-6 w-full h-14 rounded-full bg-terra text-cream font-bold text-[16px] flex items-center justify-center shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] disabled:opacity-50 disabled:cursor-not-allowed"
+          <Link
+            href="/checkout"
+            className="mt-6 w-full h-14 rounded-full bg-terra text-cream font-bold text-[16px] flex items-center justify-center gap-2 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
           >
+            <ChevronRight className="w-5 h-5" aria-hidden="true" />
             أكمل الطلب
-          </button>
+          </Link>
           <p className="mt-2 text-center text-[12.5px] text-cocoa-soft">
-            قريبًا — خطوة الدفع رح تتوفّر بالمرحلة الجاية
+            خطوة وحدة: عنوانك + طريقة الدفع
           </p>
         </section>
       </main>

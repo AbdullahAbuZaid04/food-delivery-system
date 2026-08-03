@@ -176,12 +176,22 @@ export function CartProvider({ children }) {
       items: cart.items,
       totalItems,
       totalPrice,
+      hydrated,
       addItem,
       removeItem,
       updateQuantity,
       clearCart,
     }),
-    [cart, totalItems, totalPrice, addItem, removeItem, updateQuantity, clearCart],
+    [
+      cart,
+      totalItems,
+      totalPrice,
+      hydrated,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

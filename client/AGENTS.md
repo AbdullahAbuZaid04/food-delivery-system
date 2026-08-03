@@ -225,6 +225,13 @@ section on any page.
 - [ ] Hero floating trust badges (١٢٠ مطعم / ٤٫٩ تقييم / ٢٥ دقيقة توصيل) were
   removed during a responsiveness fix — restore using the safe positioning
   pattern in section 8 before treating the homepage as final.
+- [ ] Checkout + order-confirmation are UI-only this phase: Cash-on-Delivery is
+  the only active payment (بطاقة ائتمان is a disabled teaser card with a
+  "قريبًا" badge — no e-payment logic/form yet), the delivery fee is a flat
+  mock ٥ ₪, order numbers are fake (`WB-` + last 6 digits of `Date.now()`), and
+  the last placed order persists under the `wajba-last-order` localStorage key
+  (deliberately separate from `wajba-cart`). No real API or payment gateway —
+  replace with the real data layer before production (AGENTS.md §2/§10).
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 
