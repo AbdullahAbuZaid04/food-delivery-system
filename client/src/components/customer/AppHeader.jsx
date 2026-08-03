@@ -155,13 +155,10 @@ function AppHeader({
                 aria-label="قائمة الحساب"
                 className="absolute start-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
               >
-                <a
-                  href="#"
+                <Link
+                  href="/account"
                   role="menuitem"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    closeUserMenu();
-                  }}
+                  onClick={closeUserMenu}
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
                 >
                   <UserRound
@@ -169,7 +166,7 @@ function AppHeader({
                     aria-hidden="true"
                   />
                   حسابي
-                </a>
+                </Link>
                 <Link
                   href="/orders"
                   role="menuitem"
