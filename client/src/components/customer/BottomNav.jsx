@@ -1,15 +1,34 @@
+import Link from "next/link";
 import { Heart, House, ShoppingBag, UserRound } from "lucide-react";
 
 const items = [
-  { key: "home", label: "الرئيسية", icon: <House className="w-5 h-5" aria-hidden="true" /> },
-  { key: "orders", label: "طلباتي", icon: <ShoppingBag className="w-5 h-5" aria-hidden="true" /> },
-  { key: "favorites", label: "المفضلة", icon: <Heart className="w-5 h-5" aria-hidden="true" /> },
-  { key: "account", label: "حسابي", icon: <UserRound className="w-5 h-5" aria-hidden="true" /> },
+  {
+    key: "home",
+    label: "الرئيسية",
+    href: "/home",
+    icon: <House className="w-5 h-5" aria-hidden="true" />,
+  },
+  {
+    key: "orders",
+    label: "طلباتي",
+    href: "/orders",
+    icon: <ShoppingBag className="w-5 h-5" aria-hidden="true" />,
+  },
+  {
+    key: "favorites",
+    label: "المفضلة",
+    href: null,
+    icon: <Heart className="w-5 h-5" aria-hidden="true" />,
+  },
+  {
+    key: "account",
+    label: "حسابي",
+    href: null,
+    icon: <UserRound className="w-5 h-5" aria-hidden="true" />,
+  },
 ];
 
-const ACTIVE_KEY = "home";
-
-function BottomNav() {
+function BottomNav({ activeKey = "home" }) {
   return (
     <nav
       aria-label="تنقّل الموبايل"
@@ -17,18 +36,34 @@ function BottomNav() {
     >
       <div className="grid grid-cols-4">
         {items.map((item) => {
-          const isActive = item.key === ACTIVE_KEY;
-          return (
+          const isActive = item.key === activeKey;
+          const className = `flex flex-col items-center justify-center gap-1 h-[64px] text-[11.5px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
+            isActive ? "text-terra" : "text-cocoa-soft hover:text-terra"
+          }`;
+          const content = (
+            <>
+              {item.icon}
+              {item.label}
+            </>
+          );
+
+          return item.href ? (
+            <Link
+              key={item.key}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={className}
+            >
+              {content}
+            </Link>
+          ) : (
             <button
               key={item.key}
               type="button"
               aria-current={isActive ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-1 h-[64px] text-[11.5px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
-                isActive ? "text-terra" : "text-cocoa-soft hover:text-terra"
-              }`}
+              className={className}
             >
-              {item.icon}
-              {item.label}
+              {content}
             </button>
           );
         })}

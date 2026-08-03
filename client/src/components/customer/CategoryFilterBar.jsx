@@ -1,12 +1,18 @@
 "use client";
 
-function CategoryFilterBar({ categories, activeCategory, onSelect }) {
+function CategoryFilterBar({
+  categories,
+  activeCategory,
+  onSelect,
+  srOnlyTitle = "فئات المطاعم",
+  ariaLabel = "فلترة المطاعم حسب الفئة",
+}) {
   return (
     <div className="mt-6 md:mt-8">
-      <h2 className="sr-only">فئات المطاعم</h2>
+      <h2 className="sr-only">{srOnlyTitle}</h2>
       <div
         role="group"
-        aria-label="فلترة المطاعم حسب الفئة"
+        aria-label={ariaLabel}
         className="flex gap-2.5 overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6 py-1"
       >
         {categories.map((category) => {
