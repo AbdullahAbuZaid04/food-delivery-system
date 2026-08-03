@@ -243,9 +243,26 @@ section on any page.
   `src/components/orders/OrderHistoryCard.jsx`). The "إلغاء الطلب" button (shown
   only for "قيد التحضير") and the courier "اتصال" button on the tracking page are
   disabled placeholders with a "قريبًا" badge — they need a real cancellation
-  API / courier call system. The "تواصل مع الدعم" button links to `/account`,
-  which doesn't exist yet (the account screen with its "الدعم والمساعدة" section
-  is a future phase).
+  API / courier call system. The "تواصل مع الدعم" button links to `/account` —
+  the account screen now exists (see the account-phase note below); it currently
+  has no visible support entry (the settings menu was removed — see below).
+- [ ] The account screen (`src/app/(customer)/account/`) is UI-only this phase:
+  it shows just the profile card and saved addresses. Mock user data lives in
+  `src/lib/mock/user.js` (its shape mirrors the `GET /api/auth/profile`
+  response: `firstName`/`lastName`, `profileImage`, `role`,
+  `addresses[].city/street/building/details/isDefault`, and `createdAt` used for
+  the "عضو من" year — saved-address `city` values reuse `GAZA_AREAS` from the
+  checkout step). Profile edits (first/last name, phone) update local component
+  state only — no real API; saved addresses are deleted from local state only;
+  the "أضف عنوان جديد" button is a disabled teaser with a "قريبًا" badge (no
+  add-address form yet — TODO in `src/components/account/SavedAddressesList.jsx`).
+  The settings menu (`AccountMenuList`) was removed entirely by product decision
+  — its "الإشعارات" and "الدعم والمساعدة" entries and the "تسجيل خروج" button
+  (which would call `/api/auth/logout`, clear cookies and redirect to `/login`)
+  are all deferred; logout currently exists only as the placeholder button in the
+  `AppHeader` user dropdown (it just closes the menu). "غيّر كلمة السر" was also
+  deliberately omitted — the `/reset-password` route doesn't exist yet and should
+  be built with the auth phase before adding that link.
 - [ ] ~~Active orders (قيد التحضير / بالطريق) temporarily made the whole
   `OrderHistoryCard` a Link to `/order-confirmation`~~ — DONE: active order cards
   now link to the dedicated per-order tracking page `/orders/[id]`

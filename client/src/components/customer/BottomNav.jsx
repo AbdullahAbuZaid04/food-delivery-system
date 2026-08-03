@@ -23,7 +23,7 @@ const items = [
   {
     key: "account",
     label: "حسابي",
-    href: null,
+    href: "/account",
     icon: <UserRound className="w-5 h-5" aria-hidden="true" />,
   },
 ];
