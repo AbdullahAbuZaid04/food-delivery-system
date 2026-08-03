@@ -5,8 +5,9 @@
 // Click behavior depends on the order status:
 // - Active orders (قيد التحضير / بالطريق): the WHOLE card is a Link (absolute
 //   overlay, same pattern as RestaurantCard) so tapping anywhere on the card
-//   opens it — with a hover bg change + a small "اضغط لمتابعة التتبع" hint as
-//   the visual affordance (AGENTS.md §6).
+//   opens the per-order tracking page /orders/[order.id] — with a hover bg
+//   change + a small "اضغط لمتابعة التتبع" hint as the visual affordance
+//   (AGENTS.md §6).
 // - Past orders (تم التوصيل / ملغي): the card is NOT clickable as a whole —
 //   the reorder button is the only interactive element.
 // The reorder button is a visual-only placeholder this phase.
@@ -35,12 +36,8 @@ function OrderHistoryCard({ order }) {
       }`}
     >
       {isActive ? (
-        // TODO: مؤقت — الطلبات الجارية رح توجّه لصفحة تتبع مخصصة لكل طلب
-        // (feature/order-tracking-ui) عبر /orders/[id]. هلأ بتروح على
-        // /order-confirmation لأنها الصفحة الوحيدة الجاهزة اللي بتحكي تفاصيل
-        // الطلب — لازم نستبدلها بصفحة التتبع قبل الإنتاج.
         <Link
-          href="/order-confirmation"
+          href={`/orders/${order.id}`}
           aria-label={`متابعة تتبع طلبك من ${order.restaurantName}`}
           className="absolute inset-0 z-10 rounded-[24px] focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
         />
