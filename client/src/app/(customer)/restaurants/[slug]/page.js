@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { notFound } from "next/navigation";
 import { toast } from "react-hot-toast";
 import AppHeader from "@components/customer/AppHeader";
@@ -9,7 +9,8 @@ import MenuCategoryTabs, {
   MENU_STICKY_OFFSET,
 } from "@components/customer/MenuCategoryTabs";
 import MenuItemCard from "@components/customer/MenuItemCard";
-import CartSummaryBar from "@components/customer/CartSummaryBar";
+import RestaurantConflictModal from "@components/customer/RestaurantConflictModal";
+import { useCart } from "@context/CartContext";
 import { restaurants } from "@lib/mock/restaurants";
 import { getRestaurantMenu } from "@lib/mock/menu";
 
@@ -23,91 +24,36 @@ function RestaurantDetailPage({ params }) {
     notFound();
   }
 
-  const [cartItems, setCartItems] = useState([]);
   const [isFavorite, setIsFavorite] = useState(restaurant.isFavorite ?? false);
+  const [isConflictOpen, setIsConflictOpen] = useState(false);
+  const [pendingItem, setPendingItem] = useState(null);
 
-  const menuItemById = useMemo(() => {
-    const map = new Map();
-    for (const category of menu.menuCategories) {
-      for (const item of category.items) map.set(item.id, item);
-    }
-    return map;
-  }, [menu]);
-
-  const addItem = useCallback(
-    (itemId) => {
-      const alreadyInCart = cartItems.some((entry) => entry.menuItemId === itemId);
-      if (!alreadyInCart) {
-        const item = menuItemById.get(itemId);
-        toast.success(item ? `ضفنا "${item.name}" عالسلة` : "ضفنا الصنف عالسلة");
-      }
-      setCartItems((previous) => {
-        const existing = previous.find((entry) => entry.menuItemId === itemId);
-        if (existing) {
-          return previous.map((entry) =>
-            entry.menuItemId === itemId
-              ? { ...entry, quantity: entry.quantity + 1 }
-              : entry,
-          );
-        }
-        return [...previous, { menuItemId: itemId, quantity: 1 }];
-      });
-    },
-    [cartItems, menuItemById],
-  );
-
-  const removeItem = useCallback((itemId) => {
-    setCartItems((previous) =>
-      previous.filter((entry) => entry.menuItemId !== itemId),
-    );
-  }, []);
-
-  const updateQuantity = useCallback(
-    (itemId, quantity) => {
-      if (quantity <= 0) {
-        const item = menuItemById.get(itemId);
-        toast.success(item ? `شلنا "${item.name}" من السلة` : "شلنا الصنف من السلة");
-        removeItem(itemId);
-        return;
-      }
-      setCartItems((previous) =>
-        previous.map((entry) =>
-          entry.menuItemId === itemId ? { ...entry, quantity } : entry,
-        ),
-      );
-    },
-    [menuItemById, removeItem],
-  );
+  const { restaurantName, items, addItem, clearCart } = useCart();
 
   const quantityByItemId = useMemo(() => {
     const map = new Map();
-    for (const entry of cartItems) map.set(entry.menuItemId, entry.quantity);
+    for (const entry of items) map.set(entry.menuItemId, entry.quantity);
     return map;
-  }, [cartItems]);
+  }, [items]);
 
-  const { totalCount, totalPrice } = useMemo(() => {
-    let count = 0;
-    let price = 0;
-    for (const entry of cartItems) {
-      const item = menuItemById.get(entry.menuItemId);
-      if (!item) continue;
-      count += entry.quantity;
-      price += entry.quantity * item.price;
-    }
-    return { totalCount: count, totalPrice: price };
-  }, [cartItems, menuItemById]);
+  const handleConflict = (pending) => {
+    setPendingItem(pending);
+    setIsConflictOpen(true);
+  };
 
-  const handleCheckout = () => {
-    toast.success("تسلم إيدك! خطوة الدفع رح نبنيلها بالمرحلة الجاية.");
+  const handleConfirmConflict = () => {
+    if (!pendingItem) return;
+    const { item, restaurantId, restaurantName } = pendingItem;
+    clearCart();
+    addItem(item, restaurantId, restaurantName);
+    toast.success(`ضفنا "${item.name}" عالسلة`);
+    setIsConflictOpen(false);
+    setPendingItem(null);
   };
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-      <AppHeader
-        userName="أحمد"
-        cartCount={totalCount}
-        showSearch={false}
-      />
+      <AppHeader userName="أحمد" showSearch={false} />
 
       <RestaurantHeader
         restaurant={restaurant}
@@ -119,7 +65,7 @@ function RestaurantDetailPage({ params }) {
 
       <MenuCategoryTabs categories={menu.menuCategories} />
 
-      <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pb-32 pt-4 md:pt-6">
+      <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pb-16 pt-4 md:pt-6">
         <h2 className="sr-only">منيو {restaurant.name}</h2>
         {menu.menuCategories.map((category) => (
           <section
@@ -137,12 +83,9 @@ function RestaurantDetailPage({ params }) {
                 <MenuItemCard
                   key={item.id}
                   item={item}
-                  quantity={quantityByItemId.get(item.id) ?? 0}
-                  onAdd={() => addItem(item.id)}
-                  onIncrement={() => addItem(item.id)}
-                  onDecrement={() =>
-                    updateQuantity(item.id, (quantityByItemId.get(item.id) ?? 0) - 1)
-                  }
+                  restaurantId={restaurant.id}
+                  restaurantName={restaurant.name}
+                  onConflict={handleConflict}
                 />
               ))}
             </div>
@@ -150,10 +93,15 @@ function RestaurantDetailPage({ params }) {
         ))}
       </main>
 
-      <CartSummaryBar
-        totalCount={totalCount}
-        totalPrice={totalPrice}
-        onCheckout={handleCheckout}
+      <RestaurantConflictModal
+        open={isConflictOpen}
+        currentRestaurantName={restaurantName}
+        incomingRestaurantName={pendingItem?.restaurantName}
+        onClose={() => {
+          setIsConflictOpen(false);
+          setPendingItem(null);
+        }}
+        onConfirm={handleConfirmConflict}
       />
     </div>
   );

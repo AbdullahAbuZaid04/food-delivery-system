@@ -40,6 +40,15 @@ per feature.
 - `react-hot-toast` (`<Toaster />`, mounted once in root layout) is the
   project-wide toast/notification mechanism — use it for cart actions, form
   submissions, auth errors, etc. Don't add a second toast library.
+- Cart state is shared app-wide via React Context only
+  (`src/context/CartContext.jsx` — `CartProvider` + `useCart()`), persisted to
+  `localStorage` under the `wajba-cart` key (hydrated in a `useEffect` to avoid
+  SSR hydration mismatches). A cart holds items from ONE restaurant at a time:
+  `addItem()` returns `{ conflict: true }` when the caller tries to add from a
+  different restaurant and the decision (clear vs. keep) is left to the UI via
+  `RestaurantConflictModal` — the context never mutates on conflict. No external
+  state library (Zustand or otherwise) — this is the documented decision
+  (§10); if it ever changes, update this file.
 - No backend/database is defined yet. When one is added (API routes, external
   API, ORM), this file must be updated with the chosen pattern before agents
   start writing data-fetching code — don't invent a data layer ad hoc.
@@ -208,8 +217,11 @@ section on any page.
   should be tracked here too).
 - [ ] Footer phone number `0590000000` and `support@wajba.ps` — confirm these
   are real, live contact channels before publishing.
-- [ ] Header cart icon has no item-count state — wire it to real cart state once
-  cart functionality exists; until then it's a static placeholder.
+- [ ] ~~Header cart icon has no item-count state~~ — DONE: `AppHeader` now reads
+  `useCart()` directly and its cart icon is a `Link` to `/cart`, so every screen
+  (home, restaurant, cart) shows the real cart count. Note: the old fixed
+  `CartSummaryBar` ("اطلب الآن") was removed from the restaurant page — the
+  header icon is now the only entry point to the cart.
 - [ ] Hero floating trust badges (١٢٠ مطعم / ٤٫٩ تقييم / ٢٥ دقيقة توصيل) were
   removed during a responsiveness fix — restore using the safe positioning
   pattern in section 8 before treating the homepage as final.

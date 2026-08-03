@@ -2,11 +2,46 @@
 
 import Image from "next/image";
 import { Ban, Minus, Plus } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useCart } from "@context/CartContext";
 import { formatPrice, toArabicDigits } from "@lib/format";
 
-function MenuItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }) {
+/**
+ * MenuItemCard — reads quantity + cart actions straight from CartContext
+ * (no more addItem/updateQuantity props from the parent page). When addItem
+ * reports a restaurant conflict it calls the optional `onConflict` callback so
+ * the parent page can open RestaurantConflictModal.
+ */
+function MenuItemCard({ item, restaurantId, restaurantName, onConflict }) {
+  const { items, addItem, updateQuantity } = useCart();
+
   const isAvailable = item.isAvailable;
+  const quantity =
+    items.find((entry) => entry.menuItemId === item.id)?.quantity ?? 0;
   const hasQuantity = quantity > 0;
+
+  const handleAdd = () => {
+    const result = addItem(item, restaurantId, restaurantName);
+    if (result?.conflict) {
+      onConflict?.({ item, restaurantId, restaurantName });
+      return;
+    }
+    toast.success(`ضفنا "${item.name}" عالسلة`);
+  };
+
+  const handleIncrement = () => {
+    const result = addItem(item, restaurantId, restaurantName);
+    if (result?.conflict) {
+      onConflict?.({ item, restaurantId, restaurantName });
+    }
+  };
+
+  const handleDecrement = () => {
+    updateQuantity(item.id, quantity - 1);
+    if (quantity - 1 <= 0) {
+      toast.success(`شلنا "${item.name}" من السلة`);
+    }
+  };
 
   return (
     <article
@@ -50,7 +85,7 @@ function MenuItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }) {
             <div className="flex items-center rounded-full bg-terra text-cream overflow-hidden shrink-0">
               <button
                 type="button"
-                onClick={onIncrement}
+                onClick={handleIncrement}
                 aria-label={`زِد كمية ${item.name}`}
                 className="w-11 h-11 flex items-center justify-center hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cream"
               >
@@ -64,7 +99,7 @@ function MenuItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }) {
               </span>
               <button
                 type="button"
-                onClick={onDecrement}
+                onClick={handleDecrement}
                 aria-label={`نقّص كمية ${item.name}`}
                 className="w-11 h-11 flex items-center justify-center hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cream"
               >
@@ -74,7 +109,7 @@ function MenuItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }) {
           ) : (
             <button
               type="button"
-              onClick={isAvailable ? onAdd : undefined}
+              onClick={isAvailable ? handleAdd : undefined}
               disabled={!isAvailable}
               aria-disabled={!isAvailable}
               aria-label={`أضف ${item.name} إلى السلة`}
