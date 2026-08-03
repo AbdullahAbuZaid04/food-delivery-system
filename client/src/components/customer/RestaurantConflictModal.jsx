@@ -1,0 +1,128 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { TriangleAlert, X } from "lucide-react";
+
+/**
+ * RestaurantConflictModal — shown when addItem() returns `{ conflict: true }`
+ * (the cart already holds items from a different restaurant). The decision is
+ * left to the user: cancel (keep the current cart untouched) or empty the cart
+ * and add the pending item.
+ *
+ * Accessibility follows AGENTS.md §6/§7 (same pattern as the landing menu
+ * modal in MobileMenu): body scroll lock while open, focus moves into the
+ * dialog, Escape closes, Tab is trapped inside, and focus returns to the
+ * previously-focused element on close.
+ *
+ * @param {boolean} open
+ * @param {string} currentRestaurantName - restaurant already in the cart.
+ * @param {string} incomingRestaurantName - restaurant the user tried to add from.
+ * @param {() => void} onClose - cancel; cart stays untouched.
+ * @param {() => void} onConfirm - clear the cart and add the pending item.
+ */
+function RestaurantConflictModal({
+  open,
+  currentRestaurantName = "",
+  incomingRestaurantName = "",
+  onClose,
+  onConfirm,
+}) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previouslyFocused = document.activeElement;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusables = dialogRef.current?.querySelectorAll(
+        "button:not([disabled])",
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      if (previouslyFocused?.focus) previouslyFocused.focus();
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-cocoa/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="سلة فيها طلب من مطعم تاني"
+        tabIndex={-1}
+        className="relative w-full max-w-md rounded-[24px] bg-cream p-6 sm:p-7 shadow-[0_32px_64px_-32px_rgba(42,36,28,0.6)] outline-none animate-rise"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="إغلاق التنبيه"
+          className="absolute top-3 end-3 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-terra hover:bg-terra/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+        >
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
+
+        <span className="w-14 h-14 rounded-full bg-warning/15 text-warning flex items-center justify-center">
+          <TriangleAlert className="w-7 h-7" strokeWidth={1.8} aria-hidden="true" />
+        </span>
+
+        <h2 className="mt-5 font-display font-black text-[20px] sm:text-[22px] text-cocoa leading-snug">
+          طلبك الحالي من {currentRestaurantName}
+        </h2>
+        <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
+          إذا أضفت من {incomingRestaurantName} بتضيع طلبيتك الحالية. متأكد بدك
+          تكمل؟
+        </p>
+
+        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="h-12 flex-1 rounded-full bg-terra text-cream font-bold text-[15px] flex items-center justify-center shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+          >
+            أفرغ السلة وكمّل
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-12 flex-1 rounded-full border-2 border-clay/20 text-cocoa font-bold text-[15px] flex items-center justify-center hover:border-terra hover:text-terra transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default RestaurantConflictModal;

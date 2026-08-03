@@ -12,34 +12,28 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import BrandMark from "@components/ui/BrandMark";
+import { useCart } from "@context/CartContext";
 import { formatArabicCount, toArabicDigits } from "@lib/format";
 
 export const APP_HEADER_HEIGHT = 72;
-
-const MOCK_CART_COUNT = "٢";
 
 function AppHeader({
   userName,
   searchQuery,
   onSearchChange,
-  cartCount,
   showSearch = true,
 }) {
+  const { totalItems } = useCart();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const avatarButtonRef = useRef(null);
 
-  const hasLiveCart = typeof cartCount === "number";
-  const cartBadge = hasLiveCart
-    ? cartCount > 0
-      ? toArabicDigits(cartCount)
-      : null
-    : MOCK_CART_COUNT;
-  const cartLabel = hasLiveCart
-    ? cartCount > 0
-      ? `سلة الطلبات — فيك ${formatArabicCount(cartCount)}`
-      : "سلة الطلبات — فاضية"
-    : `سلة الطلبات — فيك ${MOCK_CART_COUNT} أصناف`;
+  // live badge from the shared cart — no more static mock count (AGENTS.md §11)
+  const cartBadge = totalItems > 0 ? toArabicDigits(totalItems) : null;
+  const cartLabel =
+    totalItems > 0
+      ? `سلة الطلبات — فيك ${formatArabicCount(totalItems)}`
+      : "سلة الطلبات — فاضية";
 
   const closeUserMenu = () => {
     setIsUserMenuOpen(false);
@@ -115,9 +109,9 @@ function AppHeader({
         ) : null}
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
+          <Link
+            href="/cart"
+            className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
             aria-label={cartLabel}
           >
             <ShoppingCart className="w-5 h-5" aria-hidden="true" />
@@ -129,7 +123,7 @@ function AppHeader({
                 {cartBadge}
               </span>
             ) : null}
-          </button>
+          </Link>
 
           <div className="relative" ref={userMenuRef}>
             <button
