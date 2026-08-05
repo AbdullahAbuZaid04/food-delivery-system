@@ -1,7 +1,7 @@
 const express = require("express");
 const authController = require("./auth.controller");
 const validate = require("../../middlewares/validate");
-const { registerSchema, loginSchema, addAddressSchema, updateAddressSchema } = require("./auth.schemas");
+const { registerSchema, loginSchema, refreshTokenSchema, addAddressSchema, updateAddressSchema } = require("./auth.schemas");
 const rateLimiter = require("../../middlewares/rateLimiter");
 const { authenticate } = require("../../middlewares/auth.middleware");
 
@@ -19,6 +19,13 @@ router.post(
   rateLimiter(15 * 60 * 1000, 10),
   validate(loginSchema),
   authController.login,
+);
+
+router.post(
+  "/refresh",
+  rateLimiter(15 * 60 * 1000, 10),
+  validate(refreshTokenSchema),
+  authController.refresh,
 );
 
 router.get("/profile", authenticate, authController.getProfile);

@@ -27,6 +27,10 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
+const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, "Refresh token is required."),
+});
+
 const addAddressSchema = z.object({
   label: z.string().trim().min(1, "Label is required."),
   city: z.string().trim().min(1, "City is required."),
@@ -52,6 +56,7 @@ const updateAddressSchema = z.object({
 module.exports = {
   registerSchema,
   loginSchema,
+  refreshTokenSchema,
   addAddressSchema,
   updateAddressSchema,
 };

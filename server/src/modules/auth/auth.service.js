@@ -1,5 +1,9 @@
 const bcrypt = require("bcrypt");
-const { generateToken, generateRefreshToken } = require("../../utils/jwt");
+const {
+  generateToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} = require("../../utils/jwt");
 
 const authRepository = require("./auth.repository");
 
@@ -108,6 +112,47 @@ const login = async (loginData) => {
   };
 };
 
+const refresh = async (refreshToken) => {
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new Error("Invalid refresh token.");
+  }
+
+  const user = await authRepository.findUserById(decoded.id);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new Error("Account is not active.");
+  }
+
+  const tokenPayload = {
+    id: user.id,
+    role: user.role.name,
+    email: user.email,
+  };
+
+  const token = generateToken(tokenPayload);
+  const newRefreshToken = generateRefreshToken(tokenPayload);
+
+  return {
+    user: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role.name,
+    },
+    token,
+    refreshToken: newRefreshToken,
+  };
+};
+
 const getProfile = async (userId) => {
   const user = await authRepository.findUserById(userId);
 
@@ -166,6 +211,7 @@ const updateAddress = async (userId, addressId, addressData) => {
 module.exports = {
   register,
   login,
+  refresh,
   getProfile,
   addAddress,
   deleteAddress,
