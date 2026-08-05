@@ -100,6 +100,10 @@ const getOrderById = async (orderId, userId, role) => {
     }
   }
 
+  if (role === "DRIVER" && order.driverId !== userId) {
+    throw new Error("Access denied.");
+  }
+
   return order;
 };
 
@@ -172,6 +176,23 @@ const assignDriver = async (orderId, ownerId, driverId) => {
   return await orderRepository.assignDriver(orderId, driverId);
 };
 
+const cancelOrder = async (orderId, customerId) => {
+  const order = await orderRepository.findOrderById(orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  if (order.customerId !== customerId) {
+    throw new Error("Access denied.");
+  }
+
+  if (order.status !== "PENDING" && order.status !== "ACCEPTED") {
+    throw new Error(`Cannot cancel order in ${order.status} status.`);
+  }
+
+  return await orderRepository.cancelOrder(orderId);
+};
+
 module.exports = {
   createOrder,
   getOrderById,
@@ -179,4 +200,5 @@ module.exports = {
   getRestaurantOrders,
   updateOrderStatus,
   assignDriver,
+  cancelOrder,
 };

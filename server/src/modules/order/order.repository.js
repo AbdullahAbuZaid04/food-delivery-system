@@ -22,11 +22,15 @@ const createOrder = async (data) => {
           notes: item.notes,
         })),
       },
+      statusHistory: {
+        create: { status: "PENDING" },
+      },
     },
     include: {
       items: true,
       restaurant: { select: { id: true, name: true, phone: true } },
       address: true,
+      statusHistory: { orderBy: { changedAt: "asc" } },
     },
   });
 };
@@ -44,6 +48,7 @@ const findOrderById = async (id) => {
       },
       restaurant: { select: { id: true, name: true, phone: true } },
       address: true,
+      statusHistory: { orderBy: { changedAt: "asc" } },
     },
   });
 };
@@ -111,30 +116,74 @@ const findOrdersByRestaurantId = async (restaurantId, page = 1, limit = 10) => {
 };
 
 const updateOrderStatus = async (id, status) => {
-  return await prisma.order.update({
-    where: { id },
-    data: { status },
-    include: {
-      items: true,
-      restaurant: { select: { id: true, name: true } },
-    },
+  return await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    await tx.orderStatusHistory.create({
+      data: { orderId: id, status },
+    });
+
+    return await tx.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        restaurant: { select: { id: true, name: true } },
+        statusHistory: { orderBy: { changedAt: "asc" } },
+      },
+    });
   });
 };
 
 const assignDriver = async (id, driverId) => {
-  return await prisma.order.update({
-    where: { id },
-    data: {
-      driverId,
-      status: "ASSIGNED",
-    },
-    include: {
-      items: true,
-      driver: {
-        select: { id: true, firstName: true, lastName: true, phone: true },
+  return await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id },
+      data: {
+        driverId,
+        status: "ASSIGNED",
       },
-      restaurant: { select: { id: true, name: true } },
-    },
+    });
+
+    await tx.orderStatusHistory.create({
+      data: { orderId: id, status: "ASSIGNED" },
+    });
+
+    return await tx.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        driver: {
+          select: { id: true, firstName: true, lastName: true, phone: true },
+        },
+        restaurant: { select: { id: true, name: true } },
+        statusHistory: { orderBy: { changedAt: "asc" } },
+      },
+    });
+  });
+};
+
+const cancelOrder = async (id) => {
+  return await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id },
+      data: { status: "CANCELLED" },
+    });
+
+    await tx.orderStatusHistory.create({
+      data: { orderId: id, status: "CANCELLED" },
+    });
+
+    return await tx.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        restaurant: { select: { id: true, name: true } },
+        statusHistory: { orderBy: { changedAt: "asc" } },
+      },
+    });
   });
 };
 
@@ -145,4 +194,5 @@ module.exports = {
   findOrdersByRestaurantId,
   updateOrderStatus,
   assignDriver,
+  cancelOrder,
 };
