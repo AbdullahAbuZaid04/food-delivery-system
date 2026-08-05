@@ -34,6 +34,31 @@ const login = async (req, res) => {
   }
 };
 
+const refresh = async (req, res) => {
+  try {
+    const result = await authService.refresh(req.validatedData.refreshToken);
+
+    return res.status(200).json({
+      success: true,
+      message: "Tokens refreshed successfully.",
+      data: result,
+    });
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes("active")) {
+      return res.status(403).json({ success: false, message: error.message });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const getProfile = async (req, res) => {
   try {
     const profile = await authService.getProfile(req.user.id);
@@ -134,6 +159,7 @@ const updateAddress = async (req, res) => {
 module.exports = {
   register,
   login,
+  refresh,
   getProfile,
   logout,
   addAddress,

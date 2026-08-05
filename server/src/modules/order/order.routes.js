@@ -43,4 +43,6 @@ router.patch(
   orderController.assignDriver
 );
 
+router.patch("/:id/cancel", authorize("CUSTOMER"), orderController.cancelOrder);
+
 module.exports = router;

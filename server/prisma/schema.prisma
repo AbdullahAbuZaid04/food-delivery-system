@@ -292,8 +292,9 @@ model Order {
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
   address    Address    @relation(fields: [addressId], references: [id])
 
-  items  OrderItem[]
-  review Review?
+  items         OrderItem[]
+  review        Review?
+  statusHistory OrderStatusHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -301,6 +302,22 @@ model Order {
   @@index([customerId])
   @@index([restaurantId])
   @@index([driverId])
+  @@index([status])
+}
+
+//////////////////////////////////////////////////////
+// ORDER STATUS HISTORY
+//////////////////////////////////////////////////////
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  changedAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
   @@index([status])
 }
 
