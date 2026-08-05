@@ -24,6 +24,13 @@
 // - `courierName` / `courierPhone` — fake courier details, ONLY for orders with
 //   status "بالطريق"; null everywhere else (the tracking page shows the
 //   CourierInfoCard only then).
+// - `estimatedDeliveryAt` — expected arrival time (12-hour format, Arabic
+//   digits) shown on the tracking page for ACTIVE orders only (قيد التحضير /
+//   بالطريق); null for delivered/cancelled ones.
+// - `paymentMethod` / `paymentStatus` — read-only payment info. Method is always
+//   CASH for now (card is still a disabled checkout teaser, AGENTS.md §11);
+//   status is PENDING while the order is active, PAID once delivered, CANCELLED
+//   for cancelled orders.
 export const orders = [
   {
     id: "ord-1006",
@@ -55,6 +62,9 @@ export const orders = [
     ],
     courierName: null,
     courierPhone: null,
+    estimatedDeliveryAt: "2026-08-03T13:25:00",
+    paymentMethod: "CASH",
+    paymentStatus: "PENDING",
   },
   {
     id: "ord-1005",
@@ -85,6 +95,9 @@ export const orders = [
     ],
     courierName: "سامر أبو هاشم",
     courierPhone: "0597771234",
+    estimatedDeliveryAt: "2026-08-03T19:15:00",
+    paymentMethod: "CASH",
+    paymentStatus: "PENDING",
   },
   {
     id: "ord-1004",
@@ -116,6 +129,9 @@ export const orders = [
     ],
     courierName: null,
     courierPhone: null,
+    estimatedDeliveryAt: null,
+    paymentMethod: "CASH",
+    paymentStatus: "PAID",
   },
   {
     id: "ord-1003",
@@ -143,6 +159,9 @@ export const orders = [
     ],
     courierName: null,
     courierPhone: null,
+    estimatedDeliveryAt: null,
+    paymentMethod: "CASH",
+    paymentStatus: "PAID",
   },
   {
     id: "ord-1002",
@@ -169,6 +188,9 @@ export const orders = [
     ],
     courierName: null,
     courierPhone: null,
+    estimatedDeliveryAt: null,
+    paymentMethod: "CASH",
+    paymentStatus: "CANCELLED",
   },
   {
     id: "ord-1001",
@@ -200,5 +222,8 @@ export const orders = [
     ],
     courierName: null,
     courierPhone: null,
+    estimatedDeliveryAt: null,
+    paymentMethod: "CASH",
+    paymentStatus: "PAID",
   },
 ];

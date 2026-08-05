@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Lock, Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, PackageSearch } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import OrderSuccessHeader from "@components/checkout/OrderSuccessHeader";
@@ -113,21 +113,16 @@ function OrderConfirmationPage() {
         </div>
 
         <section className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-full border-2 border-dashed border-clay/25 bg-white/60 px-6 text-cocoa-soft font-bold text-[15px] cursor-not-allowed"
+          <Link
+            href={order.id ? `/orders/${order.id}` : "/orders"}
+            className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[15px] px-8 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
           >
-            <Lock className="w-4.5 h-4.5" aria-hidden="true" />
+            <PackageSearch className="w-5 h-5" aria-hidden="true" />
             تتبع طلبك
-            <span className="rounded-full bg-gold/20 text-gold px-2.5 py-0.5 text-[11.5px] font-bold">
-              قريبًا
-            </span>
-          </button>
+          </Link>
           <Link
             href="/home"
-            className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[15px] px-8 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+            className="inline-flex items-center justify-center gap-2 h-12 rounded-full border-2 border-clay/25 bg-white/60 px-8 text-cocoa font-bold text-[15px] hover:border-clay/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
           >
             ارجع للرئيسية
           </Link>

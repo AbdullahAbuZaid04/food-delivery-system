@@ -237,13 +237,19 @@ section on any page.
   (`src/lib/mock/orders.js` — 6 orders with static dates/timestamps anchored to
   the authoring day so the statically prerendered routes stay hydration-safe, no
   real API). The tracking page is a static snapshot — no real-time updates, the
-  shown status never changes live. The "اطلب نفس الطلبية" button only
-  `console.log`s the order id — later it should auto-fill `CartContext` with the
-  previous order's items and navigate to that restaurant's page (TODO comment in
-  `src/components/orders/OrderHistoryCard.jsx`). The "إلغاء الطلب" button (shown
-  only for "قيد التحضير") and the courier "اتصال" button on the tracking page are
-  disabled placeholders with a "قريبًا" badge — they need a real cancellation
-  API / courier call system. The "تواصل مع الدعم" button links to `/account` —
+  shown status never changes live; it does show a mock ETA + payment info for
+  active orders. A just-placed order (stored by checkout under
+  `wajba-last-order`) gets its own tracking id and renders the same shared screen
+  (`components/orders/OrderTrackingView.jsx`) via the client fallback
+  `components/orders/LastOrderTracking.jsx`, so the confirmation page's
+  "تتبع طلبك" link works end-to-end with mock data. The "اطلب نفس الطلبية" button
+  only `console.log`s the order id — later it should auto-fill `CartContext` with
+  the previous order's items and navigate to that restaurant's page (TODO comment
+  in `src/components/orders/OrderHistoryCard.jsx`). The courier "اتصال" button
+  opens the dialer via a `tel:` link to the mock courier phone (real courier
+  numbers come with the API). The "إلغاء الطلب" button (shown only for
+  "قيد التحضير") is still a disabled placeholder with a "قريبًا" badge — it
+  needs a real cancellation API. The "تواصل مع الدعم" button links to `/account` —
   the account screen now exists (see the account-phase note below); it currently
   has no visible support entry (the settings menu was removed — see below).
 - [ ] The account screen (`src/app/(customer)/account/`) is UI-only this phase:

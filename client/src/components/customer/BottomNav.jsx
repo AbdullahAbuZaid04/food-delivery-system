@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 import { Heart, House, ShoppingBag, UserRound } from "lucide-react";
 
 const items = [
@@ -60,6 +63,7 @@ function BottomNav({ activeKey = "home" }) {
             <button
               key={item.key}
               type="button"
+              onClick={() => toast("صفحة المفضلة هتتاح قريبًا")}
               aria-current={isActive ? "page" : undefined}
               className={className}
             >
