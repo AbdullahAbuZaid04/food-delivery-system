@@ -11,11 +11,14 @@ import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import { useCart } from "@context/CartContext";
 import { GAZA_AREAS } from "@lib/mock/gazaAreas";
 import { formatPrice } from "@lib/format";
+import { ORDER_PROGRESS_STEPS } from "@components/orders/OrderProgressSteps";
 
 const DELIVERY_FEE = 5;
 const MOCK_USER_NAME = "أحمد";
 const LAST_ORDER_KEY = "wajba-last-order";
 const CONFIRM_LOADING_MS = 800;
+// Mock ETA for a fresh order — 40 minutes out, matching the mock timeline pace.
+const ESTIMATED_DELIVERY_MS = 40 * 60 * 1000;
 
 function ConfirmOrderButton({ canSubmit, isSubmitting, className = "" }) {
   return (
@@ -67,9 +70,15 @@ function CheckoutPage() {
     if (!canSubmit) return;
 
     const areaName = GAZA_AREAS.find((item) => item.id === area)?.name ?? area;
+    const createdAt = new Date().toISOString();
+    // Fake but unique tracking id — must match the /orders/[id] route so the
+    // confirmation's "تتبع طلبك" link resolves to this stored order.
+    const id = `ord-${String(Date.now()).slice(-6)}`;
     const order = {
+      id,
       orderNumber: `WB-${String(Date.now()).slice(-6)}`,
-      createdAt: new Date().toISOString(),
+      createdAt,
+      status: "قيد التحضير",
       restaurantName,
       items,
       subtotal: totalPrice,
@@ -82,6 +91,20 @@ function CheckoutPage() {
       },
       phone: phone.trim(),
       paymentMethod,
+      paymentStatus: "PENDING",
+      estimatedDeliveryAt: new Date(
+        Date.now() + ESTIMATED_DELIVERY_MS,
+      ).toISOString(),
+      // New order = confirmed + being prepared (the tracking screen reads this
+      // timeline). Steps come from the shared ORDER_PROGRESS_STEPS list so the
+      // canonical journey stays single-sourced (AGENTS.md §12).
+      timeline: ORDER_PROGRESS_STEPS.map((step, index) => ({
+        step,
+        timestamp: index < 2 ? createdAt : null,
+        completed: index === 0,
+      })),
+      courierName: null,
+      courierPhone: null,
     };
 
     try {

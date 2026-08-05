@@ -66,8 +66,8 @@ function AppHeader({
     <header className="sticky top-0 z-50 w-full bg-cream/90 backdrop-blur-md border-b border-clay/10">
       <div className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 h-[72px] flex items-center justify-between gap-3">
         <Link
-          href="/"
-          aria-label="وجبة — الرجوع للصفحة الرئيسية"
+          href="/home"
+          aria-label="وجبة — الرجوع لصفحة المطاعم الرئيسية"
           className="flex items-center gap-2.5 text-terra shrink-0"
         >
           <BrandMark />

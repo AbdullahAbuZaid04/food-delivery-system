@@ -1,19 +1,19 @@
 // src/components/orders/CourierInfoCard.jsx
 // Small card for the active courier — rendered ONLY when the order is on the way
 // (courierName exists). Shows a circular avatar with the courier's first letter,
-// their name and role, plus a call button.
+// their name and role, plus a call button that opens the dialer via a `tel:`
+// link (phone numbers are LTR, AGENTS.md §5).
 //
-// The call button is a deliberate visual-only placeholder: it needs a real
-// call/contact system (or at least a verified phone number), which is out of
-// scope for this phase. It is `disabled` + `aria-disabled` and carries a visible
-// "قريبًا" badge + aria-describedby note so the disabled state is never
-// communicated by color alone (AGENTS.md §7).
+// If a courier has no phone number yet (mock/API gap), the button falls back to
+// the disabled "قريبًا" placeholder instead of a dead link — the disabled state
+// is still never communicated by color alone (AGENTS.md §7).
 import { Phone } from "lucide-react";
 
-export default function CourierInfoCard({ courierName }) {
+export default function CourierInfoCard({ courierName, courierPhone }) {
   if (!courierName) return null;
 
   const initial = courierName.trim().charAt(0) || "؟";
+  const canCall = Boolean(courierPhone);
 
   return (
     <section
@@ -42,27 +42,33 @@ export default function CourierInfoCard({ courierName }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        aria-label={`اتصال بالمندوب ${courierName} — قريبًا`}
-        aria-describedby="courier-call-note"
-        className="mt-4 inline-flex w-full h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay/25 bg-white/60 px-5 text-cocoa-soft font-bold text-[14px] cursor-not-allowed"
-      >
-        <Phone className="w-4.5 h-4.5" aria-hidden="true" />
-        اتصال
-        <span className="rounded-full bg-gold/20 text-gold px-2.5 py-0.5 text-[11.5px] font-bold">
-          قريبًا
-        </span>
-      </button>
-
-      <p
-        id="courier-call-note"
-        className="mt-2 text-center text-[12px] text-cocoa-soft"
-      >
-        خدمة الاتصال المباشر بالمندوب لسّا ما اشتغلت — هيجي قريبًا
-      </p>
+      {canCall ? (
+        <a
+          href={`tel:${courierPhone}`}
+          aria-label={`اتصال بالمندوب ${courierName}`}
+          className="mt-4 inline-flex w-full h-12 items-center justify-center gap-2 rounded-full bg-olive text-cream font-bold text-[14px] shadow-[0_12px_28px_-10px_rgba(58,68,41,0.6)] hover:bg-olive-deep transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/40"
+        >
+          <Phone className="w-4.5 h-4.5" aria-hidden="true" />
+          اتصال
+          <span dir="ltr" className="text-[12px] font-semibold opacity-90">
+            {courierPhone}
+          </span>
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          aria-label={`اتصال بالمندوب ${courierName} — قريبًا`}
+          className="mt-4 inline-flex w-full h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay/25 bg-white/60 px-5 text-cocoa-soft font-bold text-[14px] cursor-not-allowed"
+        >
+          <Phone className="w-4.5 h-4.5" aria-hidden="true" />
+          اتصال
+          <span className="rounded-full bg-gold/20 text-gold px-2.5 py-0.5 text-[11.5px] font-bold">
+            قريبًا
+          </span>
+        </button>
+      )}
     </section>
   );
 }

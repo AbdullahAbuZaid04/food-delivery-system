@@ -4,7 +4,7 @@
 // in-browser with local state + useMemo.
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppHeader from "@components/customer/AppHeader";
 import BottomNav from "@components/customer/BottomNav";
 import CategoryFilterBar from "@components/customer/CategoryFilterBar";
@@ -14,6 +14,8 @@ import { orders } from "@lib/mock/orders";
 import { toArabicDigits } from "@lib/format";
 
 const MOCK_USER_NAME = "أحمد";
+// Same key the checkout screen persists its just-placed order under.
+const LAST_ORDER_KEY = "wajba-last-order";
 
 const ORDER_TABS = ["الكل", "جارية", "سابقة"];
 
@@ -25,15 +27,51 @@ const STATUSES_BY_TAB = {
 
 function OrdersPage() {
   const [activeTab, setActiveTab] = useState("الكل");
+  // The order placed in this session (from localStorage) is merged on top of the
+  // static mock list so a brand-new order shows up here the same way it renders
+  // on the tracking page — read in a useEffect to stay hydration-safe (AGENTS.md §2).
+  const [extraOrders, setExtraOrders] = useState([]);
+
+  useEffect(() => {
+    let lastOrder = null;
+    try {
+      const raw = window.localStorage.getItem(LAST_ORDER_KEY);
+      if (raw) lastOrder = JSON.parse(raw);
+    } catch {}
+
+    if (!lastOrder || !lastOrder.id || !lastOrder.orderNumber) return;
+
+    // Normalize the checkout shape onto the mock-order shape OrderHistoryCard
+    // reads (date is derived from createdAt, deliveryArea from the address).
+    const normalized = {
+      id: lastOrder.id,
+      restaurantName: lastOrder.restaurantName,
+      status: lastOrder.status ?? "قيد التحضير",
+      date: (lastOrder.createdAt ?? "").slice(0, 10),
+      deliveryArea: lastOrder.address?.area ?? "",
+      items: (lastOrder.items ?? []).map((item) => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      total: lastOrder.total ?? 0,
+    };
+
+    // Same intentional localStorage-read pattern as CartContext /
+    // order-confirmation (AGENTS.md §2).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setExtraOrders([normalized]);
+  }, []);
 
   const visibleOrders = useMemo(() => {
     const statuses = STATUSES_BY_TAB[activeTab];
+    const all = [...extraOrders, ...orders];
     const filtered =
       statuses.length === 0
-        ? orders
-        : orders.filter((order) => statuses.includes(order.status));
+        ? all
+        : all.filter((order) => statuses.includes(order.status));
     return [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [activeTab]);
+  }, [activeTab, extraOrders]);
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">

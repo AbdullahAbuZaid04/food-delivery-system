@@ -7,35 +7,11 @@
 // "لم يصل بعد" hint instead (AGENTS.md §6: no info by color alone — text carries
 // the state too).
 //
-// The month-name array mirrors the one in @lib/format.js; it's kept local on
-// purpose so this read-only display doesn't grow format.js's API for a single
-// consumer. Arabic-Indic digits come from toArabicDigits (AGENTS.md §5).
+// Timestamp formatting (Arabic-Indic digits + Arabic month names, AGENTS.md §5)
+// is delegated to @lib/format's formatDateTime — one shared implementation for
+// every date/time display in the product.
 import { Clock } from "lucide-react";
-import { toArabicDigits } from "@lib/format";
-
-const ARABIC_MONTHS = [
-  "يناير",
-  "فبراير",
-  "مارس",
-  "أبريل",
-  "مايو",
-  "يونيو",
-  "يوليو",
-  "أغسطس",
-  "سبتمبر",
-  "أكتوبر",
-  "نوفمبر",
-  "ديسمبر",
-];
-
-function formatTimestamp(iso) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const period = date.getHours() >= 12 ? "م" : "ص";
-  const hour12 = date.getHours() % 12 || 12;
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${toArabicDigits(date.getDate())} ${ARABIC_MONTHS[date.getMonth()]} ${toArabicDigits(date.getFullYear())} · ${toArabicDigits(hour12)}:${toArabicDigits(minutes)} ${period}`;
-}
+import { formatDateTime } from "@lib/format";
 
 export default function OrderTimeline({ timeline = [] }) {
   if (!timeline.length) return null;
@@ -56,7 +32,7 @@ export default function OrderTimeline({ timeline = [] }) {
         {timeline.map((entry, index) => {
           const isLast = index === timeline.length - 1;
           const formatted = entry.timestamp
-            ? formatTimestamp(entry.timestamp)
+            ? formatDateTime(entry.timestamp)
             : null;
 
           return (

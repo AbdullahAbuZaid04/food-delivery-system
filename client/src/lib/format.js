@@ -41,3 +41,22 @@ export function formatOrderDate(isoDate) {
   if (daysDiff === 1) return "أمس";
   return `${toArabicDigits(date.getDate())} ${ARABIC_MONTHS[date.getMonth()]} ${toArabicDigits(date.getFullYear())}`;
 }
+
+// "18:47" → "٦:٤٧ م" — 12-hour clock with Arabic-Indic digits (AGENTS.md §5).
+// Used for delivery ETAs on the order-tracking screen.
+export function formatTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const period = date.getHours() >= 12 ? "م" : "ص";
+  const hour12 = date.getHours() % 12 || 12;
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${toArabicDigits(hour12)}:${toArabicDigits(minutes)} ${period}`;
+}
+
+// "2026-08-03T18:47:00" → "٣ أغسطس ٢٠٢٦ · ٦:٤٧ م". Full date + time for the
+// order-timeline rows (single source of truth for month names/time formatting).
+export function formatDateTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${toArabicDigits(date.getDate())} ${ARABIC_MONTHS[date.getMonth()]} ${toArabicDigits(date.getFullYear())} · ${formatTime(iso)}`;
+}
