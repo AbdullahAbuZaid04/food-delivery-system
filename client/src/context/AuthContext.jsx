@@ -19,19 +19,12 @@ import { getAccessToken, setUnauthorizedHandler } from "@lib/api/client";
 // pattern as CartContext). When the API client's refresh flow fails it calls
 // the handler registered via setUnauthorizedHandler, and we drop to
 // "unauthenticated" so the UI re-renders logged-out.
+//
+// Any authenticated role (CUSTOMER/DRIVER/OWNER/ADMIN) is kept in the session
+// here. Route groups guard themselves by role: the customer app redirects
+// non-customers, and the owner dashboard requires OWNER.
 
 const AuthContext = createContext(null);
-
-// This client is the CUSTOMER app. Drivers, restaurant owners, and admins have
-// their own dashboards (future phases) — a non-CUSTOMER session must never
-// land inside the ordering UI, otherwise a driver would see the cart/menu and
-// only fail with 403 when the API rejects them at checkout.
-function isCustomerSession(user) {
-  return user?.role === "CUSTOMER";
-}
-
-const NON_CUSTOMER_MESSAGE =
-  "هالتطبيق للزبائن بس — حسابك إله لوحة تحكم خاصة (سائق/مالك مطعم). سجّل دخولك بحساب زبون.";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -48,14 +41,6 @@ export function AuthProvider({ children }) {
       try {
         const profile = await authApi.getProfile();
         if (!active) return;
-        if (!isCustomerSession(profile)) {
-          // A driver/owner/admin token must not restore a customer session —
-          // drop it so every customer screen redirects to /login.
-          await authApi.logout();
-          setUser(null);
-          setStatus("unauthenticated");
-          return;
-        }
         setUser(profile);
         setStatus("authenticated");
       } catch {
@@ -80,10 +65,6 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const loggedInUser = await authApi.login(email, password);
-    if (!isCustomerSession(loggedInUser)) {
-      await authApi.logout();
-      throw new Error(NON_CUSTOMER_MESSAGE);
-    }
     setUser(loggedInUser);
     setStatus("authenticated");
     return loggedInUser;
@@ -91,10 +72,6 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const newUser = await authApi.register(payload);
-    if (!isCustomerSession(newUser)) {
-      await authApi.logout();
-      throw new Error(NON_CUSTOMER_MESSAGE);
-    }
     setUser(newUser);
     setStatus("authenticated");
     return newUser;
@@ -112,9 +89,6 @@ export function AuthProvider({ children }) {
 
   const updateUser = useCallback(async (payload) => {
     const updated = await authApi.updateProfile(payload);
-    if (!isCustomerSession(updated)) {
-      throw new Error(NON_CUSTOMER_MESSAGE);
-    }
     setUser(updated);
     return updated;
   }, []);
@@ -125,6 +99,7 @@ export function AuthProvider({ children }) {
       status,
       isAuthenticated: status === "authenticated",
       isReady: status !== "loading",
+      role: user?.role ?? null,
       login,
       register,
       logout,
