@@ -1,61 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, MapPin, PackageSearch } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import OrderSuccessHeader from "@components/checkout/OrderSuccessHeader";
 import OrderProgressSteps from "@components/checkout/OrderProgressSteps";
+import { getOrderById } from "@lib/api/orders";
+import { orderToConfirm } from "@lib/api/presenters";
+import { useAuth } from "@context/AuthContext";
 
-const LAST_ORDER_KEY = "wajba-last-order";
-const MOCK_USER_NAME = "أحمد";
+function ConfirmationShell() {
+  const { user } = useAuth();
+  const userName = user?.firstName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : "";
 
-function OrderConfirmationPage() {
+  return (
+    <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
+      <AppHeader userName={userName} showSearch={false} />
+      <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-16">
+        <div className="mt-10 md:mt-12 min-h-[320px] flex flex-col items-center justify-center rounded-[24px] border border-dashed border-clay/25 bg-cream-deep/60 px-6 py-14 text-center">
+          <span className="w-14 h-14 rounded-full bg-terra/10 flex items-center justify-center">
+            <Loader2
+              className="w-7 h-7 text-terra animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+          </span>
+          <p
+            role="status"
+            className="mt-4 font-display font-semibold text-[15px] text-cocoa"
+          >
+            عم نقرا تفاصيل طلبك…
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function OrderConfirmationContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    let storedOrder = null;
-    try {
-      const raw = window.localStorage.getItem(LAST_ORDER_KEY);
-      if (raw) storedOrder = JSON.parse(raw);
-    } catch {}
+  const orderId = searchParams.get("order");
 
-    if (!storedOrder || !storedOrder.orderNumber) {
+  const loadOrder = useCallback(async () => {
+    if (!orderId) {
       router.replace("/home");
       return;
     }
+    setIsReady(false);
+    setOrder(null);
+    try {
+      const detail = await getOrderById(orderId);
+      setOrder(orderToConfirm(detail));
+    } catch {
+      router.replace("/home");
+    } finally {
+      setIsReady(true);
+    }
+  }, [orderId, router]);
 
+  useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOrder(storedOrder);
-    setIsReady(true);
-  }, [router]);
+    loadOrder();
+  }, [loadOrder]);
+
+  const userName = user?.firstName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : "";
 
   if (!isReady || !order) {
-    return (
-      <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-        <AppHeader userName={MOCK_USER_NAME} showSearch={false} />
-        <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-16">
-          <div className="mt-10 md:mt-12 min-h-[320px] flex flex-col items-center justify-center rounded-[24px] border border-dashed border-clay/25 bg-cream-deep/60 px-6 py-14 text-center">
-            <span className="w-14 h-14 rounded-full bg-terra/10 flex items-center justify-center">
-              <Loader2
-                className="w-7 h-7 text-terra animate-spin motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-            </span>
-            <p
-              role="status"
-              className="mt-4 font-display font-semibold text-[15px] text-cocoa"
-            >
-              عم نقرا تفاصيل طلبك…
-            </p>
-          </div>
-        </main>
-      </div>
-    );
+    return <ConfirmationShell />;
   }
 
   const addressLine = [order.address?.area, order.address?.neighborhood]
@@ -64,7 +86,7 @@ function OrderConfirmationPage() {
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-      <AppHeader userName={MOCK_USER_NAME} showSearch={false} />
+      <AppHeader userName={userName} showSearch={false} />
 
       <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-8 md:pt-12 pb-16">
         <OrderSuccessHeader orderNumber={order.orderNumber} />
@@ -132,4 +154,10 @@ function OrderConfirmationPage() {
   );
 }
 
-export default OrderConfirmationPage;
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={<ConfirmationShell />}>
+      <OrderConfirmationContent />
+    </Suspense>
+  );
+}

@@ -3,17 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { ChevronRight, Lock, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import AppHeader from "@components/customer/AppHeader";
 import { useCart } from "@context/CartContext";
+import { useAuth } from "@context/AuthContext";
 import { formatArabicCount, formatPrice, toArabicDigits } from "@lib/format";
+import { DEFAULT_MEAL_IMAGE } from "@lib/api/presenters";
 
-/**
- * EmptyCart — empty-state block for the cart page, mirrors the EmptyState
- * styling used on the home screen (AGENTS.md §6) with a cart icon and a
- * "شوف المطاعم" action pointing back to /home.
- */
 function EmptyCart() {
   return (
     <section className="mt-10 md:mt-12 min-h-[320px] flex flex-col items-center justify-center rounded-[24px] border border-dashed border-clay/25 bg-cream-deep/60 px-6 py-14 text-center">
@@ -40,11 +37,6 @@ function EmptyCart() {
   );
 }
 
-/**
- * ClearCartDialog — simple confirmation before emptying the whole cart
- * (AGENTS.md §7: Escape, focus trap, scroll lock, focus restore). Colocated
- * here because it's only used by the cart page.
- */
 function ClearCartDialog({ open, restaurantName, itemCount, onClose, onConfirm }) {
   const dialogRef = useRef(null);
 
@@ -149,7 +141,7 @@ function CartItemRow({ entry, onIncrement, onDecrement }) {
     <li className="flex items-center gap-3 sm:gap-4 rounded-[24px] border border-clay/10 bg-cream-deep p-3 sm:p-4">
       <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl overflow-hidden border border-clay/10 bg-cream">
         <Image
-          src={entry.image}
+          src={entry.image || DEFAULT_MEAL_IMAGE}
           alt={entry.name}
           fill
           sizes="(max-width: 640px) 64px, 80px"
@@ -192,15 +184,24 @@ function CartItemRow({ entry, onIncrement, onDecrement }) {
 }
 
 function CartPage() {
+  const { user, status } = useAuth();
   const {
     restaurantName,
     items,
     totalItems,
     totalPrice,
+    deliveryFee,
     updateQuantity,
     clearCart,
   } = useCart();
   const [isClearOpen, setIsClearOpen] = useState(false);
+
+  const userName = user?.firstName
+    ? `${user.firstName} ${user.lastName}`.trim()
+    : "";
+
+  const isGuest = !user;
+  const isAuthLoading = status === "loading";
 
   const handleIncrement = (entry) => {
     updateQuantity(entry.menuItemId, entry.quantity + 1);
@@ -222,7 +223,7 @@ function CartPage() {
   if (items.length === 0) {
     return (
       <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-        <AppHeader userName="أحمد" showSearch={false} />
+        <AppHeader userName={userName} showSearch={false} />
         <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-16">
           <EmptyCart />
         </main>
@@ -232,7 +233,7 @@ function CartPage() {
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-      <AppHeader userName="أحمد" showSearch={false} />
+      <AppHeader userName={userName} showSearch={false} />
 
       <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-16">
         <header className="flex flex-wrap items-start justify-between gap-3">
@@ -276,22 +277,74 @@ function CartPage() {
           </div>
 
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-clay/10 pt-3">
+            <span className="text-cocoa-soft text-[14.5px]">المجموع الفرعي</span>
+            <span className="font-bold text-cocoa">{formatPrice(totalPrice)}</span>
+          </div>
+
+          {deliveryFee > 0 ? (
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-cocoa-soft text-[14.5px]">رسوم التوصيل</span>
+              <span className="font-bold text-cocoa">
+                {formatPrice(deliveryFee)}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-clay/10 pt-3">
             <span className="text-cocoa-soft text-[14.5px]">السعر الإجمالي</span>
             <span className="font-display font-black text-[20px] text-terra">
-              {formatPrice(totalPrice)}
+              {formatPrice(totalPrice + (deliveryFee || 0))}
             </span>
           </div>
 
-          <Link
-            href="/checkout"
-            className="mt-6 w-full h-14 rounded-full bg-terra text-cream font-bold text-[16px] flex items-center justify-center gap-2 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-          >
-            <ChevronRight className="w-5 h-5" aria-hidden="true" />
-            أكمل الطلب
-          </Link>
-          <p className="mt-2 text-center text-[12.5px] text-cocoa-soft">
-            خطوة وحدة: عنوانك + طريقة الدفع
-          </p>
+          {isAuthLoading ? null : isGuest ? (
+            <div className="mt-6" role="alert">
+              <div className="rounded-2xl border-2 border-warning/50 bg-warning/10 p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <span className="w-10 h-10 rounded-full bg-warning/20 text-warning flex items-center justify-center shrink-0">
+                    <Lock className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="font-display font-bold text-[15px] text-cocoa">
+                      إكمال الطلب متوقف هلق
+                    </p>
+                    <p className="mt-1 text-[13.5px] text-cocoa-soft leading-relaxed">
+                      أنت دخّلت من غير حساب، وعشان تكمّل خطوة الدفع لازم تسجّل
+                      دخولك الأول. سلتك رح تفضل محفوظة عندك.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col sm:flex-row-reverse gap-3">
+                  <Link
+                    href="/login?next=/cart"
+                    className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-terra text-cream font-bold text-[15px] shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+                  >
+                    تسجيل الدخول
+                  </Link>
+                  <Link
+                    href="/register?next=/cart"
+                    className="inline-flex h-12 flex-1 items-center justify-center rounded-full border-2 border-clay/20 text-cocoa font-bold text-[15px] hover:border-terra hover:text-terra transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+                  >
+                    إنشاء حساب
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : isAuthLoading ? null : (
+            <>
+              <Link
+                href="/checkout"
+                className="mt-6 w-full h-14 rounded-full bg-terra text-cream font-bold text-[16px] flex items-center justify-center gap-2 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+              >
+                <ChevronRight className="w-5 h-5" aria-hidden="true" />
+                أكمل الطلب
+              </Link>
+              <p className="mt-2 text-center text-[12.5px] text-cocoa-soft">
+                خطوة وحدة: عنوانك + طريقة الدفع
+              </p>
+            </>
+          )}
         </section>
       </main>
 
