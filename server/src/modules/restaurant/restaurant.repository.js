@@ -8,6 +8,7 @@ const createRestaurant = async (data) => {
       description: data.description,
       phone: data.phone,
       email: data.email,
+      cuisine: data.cuisine,
       logoUrl: data.logoUrl,
       coverImageUrl: data.coverImageUrl,
       deliveryFee: data.deliveryFee,
@@ -62,7 +63,7 @@ const findRestaurantById = async (id) => {
 };
 
 const findRestaurantBySlug = async (slug) => {
-  return await prisma.restaurant.findFirst({
+  const restaurant = await prisma.restaurant.findFirst({
     where: { slug, deletedAt: null },
     include: {
       owner: {
@@ -72,6 +73,20 @@ const findRestaurantBySlug = async (slug) => {
       _count: { select: { categories: true, meals: true, reviews: true } },
     },
   });
+  if (!restaurant) return null;
+
+  // Same rating merge as findAllRestaurants — the detail screen (restaurant
+  // header) needs the real average rating, not "جديد" whenever reviews exist.
+  const ratingRows = await prisma.review.groupBy({
+    by: ["restaurantId"],
+    where: { restaurantId: restaurant.id },
+    _avg: { rating: true },
+  });
+
+  return {
+    ...restaurant,
+    rating: ratingRows[0]?._avg.rating ?? null,
+  };
 };
 
 const findAllRestaurants = async (page = 1, limit = 10, search = "") => {
@@ -87,7 +102,7 @@ const findAllRestaurants = async (page = 1, limit = 10, search = "") => {
       : {}),
   };
 
-  const [restaurants, total] = await Promise.all([
+  const [restaurants, total, allIds] = await Promise.all([
     prisma.restaurant.findMany({
       where,
       include: {
@@ -99,10 +114,48 @@ const findAllRestaurants = async (page = 1, limit = 10, search = "") => {
       orderBy: { createdAt: "desc" },
     }),
     prisma.restaurant.count({ where }),
+    prisma.restaurant.findMany({ where, select: { id: true } }),
   ]);
 
+  const ratingRows = await prisma.review.groupBy({
+    by: ["restaurantId"],
+    where: { restaurantId: { in: allIds.map((item) => item.id) } },
+    _avg: { rating: true },
+  });
+
+  // Merge each restaurant's average review rating onto its row so the customer
+  // app can show ratings on the cards without an extra N+1 query per restaurant.
+  const ratingById = new Map(
+    ratingRows.map((row) => [row.restaurantId, row._avg.rating]),
+  );
+
+  // A few meal names per restaurant (up to 3) for the card "الأطباق" chips —
+  // one query for all listed restaurants, no N+1.
+  const mealRows = await prisma.meal.findMany({
+    where: {
+      restaurantId: { in: allIds.map((item) => item.id) },
+      deletedAt: null,
+      status: "AVAILABLE",
+    },
+    select: { restaurantId: true, name: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const dishesById = new Map();
+  for (const row of mealRows) {
+    const list = dishesById.get(row.restaurantId) ?? [];
+    if (list.length < 3) {
+      list.push(row.name);
+      dishesById.set(row.restaurantId, list);
+    }
+  }
+
   return {
-    restaurants,
+    restaurants: restaurants.map((restaurant) => ({
+      ...restaurant,
+      rating: ratingById.get(restaurant.id) ?? null,
+      dishes: dishesById.get(restaurant.id) ?? [],
+    })),
     pagination: {
       page,
       limit,
