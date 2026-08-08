@@ -1,30 +1,15 @@
-// src/components/orders/OrderTrackingView.jsx
-// Full per-order tracking screen, shared by two entry points so the layout is
-// defined ONCE (AGENTS.md §3/§12):
-//  - the static /orders/[id] route for the 6 mock orders, and
-//  - a just-placed order stored in localStorage by the checkout screen, whose
-//    route falls back to <LastOrderTracking/>, which reads the same storage and
-//    renders this view with the exact same props shape.
-// Pure presentational component (no hooks) — safe to render from both a Server
-// Component and a Client Component.
-//
-// Layout (all read-only except the two placeholder actions at the bottom):
-// header (restaurant + order # + ETA for active orders + status badge) →
-// OrderProgressSteps summary → CourierInfoCard (only when the order is
-// "بالطريق") → OrderTimeline details → read-only delivery address + payment
-// info → OrderSummaryCard → disabled "إلغاء الطلب" (only for "قيد التحضير") +
-// "تواصل مع الدعم" link.
+"use client";
+
 import Link from "next/link";
-import { ChevronRight, Clock, Headset, Lock, MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Ban, ChevronRight, Clock, MapPin, X } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import OrderProgressSteps from "@components/orders/OrderProgressSteps";
 import CourierInfoCard from "@components/orders/CourierInfoCard";
 import OrderTimeline from "@components/orders/OrderTimeline";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
-import { formatTime, toArabicDigits } from "@lib/format";
-
-const MOCK_USER_NAME = "أحمد";
+import { formatTime } from "@lib/format";
 
 const PAYMENT_METHOD_LABELS = {
   CASH: "كاش عند الاستلام",
@@ -37,18 +22,182 @@ const PAYMENT_STATUS_LABELS = {
   CANCELLED: "أُلغي",
 };
 
-// ETA is only meaningful while the order is still moving toward the customer.
 const ACTIVE_STATUSES = new Set(["قيد التحضير", "بالطريق"]);
 
-export default function OrderTrackingView({ order }) {
+function CancelOrderModal({
+  open,
+  orderNumber,
+  isCancelling,
+  error,
+  onClose,
+  onConfirm,
+}) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusables = dialogRef.current?.querySelectorAll(
+        "button:not([disabled])",
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      if (previouslyFocused?.focus) previouslyFocused.focus();
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-cocoa/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-label="تأكيد إلغاء الطلب"
+        tabIndex={-1}
+        className="relative w-full max-w-md rounded-[24px] bg-cream p-6 sm:p-7 shadow-[0_32px_64px_-32px_rgba(42,36,28,0.6)] outline-none animate-rise"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="إغلاق التنبيه"
+          className="absolute top-3 end-3 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-error hover:bg-error/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+        >
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
+
+        <span className="w-14 h-14 rounded-full bg-error/15 text-error flex items-center justify-center">
+          <Ban className="w-7 h-7" strokeWidth={1.8} aria-hidden="true" />
+        </span>
+
+        <h2 className="mt-5 font-display font-black text-[20px] sm:text-[22px] text-cocoa leading-snug">
+          إلغاء الطلب؟
+        </h2>
+        <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
+          متأكد تريد إلغاء طلبك رقم{" "}
+          <span dir="ltr" className="inline-block">
+            #{orderNumber}
+          </span>
+          ؟ هالإجراء ما رح يترجع.
+        </p>
+
+        {error ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-2xl border border-error/20 bg-error/10 px-4 py-3 text-[13.5px] font-semibold text-error leading-relaxed"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isCancelling}
+            className="h-12 flex-1 rounded-full bg-error text-cream font-bold text-[15px] flex items-center justify-center shadow-[0_12px_28px_-10px_rgba(220,38,38,0.7)] hover:bg-error/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isCancelling ? "عم نلغي..." : "نعم، ألغِ الطلب"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isCancelling}
+            className="h-12 flex-1 rounded-full border-2 border-clay/20 text-cocoa font-bold text-[15px] flex items-center justify-center hover:border-terra hover:text-terra transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+          >
+            لا، رجّع
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CancelOrderControl({ onCancel, orderNumber }) {
+  const [open, setOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [error, setError] = useState("");
+
+  const close = () => {
+    setOpen(false);
+    setError("");
+  };
+
+  const confirmCancel = async () => {
+    setIsCancelling(true);
+    setError("");
+    try {
+      await onCancel();
+      setOpen(false);
+    } catch (err) {
+      setError(err?.message || "صارت مشكلة في إلغاء الطلب، جرب مرة تانية.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-error/30 bg-white px-6 text-error font-bold text-[15px] hover:border-error hover:bg-error/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+      >
+        إلغاء الطلب
+      </button>
+
+      <CancelOrderModal
+        open={open}
+        orderNumber={orderNumber}
+        isCancelling={isCancelling}
+        error={error}
+        onClose={close}
+        onConfirm={confirmCancel}
+      />
+    </>
+  );
+}
+
+export default function OrderTrackingView({ order, userName = "", onCancel }) {
   const subtotal = (order.items ?? []).reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
   const deliveryFee = order.total - subtotal;
   const isCancelled = order.status === "ملغي";
-  // "ord-1006" → "#١٠٠٦" — digits are Arabic-Indic, never Latin (AGENTS.md §5).
-  const orderNumber = toArabicDigits(String(order.id).replace(/\D/g, ""));
+  const orderNumber = order.orderNumber
+    ? order.orderNumber
+    : String(order.id).replace(/\D/g, "");
   const showEta =
     ACTIVE_STATUSES.has(order.status) && Boolean(order.estimatedDeliveryAt);
   const showPayment = !isCancelled;
@@ -59,7 +208,7 @@ export default function OrderTrackingView({ order }) {
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-      <AppHeader userName={MOCK_USER_NAME} showSearch={false} />
+      <AppHeader userName={userName} showSearch={false} />
 
       <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-20 md:pb-0">
         <Link
@@ -76,7 +225,10 @@ export default function OrderTrackingView({ order }) {
               {order.restaurantName}
             </h1>
             <p className="mt-1 text-[14px] text-cocoa-soft">
-              رقم الطلب #{orderNumber}
+              رقم الطلب{" "}
+              <span dir="ltr" className="inline-block">
+                #{orderNumber}
+              </span>
             </p>
             {showEta ? (
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-3 py-1.5 text-[13px] font-bold text-olive-deep">
@@ -112,7 +264,10 @@ export default function OrderTrackingView({ order }) {
                 id="delivery-address-title"
                 className="flex items-center gap-2 font-display font-bold text-[17px] text-cocoa"
               >
-                <MapPin className="w-5 h-5 text-terra shrink-0" aria-hidden="true" />
+                <MapPin
+                  className="w-5 h-5 text-terra shrink-0"
+                  aria-hidden="true"
+                />
                 عنوان التوصيل
               </h2>
 
@@ -124,7 +279,9 @@ export default function OrderTrackingView({ order }) {
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[13.5px] text-cocoa-soft">الحي / الشارع</dt>
+                  <dt className="text-[13.5px] text-cocoa-soft">
+                    الحي / الشارع
+                  </dt>
                   <dd className="text-end text-[14px] font-bold text-cocoa">
                     {order.deliveryAddress.street}
                   </dd>
@@ -144,13 +301,17 @@ export default function OrderTrackingView({ order }) {
                 {showPayment ? (
                   <>
                     <div className="flex items-center justify-between gap-3">
-                      <dt className="text-[13.5px] text-cocoa-soft">طريقة الدفع</dt>
+                      <dt className="text-[13.5px] text-cocoa-soft">
+                        طريقة الدفع
+                      </dt>
                       <dd className="text-[14px] font-bold text-cocoa">
                         {paymentMethodLabel}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <dt className="text-[13.5px] text-cocoa-soft">حالة الدفع</dt>
+                      <dt className="text-[13.5px] text-cocoa-soft">
+                        حالة الدفع
+                      </dt>
                       <dd
                         className={`text-[14px] font-bold ${
                           order.paymentStatus === "PAID"
@@ -165,6 +326,15 @@ export default function OrderTrackingView({ order }) {
                 ) : null}
               </dl>
             </section>
+
+            {order.status === "قيد التحضير" && onCancel ? (
+              <div className="flex justify-center pt-1">
+                <CancelOrderControl
+                  onCancel={onCancel}
+                  orderNumber={orderNumber}
+                />
+              </div>
+            ) : null}
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-[88px]">
@@ -177,32 +347,6 @@ export default function OrderTrackingView({ order }) {
             />
           </aside>
         </div>
-
-        <section className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
-          {order.status === "قيد التحضير" ? (
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              aria-label="إلغاء الطلب — قريبًا"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay/25 bg-white/60 px-6 text-cocoa-soft font-bold text-[15px] cursor-not-allowed"
-            >
-              <Lock className="w-4.5 h-4.5" aria-hidden="true" />
-              إلغاء الطلب
-              <span className="rounded-full bg-gold/20 text-gold px-2.5 py-0.5 text-[11.5px] font-bold">
-                قريبًا
-              </span>
-            </button>
-          ) : null}
-
-          <Link
-            href="/account"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-terra px-8 text-cream font-bold text-[15px] shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-          >
-            <Headset className="w-5 h-5" aria-hidden="true" />
-            تواصل مع الدعم
-          </Link>
-        </section>
       </main>
     </div>
   );

@@ -1,15 +1,3 @@
-// src/components/orders/OrderTimeline.jsx
-// Detailed vertical timeline of the order's journey — the expanded version of the
-// horizontal OrderProgressSteps summary (which stays a one-line glance up top).
-// Each row: a small dot (filled terra when completed, empty outline otherwise) +
-// a vertical connector running down to the next dot + the step name and its
-// timestamp beside it. Future steps have no timestamp yet and show a short
-// "لم يصل بعد" hint instead (AGENTS.md §6: no info by color alone — text carries
-// the state too).
-//
-// Timestamp formatting (Arabic-Indic digits + Arabic month names, AGENTS.md §5)
-// is delegated to @lib/format's formatDateTime — one shared implementation for
-// every date/time display in the product.
 import { Clock } from "lucide-react";
 import { formatDateTime } from "@lib/format";
 
