@@ -6,3 +6,5 @@ export * as categoryApi from "./categories";
 export * as mealApi from "./meals";
 export * as cartApi from "./cart";
 export * as orderApi from "./orders";
+export * as dashboardApi from "./dashboard";
+export * as reviewApi from "./reviews";
