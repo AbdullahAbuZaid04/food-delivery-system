@@ -29,6 +29,7 @@ const STORAGE_KEY = "wajba-cart";
 const EMPTY_CART = {
   restaurantId: null,
   restaurantName: null,
+  deliveryFee: 0,
   items: [],
 };
 
@@ -54,6 +55,7 @@ export function CartProvider({ children }) {
               parsed.items.length > 0 ? parsed.restaurantId ?? null : null,
             restaurantName:
               parsed.items.length > 0 ? parsed.restaurantName ?? null : null,
+            deliveryFee: Number(parsed.deliveryFee) || 0,
             items: parsed.items,
           });
         }
@@ -159,6 +161,13 @@ export function CartProvider({ children }) {
     setCart(EMPTY_CART);
   }, []);
 
+  const setDeliveryFee = useCallback((fee) => {
+    setCart((previous) => ({
+      ...previous,
+      deliveryFee: Number(fee) || 0,
+    }));
+  }, []);
+
   const totalItems = useMemo(
     () => cart.items.reduce((sum, entry) => sum + entry.quantity, 0),
     [cart.items],
@@ -173,6 +182,7 @@ export function CartProvider({ children }) {
     () => ({
       restaurantId: cart.restaurantId,
       restaurantName: cart.restaurantName,
+      deliveryFee: cart.deliveryFee,
       items: cart.items,
       totalItems,
       totalPrice,
@@ -181,6 +191,7 @@ export function CartProvider({ children }) {
       removeItem,
       updateQuantity,
       clearCart,
+      setDeliveryFee,
     }),
     [
       cart,
@@ -191,6 +202,7 @@ export function CartProvider({ children }) {
       removeItem,
       updateQuantity,
       clearCart,
+      setDeliveryFee,
     ],
   );
 
