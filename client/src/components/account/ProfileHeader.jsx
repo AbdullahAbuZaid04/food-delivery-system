@@ -1,31 +1,24 @@
-// src/components/account/ProfileHeader.jsx
-// بطاقة "حسابي" العلوية — أفاتار دائري كبير بنفس نمط أفاتار قائمة المستخدم
-// بـ AppHeader، مع الاسم والإيميل وتاريخ العضوية (بيشتق من createdAt بالشكل
-// نفسه اللي بترجعه استجابة GET /api/auth/profile). زر القلم بزاوية الأفاتار
-// بيفعّل وضع تعديل inline: الاسم الأول واسم العائلة ورقم الهاتف بيصيروا
-// AuthField قابلين للتعديل، و"احفظ" بيحدّث state محلي بس (بدون أي API)،
-// و"إلغاء" بيرجّع القيم الأصلية.
 "use client";
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Check, Pencil, X } from "lucide-react";
+import { Check, Loader2, Pencil, X } from "lucide-react";
 import AuthField from "@components/auth/AuthField";
 import { toArabicDigits } from "@lib/format";
 
-function ProfileHeader({ user }) {
+function ProfileHeader({ user, onSaved }) {
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
   const [phone, setPhone] = useState(user.phone);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [saveNote, setSaveNote] = useState("");
+  const [saveError, setSaveError] = useState("");
   const firstNameInputRef = useRef(null);
 
   const displayName = `${firstName} ${lastName}`.trim();
   const initial = firstName.trim().charAt(0) || "ز";
 
-  // "عضو من [سنة]" بيطلع من createdAt اللي بترجعها الـ API — سنة واحدة
-  // بأرقام عربية-هندية (AGENTS.md §5). لو التاريخ فاضي بنسكت عنها.
   const joinDate = new Date(user.createdAt);
   const joinedYear = Number.isNaN(joinDate.getTime())
     ? ""
@@ -33,6 +26,7 @@ function ProfileHeader({ user }) {
 
   const startEditing = () => {
     setSaveNote("");
+    setSaveError("");
     setIsEditing(true);
   };
 
@@ -42,21 +36,46 @@ function ProfileHeader({ user }) {
     setPhone(user.phone);
     setIsEditing(false);
     setSaveNote("");
+    setSaveError("");
   };
 
-  const saveEditing = () => {
-    setIsEditing(false);
-    setSaveNote("تم حفظ بياناتك");
+  const saveEditing = async () => {
+    const nextFirstName = firstName.trim();
+    const nextLastName = lastName.trim();
+    const nextPhone = phone.trim();
+
+    if (
+      nextFirstName === user.firstName &&
+      nextLastName === user.lastName &&
+      nextPhone === user.phone
+    ) {
+      setIsEditing(false);
+      setSaveNote("");
+      setSaveError("");
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      await onSaved({
+        firstName: nextFirstName,
+        lastName: nextLastName,
+        phone: nextPhone,
+      });
+      setIsEditing(false);
+      setSaveNote("تم حفظ بياناتك");
+    } catch (err) {
+      setSaveError(err?.message || "صارت مشكلة في حفظ بياناتك");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // لما بيفتح وضع التعديل، الفوكس بيمشي على أول حقل (الاسم الأول) عشان يبدأ
-  // يكتب مباشرة — نفس مبدأ نقل الفوكس لفتح أي overlay بالـ AGENTS.md §6/§7.
   useEffect(() => {
     if (isEditing) firstNameInputRef.current?.focus();
   }, [isEditing]);
 
-  // Escape بيلغي التعديل بدون حفظ — دعم كامل من الكيبورد (AGENTS.md §6).
-  // تفضيليًا مضمّن مباشرة هون عشان ما يعتمد على تابع متغيّر كل render.
   useEffect(() => {
     if (!isEditing) return;
     const onKeyDown = (event) => {
@@ -66,6 +85,7 @@ function ProfileHeader({ user }) {
         setPhone(user.phone);
         setIsEditing(false);
         setSaveNote("");
+        setSaveError("");
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -95,9 +115,6 @@ function ProfileHeader({ user }) {
               {initial}
             </span>
           )}
-          {/* زر القلم على زاوية الأفاتار — الإزاحة السالبة بسيطة (-bottom-1)
-              فوق أفاتار 80px وسط كارد فيه padding، فما في أي خطر فيضان على
-              أقل عرض 320px (AGENTS.md §8). */}
           <button
             type="button"
             onClick={isEditing ? cancelEditing : startEditing}
@@ -144,14 +161,28 @@ function ProfileHeader({ user }) {
               onChange={(event) => setPhone(event.target.value)}
             />
 
+            {saveError ? (
+              <p className="text-error text-[13px]" role="alert">
+                {saveError}
+              </p>
+            ) : null}
+
             <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
               <button
                 type="button"
                 onClick={saveEditing}
-                className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[14px] px-6 shadow-[0_10px_22px_-10px_rgba(184,74,38,0.9)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+                disabled={isSaving}
+                className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[14px] px-6 shadow-[0_10px_22px_-10px_rgba(184,74,38,0.9)] hover:bg-terra-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
               >
-                <Check className="w-4 h-4" aria-hidden="true" />
-                احفظ
+                {isSaving ? (
+                  <Loader2
+                    className="w-4 h-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Check className="w-4 h-4" aria-hidden="true" />
+                )}
+                {isSaving ? "عم نحفظ..." : "احفظ"}
               </button>
               <button
                 type="button"
