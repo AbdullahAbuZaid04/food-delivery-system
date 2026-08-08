@@ -137,6 +137,27 @@ const searchMeals = async (req, res) => {
   }
 };
 
+const updateAvailability = async (req, res) => {
+  try {
+    const meal = await mealService.updateAvailability(
+      req.user.id,
+      req.params.id,
+      req.validatedData.status,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal availability updated.",
+      data: meal,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createMeal,
   getMyMeals,
@@ -144,5 +165,6 @@ module.exports = {
   updateMeal,
   deleteMeal,
   toggleFeatured,
+  updateAvailability,
   searchMeals,
 };

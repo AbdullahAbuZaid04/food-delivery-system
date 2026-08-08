@@ -7,7 +7,7 @@ import {
   Store,
   UtensilsCrossed,
 } from "lucide-react";
-import { formatPrice, toArabicDigits } from "@lib/format";
+import { formatDateTime, formatPrice, toArabicDigits } from "@lib/format";
 
 // Presenters — convert API payloads (src/lib/api) into the presentation shapes
 // the existing UI components expect (RestaurantCard, RestaurantHeader,
@@ -64,13 +64,14 @@ function visualForCuisine(cuisine) {
 }
 
 // "4" / "4.6" → "٤" / "٤٫٦" (Arabic-Indic digits, AGENTS.md §5); no rating → "جديد".
-export function formatRating(rating) {
+// Pass `latin` (owner dashboard) to keep the digits Latin.
+export function formatRating(rating, latin = false) {
   if (rating === null || rating === undefined || rating === "") return "جديد";
   const value = Number(rating);
   if (Number.isNaN(value)) return "جديد";
   const rounded = Math.round(value * 10) / 10;
   const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  return toArabicDigits(text.replace(".", "٫"));
+  return latin ? text : toArabicDigits(text.replace(".", "٫"));
 }
 
 export function formatDeliveryFee(fee) {
@@ -280,4 +281,237 @@ export function orderToTracking(order) {
     paymentMethod: order.paymentMethod ?? "CASH",
     paymentStatus: order.paymentStatus ?? "PENDING",
   };
+}
+
+// ========================
+// OWNER DASHBOARD PRESENTERS
+// ========================
+
+// Granular status labels for the owner dashboard — unlike the customer app,
+// the owner sees every stage of the journey, not the collapsed buckets.
+export const OWNER_STATUS_LABELS = {
+  PENDING: "قيد الانتظار",
+  ACCEPTED: "تم القبول",
+  PREPARING: "قيد التحضير",
+  READY: "جاهز",
+  ASSIGNED: "تم تعيين سائق",
+  PICKED_UP: "استلمه السائق",
+  ON_THE_WAY: "بالطريق",
+  DELIVERED: "تم التوصيل",
+  CANCELLED: "ملغي",
+};
+
+export function ownerOrderStatusLabel(status) {
+  return OWNER_STATUS_LABELS[status] ?? status;
+}
+
+// Mirrors the server's validTransitions (order.service.js) so the owner UI
+// only offers legal next steps per status. READY is left empty on purpose:
+// the next step for a ready order is assigning a driver (order.service.js
+// requires status === "READY"), which the orders screen handles via a modal
+// rather than a plain status button.
+export const OWNER_STATUS_TRANSITIONS = {
+  PENDING: ["ACCEPTED", "CANCELLED"],
+  ACCEPTED: ["PREPARING", "CANCELLED"],
+  PREPARING: ["READY"],
+  READY: [],
+  ASSIGNED: ["PICKED_UP"],
+  PICKED_UP: ["ON_THE_WAY"],
+  ON_THE_WAY: ["DELIVERED"],
+};
+
+export function ownerNextActions(status) {
+  return OWNER_STATUS_TRANSITIONS[status] ?? [];
+}
+
+export const STATUS_ACTION_LABELS = {
+  ACCEPTED: "اقبل الطلب",
+  PREPARING: "ابدأ التحضير",
+  READY: "الطلب جاهز",
+  ASSIGNED: "تعيين سائق",
+  PICKED_UP: "استلمه السائق",
+  ON_THE_WAY: "عالطريق",
+  DELIVERED: "تم التوصيل",
+  CANCELLED: "إلغاء الطلب",
+};
+
+export const MEAL_STATUS_LABELS = {
+  AVAILABLE: "متاح",
+  OUT_OF_STOCK: "نفذ",
+  HIDDEN: "مخفي",
+};
+
+export const RESTAURANT_STATUS_LABELS = {
+  OPEN: "مفتوح",
+  CLOSED: "مغلق",
+  SUSPENDED: "معلّق",
+};
+
+export const PAYMENT_LABELS = {
+  CASH: "كاش عند الاستلام",
+  CARD: "بطاقة ائتمان",
+};
+
+// Server order → owner order card shape (orders list + dashboard recent rows).
+export function orderToOwnerCard(order) {
+  const address = order.address ?? {};
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    statusLabel: ownerOrderStatusLabel(order.status),
+    createdAt: order.createdAt,
+    customerName: order.customer
+      ? `${order.customer.firstName} ${order.customer.lastName}`
+      : "زبون",
+    customerPhone: order.customer?.phone ?? order.phone ?? "",
+    addressLine: [
+      address.label,
+      address.street,
+      address.building,
+      address.city,
+      address.details,
+    ]
+      .filter(Boolean)
+      .join("، "),
+    items: (order.items ?? []).map((item) => ({
+      name: item.mealName ?? item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice ?? item.price,
+    })),
+    itemCount: (order.items ?? []).reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    ),
+    subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    total: order.total,
+    paymentLabel: PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod,
+    notes: order.notes ?? "",
+    driverName: order.driver
+      ? `${order.driver.firstName} ${order.driver.lastName}`
+      : null,
+    driverPhone: order.driver?.phone ?? null,
+    nextActions: ownerNextActions(order.status),
+  };
+}
+
+// GET /dashboard → the view model for the overview screen.
+const ACTIVE_ORDER_STATUSES = [
+  "PENDING",
+  "ACCEPTED",
+  "PREPARING",
+  "READY",
+  "ASSIGNED",
+  "PICKED_UP",
+  "ON_THE_WAY",
+];
+
+export function dashboardToView(stats) {
+  const orders = stats.orders ?? {};
+  const revenue = stats.revenue ?? {};
+  const reviews = stats.reviews ?? {};
+  const ordersByStatus = stats.ordersByStatus ?? {};
+  return {
+    orders,
+    revenue,
+    reviews,
+    totalOrders: orders.total ?? 0,
+    totalRevenue: Number(revenue.total ?? 0),
+    averageRating: reviews.averageRating ?? null,
+    activeOrders: ACTIVE_ORDER_STATUSES.reduce(
+      (sum, status) => sum + (ordersByStatus[status] ?? 0),
+      0,
+    ),
+    ordersByStatus: Object.entries(ordersByStatus).map(([status, count]) => ({
+      status,
+      label: ownerOrderStatusLabel(status),
+      count,
+    })),
+    recentOrders: (stats.recentOrders ?? []).map((order) => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      statusLabel: ownerOrderStatusLabel(order.status),
+      customerName: order.customer
+        ? `${order.customer.firstName} ${order.customer.lastName}`
+        : "زبون",
+      itemNames: (order.items ?? [])
+        .map((item) => item.mealName)
+        .filter(Boolean),
+      itemCount: (order.items ?? []).reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0,
+      ),
+      createdAt: order.createdAt,
+    })),
+  };
+}
+
+// Server review → owner review card shape.
+export function reviewToOwnerCard(review) {
+  return {
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment ?? "",
+    customerName: review.customer
+      ? `${review.customer.firstName} ${review.customer.lastName}`
+      : "زبون",
+    createdAt: review.createdAt,
+  };
+}
+
+// Server restaurant → the settings/setup form state.
+export function restaurantToOwnerForm(restaurant) {
+  const address = restaurant.address ?? {};
+  return {
+    name: restaurant.name ?? "",
+    description: restaurant.description ?? "",
+    phone: restaurant.phone ?? "",
+    email: restaurant.email ?? "",
+    cuisine: restaurant.cuisine ?? "",
+    logoUrl: restaurant.logoUrl ?? "",
+    coverImageUrl: restaurant.coverImageUrl ?? "",
+    deliveryFee: restaurant.deliveryFee ?? 0,
+    minimumOrder: restaurant.minimumOrder ?? 0,
+    estimatedDeliveryTime: restaurant.estimatedDeliveryTime ?? 30,
+    address: {
+      label: address.label ?? "",
+      city: address.city ?? "",
+      street: address.street ?? "",
+      building: address.building ?? "",
+      details: address.details ?? "",
+    },
+  };
+}
+
+// The owner form state → the create/update payload the server expects. Optional
+// URL/string fields that are empty become undefined so zod's .optional() lets
+// them through (server defaults kick in where relevant).
+export function restaurantFormToPayload(form) {
+  return {
+    name: form.name.trim(),
+    description: form.description.trim() || undefined,
+    phone: form.phone.trim(),
+    email: form.email.trim() || undefined,
+    cuisine: form.cuisine.trim() || undefined,
+    logoUrl: form.logoUrl.trim() || undefined,
+    coverImageUrl: form.coverImageUrl.trim() || undefined,
+    deliveryFee: Number(form.deliveryFee) || 0,
+    minimumOrder: Number(form.minimumOrder) || 0,
+    estimatedDeliveryTime: Number(form.estimatedDeliveryTime) || undefined,
+    address: {
+      label: form.address.label.trim(),
+      city: form.address.city.trim(),
+      street: form.address.street.trim(),
+      building: form.address.building.trim() || undefined,
+      details: form.address.details.trim() || undefined,
+    },
+  };
+}
+
+// Re-export for reuse across the owner dashboard. The dashboard uses Latin
+// digits (AGENTS.md §5 dashboard exception), so formatDateTime runs in its
+// `latin` mode here.
+export function formatOwnerDateTime(iso) {
+  return formatDateTime(iso, true);
 }

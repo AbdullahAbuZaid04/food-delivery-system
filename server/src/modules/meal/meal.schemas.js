@@ -40,7 +40,12 @@ const updateMealSchema = z.object({
   isFeatured: z.boolean().optional(),
 });
 
+const updateMealAvailabilitySchema = z.object({
+  status: z.enum(["AVAILABLE", "OUT_OF_STOCK", "HIDDEN"]),
+});
+
 module.exports = {
   createMealSchema,
   updateMealSchema,
+  updateMealAvailabilitySchema,
 };

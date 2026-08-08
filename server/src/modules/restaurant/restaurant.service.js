@@ -109,6 +109,10 @@ const getRestaurantBySlug = async (slug) => {
   return restaurant;
 };
 
+const getDrivers = async () => {
+  return await restaurantRepository.findActiveDrivers();
+};
+
 module.exports = {
   createRestaurant,
   getMyRestaurant,
@@ -116,4 +120,5 @@ module.exports = {
   updateStatus,
   getAllRestaurants,
   getRestaurantBySlug,
+  getDrivers,
 };

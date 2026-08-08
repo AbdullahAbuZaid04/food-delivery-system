@@ -31,6 +31,10 @@ export default function LoginForm({ next }) {
       const data = new FormData(event.currentTarget);
       const user = await login(data.get("email"), data.get("password"));
       toast.success(`أهلًا ${user.firstName}!`);
+      if (user.role === "OWNER") {
+        router.push("/owner");
+        return;
+      }
       router.push(safeNextPath(next) || "/home");
     } catch (err) {
       setError(err.message || "تعذر تسجيل الدخول، حاول مرة تانية.");

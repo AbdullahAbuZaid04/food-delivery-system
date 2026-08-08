@@ -28,8 +28,7 @@ const createReview = async (req, res, next) => {
 
     if (
       error.message.includes("not found") ||
-      error.message.includes("delivered") ||
-      error.message.includes("not found")
+      error.message.includes("delivered")
     ) {
       return res.status(400).json({ success: false, message: error.message });
     }

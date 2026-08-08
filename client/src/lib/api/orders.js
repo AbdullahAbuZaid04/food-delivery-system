@@ -15,3 +15,15 @@ export async function getOrderById(orderId) {
 export async function cancelOrder(orderId) {
   return api.patch(`/orders/${orderId}/cancel`);
 }
+
+export async function getRestaurantOrders({ page = 1, limit = 20 } = {}) {
+  return api.get("/orders/restaurant/my", { params: { page, limit } });
+}
+
+export async function updateOrderStatus(orderId, status) {
+  return api.patch(`/orders/${orderId}/status`, { status });
+}
+
+export async function assignDriver(orderId, driverId) {
+  return api.patch(`/orders/${orderId}/assign`, { driverId });
+}

@@ -2,7 +2,7 @@ import AuthLayout from "@components/auth/AuthLayout";
 import LoginForm from "@components/auth/LoginForm";
 
 export const metadata = {
-  title: "تسجيل الدخول | وجبة",
+  title: "وجبة | تسجيل الدخول",
   description: "سجّل دخولك لحسابك بوجبة واطلب من مطاعمك المفضلة بغزة.",
 };
 

@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #e85d26;
-  --color-primary-light: #f4a261;
-  --color-primary-dark: #c24b1a;
+  /* CHANGED: owner dashboard generic tokens now mirror the warm customer
+     palette (AGENTS.md §4) — surface is cream-deep so dashboard blocks are
+     never white; inputs stay white via `bg-white` in OwnerFields.inputClass.
+     primary/primary-dark follow terra so CTAs match the customer app. */
+  --color-primary: #b84a26;
+  --color-primary-light: #cf7a4d;
+  --color-primary-dark: #98371a;
   --color-secondary: #1b4332;
   --color-secondary-light: #2d6a4f;
   --color-accent: #f4a261;
-  --color-surface: #ffffff;
-  --color-background: #fafaf5;
-  --color-foreground: #1a1a2e;
-  --color-muted: #6b7280;
-  --color-border: #e5e7eb;
+  --color-surface: #f4ead5;
+  --color-background: #fbf6ec;
+  --color-foreground: #2a241c;
+  --color-muted: #6e6255;
+  --color-border: #e3d5c0;
   --color-error: #dc2626;
   --color-success: #16a34a;
   --color-warning: #f59e0b;

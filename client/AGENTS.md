@@ -132,6 +132,12 @@ section on any page.
   LTR widgets).
 - All visible numbers use **Arabic-Indic digits** (٠١٢٣٤٥٦٧٨٩), not Latin digits —
   this applies to prices, order counts, ratings, dashboard stats, everywhere.
+  **Exception — owner dashboard**: `/owner/*` uses Latin digits for business data
+  (prices, quantities, order numbers, phone numbers, ratings) — decided by the
+  owner product decision for POS-style clarity. The shared formatters take a
+  `latin` flag rather than duplicating logic: `formatPrice(value, true)`,
+  `formatDateTime(iso, true)`, `formatRating(rating, true)`; `formatOwnerDateTime`
+  (presenters.js) already defaults to Latin.
 - Copy tone: warm, colloquial, Palestinian dialect (لهجة فلسطينية عامية), not
   formal MSA. This applies to every user-facing string in the product — error
   messages, empty states, button labels, confirmation emails — not just marketing
@@ -324,14 +330,77 @@ section on any page.
   avatar placeholder so signed-in users don't flash a login button. All pages
   pass `userName={user?.firstName}` (no `زائر` fallback) — see the header note
   in `components/customer/AppHeader.jsx`.
-- **Role guard — this client is the CUSTOMER app only**: `AuthContext` rejects
-  any non-CUSTOMER session (DRIVER/OWNER/ADMIN). `login`/`register` throw a
-  clear error ("هالتطبيق للزبائن بس…") and clear the tokens if the returned
-  user's role isn't `CUSTOMER`, and `restoreSession` drops a non-CUSTOMER
-  profile back to `unauthenticated`. So a driver logging into the customer app
-  never sees the cart/menu/checkout UI — the server's `authorize("CUSTOMER")`
-  was already the backstop (403), this makes the UI reject the session up
-  front. Driver/owner/admin dashboards are future phases, not this app.
+- **Role guard — this repo hosts BOTH the customer app and the owner
+  dashboard**: `AuthContext` keeps ANY authenticated role (CUSTOMER/DRIVER/
+  OWNER/ADMIN) in the session (`role` is exposed to callers). Route groups
+  self-guard instead of the context rejecting sessions: the customer group's
+  `CustomerGuard` lets any authenticated user browse the public storefront but
+  redirects non-customers (`user.role !== "CUSTOMER"`) away from customer-only
+  routes (cart/checkout/orders/account/order-confirmation) to `/owner`; the
+  owner dashboard shell (`components/owner/OwnerShell.jsx`) redirects
+  unauthenticated users to `/login?next=/owner` and non-OWNER users to `/home`.
+  `LoginForm` routes an OWNER session to `/owner` after login; every other role
+  follows `?next=` (default `/home`). The server's `authorize("OWNER")`/
+  `authorize("CUSTOMER")` remain the authorization backstop.
+- **Owner dashboard (`/owner/*`) — DONE (`feature/owner-dashboard`)**: routes
+  live under the `(dashboard)` route group → `src/app/(dashboard)/layout.js`
+  (metadata + `<OwnerShell>`) and `src/app/(dashboard)/owner/{,orders,menu,
+  reviews,settings}/page.js`. The group is a separate path namespace on
+  purpose: `(owner)` collided with `(customer)`'s `/orders`, so the dashboard
+  resolves to `/owner`, `/owner/orders`, `/owner/menu`, `/owner/reviews`,
+  `/owner/settings`. `OwnerShell` (sidebar + topbar + mobile drawer, auth-gated)
+  wraps the pages; `OwnerContext` owns the owner's restaurant (fetches
+  `GET /restaurants/owner/my`, exposes `restaurant`, `restaurantLoading`,
+  `restaurantError`, `reloadRestaurant`) and surfaces a setup form when no
+  restaurant exists yet — the create flow itself lives in
+  `RestaurantSetupForm` (`POST /restaurants` via `restaurantApi.createRestaurant`,
+  then `reloadRestaurant`), and edits/status live in `RestaurantSettingsForm`
+  (`restaurantApi.updateMyRestaurant` / `updateMyRestaurantStatus`). Screens: overview
+  (`GET /dashboard` → `dashboardToView`: orders/revenue/reviews totals +
+  orders-by-status + 5 recent orders), orders (`GET /orders/restaurant/my`,
+  `PATCH /orders/:id/status` for the legal transitions, and a driver-assign
+  **modal** — order.service.js requires status === "READY" before assigning, and
+  `PATCH /orders/:id/assign` moves the order to ASSIGNED, so READY orders show a
+  "تعيين سائق" button (via `GET /restaurants/owner/my/drivers`) and READY is
+  intentionally excluded from `OWNER_STATUS_TRANSITIONS`), menu
+  (`GET /categories/my` + `GET /meals/my`; category CRUD via
+  `POST|PUT|DELETE /categories`; meal create/edit/delete via
+  `POST|PUT|DELETE /meals`, `PATCH /meals/:id/feature`, and
+  `PATCH /meals/:id/availability` with `{ status }` ∈
+  AVAILABLE/OUT_OF_STOCK/HIDDEN), reviews (list from
+  `GET /reviews/restaurant/:id` — note this endpoint returns the reviews as a
+  bare array with `pagination` as a sibling the client interceptor drops, so the
+  page lists up to 100 and takes totals from `GET /dashboard` instead), and
+  settings (restaurant edit via `PUT /restaurants/owner/my` + open/closed via
+  `PATCH /restaurants/owner/my/status`). Client modules: `src/lib/api/{dashboard,
+  reviews}.js` are new; `restaurants`, `meals`, `categories`, `orders` gained
+  the owner calls; presenters (`dashboardToView`, `orderToOwnerCard`,
+  `reviewToOwnerCard`, `restaurantToOwnerForm`, `restaurantFormToPayload`,
+  `ownerOrderStatusLabel`, `OWNER_STATUS_LABELS`) live in `src/lib/api/
+  presenters.js`. Owner design uses the generic tokens (`surface`, `border`,
+  `muted`, `primary`) and the same a11y checklist as the customer app (focus
+  trap + Escape + `role="dialog"` modals, `aria-label`s, motion-reduce). Owner
+  polish (`feature/owner-polish`): the topbar mirrors the customer `AppHeader`
+  brand (BrandMark + وجبة wordmark, 72px, centered restaurant status) and no
+  longer links to the storefront — the "عرض المتجر" button and "واجهة الزبون"
+  menu item were removed by product decision while the customer app itself stays
+  intact; every tab title starts with "وجبة"; dashboard numbers are Latin digits
+  (see §5 exception); and the settings form locks `email` + `cuisine` as disabled
+  inputs (`cuisine` was never in `updateRestaurantSchema`, email is fixed by
+  decision). Dashboard blocks are no longer white: the generic tokens in
+  `globals.css` are aliased to the customer palette — `surface` = cream-deep
+  (`#f4ead5`), `foreground` = cocoa, `muted` = cocoa-soft, `border` = warm clay
+  tan, `primary`/`primary-dark` = terra — so cards, sidebar, modals and empty
+  states match the storefront's warm look (the topbar stays translucent cream);
+  form inputs and secondary buttons keep a white fill (`bg-white` in
+  `OwnerFields`) so they read as raised fields on the cream-deep blocks, exactly
+  like the customer app. The "حدّث" refresh action is a single shared
+  `components/owner/RefreshButton.jsx` (icon + label + spin-on-load) used
+  everywhere it appears — overview, orders, reviews, and the menu manager — so
+  its shape never drifts. Deferred:
+  a driver/owner order feed push channel (real-time), an owner earnings
+  breakdown beyond totals, and a dedicated owner login page (owners sign in via
+  the shared `/login` today).
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 

@@ -2,7 +2,7 @@ import { SearchX } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "الصفحة غير موجودة | وجبة",
+  title: "وجبة | الصفحة غير موجودة",
 };
 
 export default function NotFound() {
