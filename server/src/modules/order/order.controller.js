@@ -87,6 +87,58 @@ const getRestaurantOrders = async (req, res) => {
   }
 };
 
+const getDriverOrders = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const result = await orderService.getDriverOrders(
+      req.user.id,
+      page,
+      limit
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const updateDriverStatus = async (req, res) => {
+  try {
+    const order = await orderService.updateDriverStatus(
+      req.params.id,
+      req.user.id,
+      req.validatedData.status
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated.",
+      data: order,
+    });
+  } catch (error) {
+    if (error.message.includes("Access denied")) {
+      return res.status(403).json({ success: false, message: error.message });
+    }
+
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const updateOrderStatus = async (req, res) => {
   try {
     const order = await orderService.updateOrderStatus(
@@ -159,7 +211,9 @@ module.exports = {
   getOrderById,
   getMyOrders,
   getRestaurantOrders,
+  getDriverOrders,
   updateOrderStatus,
+  updateDriverStatus,
   assignDriver,
   cancelOrder,
 };

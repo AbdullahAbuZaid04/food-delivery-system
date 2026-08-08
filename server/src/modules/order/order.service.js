@@ -120,6 +120,36 @@ const getRestaurantOrders = async (ownerId, page, limit) => {
   );
 };
 
+const getDriverOrders = async (driverId, page, limit) => {
+  return await orderRepository.findOrdersByDriverId(driverId, page, limit);
+};
+
+const updateDriverStatus = async (orderId, driverId, status) => {
+  const order = await orderRepository.findOrderById(orderId);
+  if (!order) {
+    throw new Error("Order not found.");
+  }
+
+  if (order.driverId !== driverId) {
+    throw new Error("Access denied.");
+  }
+
+  // The driver only moves the delivery leg forward once the owner has
+  // assigned them the order: ASSIGNED → PICKED_UP → ON_THE_WAY → DELIVERED.
+  const driverTransitions = {
+    ASSIGNED: ["PICKED_UP"],
+    PICKED_UP: ["ON_THE_WAY"],
+    ON_THE_WAY: ["DELIVERED"],
+  };
+
+  const allowed = driverTransitions[order.status];
+  if (!allowed || !allowed.includes(status)) {
+    throw new Error(`Cannot change status from ${order.status} to ${status}.`);
+  }
+
+  return await orderRepository.updateOrderStatus(orderId, status);
+};
+
 const updateOrderStatus = async (orderId, ownerId, status) => {
   const order = await orderRepository.findOrderById(orderId);
   if (!order) {
@@ -198,7 +228,9 @@ module.exports = {
   getOrderById,
   getMyOrders,
   getRestaurantOrders,
+  getDriverOrders,
   updateOrderStatus,
+  updateDriverStatus,
   assignDriver,
   cancelOrder,
 };

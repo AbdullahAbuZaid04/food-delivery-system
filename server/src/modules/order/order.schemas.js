@@ -27,8 +27,13 @@ const assignDriverSchema = z.object({
   driverId: z.string().min(1, "Driver is required."),
 });
 
+const driverUpdateStatusSchema = z.object({
+  status: z.enum(["PICKED_UP", "ON_THE_WAY", "DELIVERED"]),
+});
+
 module.exports = {
   createOrderSchema,
   updateStatusSchema,
   assignDriverSchema,
+  driverUpdateStatusSchema,
 };

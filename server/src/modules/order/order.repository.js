@@ -122,6 +122,38 @@ const findOrdersByRestaurantId = async (restaurantId, page = 1, limit = 10) => {
   };
 };
 
+const findOrdersByDriverId = async (driverId, page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where: { driverId },
+      include: {
+        items: true,
+        customer: {
+          select: { id: true, firstName: true, lastName: true, phone: true },
+        },
+        restaurant: { select: { id: true, name: true, phone: true } },
+        address: true,
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.order.count({ where: { driverId } }),
+  ]);
+
+  return {
+    orders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
 const updateOrderStatus = async (id, status) => {
   return await prisma.$transaction(async (tx) => {
     await tx.order.update({
@@ -199,6 +231,7 @@ module.exports = {
   findOrderById,
   findOrdersByCustomerId,
   findOrdersByRestaurantId,
+  findOrdersByDriverId,
   updateOrderStatus,
   assignDriver,
   cancelOrder,

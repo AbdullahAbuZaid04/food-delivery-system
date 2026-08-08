@@ -5,6 +5,7 @@ const {
   createOrderSchema,
   updateStatusSchema,
   assignDriverSchema,
+  driverUpdateStatusSchema,
 } = require("./order.schemas");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
 
@@ -27,6 +28,12 @@ router.get(
   orderController.getRestaurantOrders
 );
 
+router.get(
+  "/driver/my",
+  authorize("DRIVER"),
+  orderController.getDriverOrders
+);
+
 router.get("/:id", orderController.getOrderById);
 
 router.patch(
@@ -34,6 +41,13 @@ router.patch(
   authorize("OWNER"),
   validate(updateStatusSchema),
   orderController.updateOrderStatus
+);
+
+router.patch(
+  "/:id/driver-status",
+  authorize("DRIVER"),
+  validate(driverUpdateStatusSchema),
+  orderController.updateDriverStatus
 );
 
 router.patch(
