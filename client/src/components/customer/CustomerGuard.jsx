@@ -25,7 +25,7 @@ function isCustomerOnlyRoute(pathname) {
 // customer-only page handles its own "login required" redirect). An
 // authenticated non-customer (OWNER/DRIVER/ADMIN) may still view the public
 // storefront, but any customer-only route sends them to their dashboard
-// (DRIVER → /driver, otherwise → /owner).
+// (DRIVER → /driver, ADMIN → /admin, otherwise → /owner).
 export default function CustomerGuard({ children }) {
   const { status, user } = useAuth();
   const router = useRouter();
@@ -37,7 +37,13 @@ export default function CustomerGuard({ children }) {
       user?.role !== "CUSTOMER" &&
       isCustomerOnlyRoute(pathname)
     ) {
-      router.replace(user?.role === "DRIVER" ? "/driver" : "/owner");
+      router.replace(
+        user?.role === "DRIVER"
+          ? "/driver"
+          : user?.role === "ADMIN"
+            ? "/admin"
+            : "/owner",
+      );
     }
   }, [status, user, pathname, router]);
 

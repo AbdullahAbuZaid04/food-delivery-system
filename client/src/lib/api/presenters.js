@@ -587,3 +587,83 @@ export function orderToDriverCard(order) {
     nextActionLabel: driverActionLabel(driverNextAction(order.status)),
   };
 }
+
+// ========================
+// ADMIN DASHBOARD PRESENTERS
+// ========================
+
+export const ADMIN_USER_STATUS_LABELS = {
+  ACTIVE: "نشط",
+  INACTIVE: "غير نشط",
+  BLOCKED: "محظور",
+};
+
+export function adminUserStatusLabel(status) {
+  return ADMIN_USER_STATUS_LABELS[status] ?? status;
+}
+
+export function adminRestaurantStatusLabel(status) {
+  return RESTAURANT_STATUS_LABELS[status] ?? status;
+}
+
+// Server user → admin list/detail card shape. Reuses RESTAURANT_STATUS_LABELS
+// for restaurants below (already defined in the owner section).
+export function adminUserToCard(user) {
+  return {
+    id: user.id,
+    name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "مستخدم",
+    email: user.email ?? "",
+    phone: user.phone ?? "",
+    role: user.role?.name ?? "",
+    status: user.status,
+    statusLabel: adminUserStatusLabel(user.status),
+    isVerified: user.isVerified ?? false,
+    createdAt: user.createdAt,
+  };
+}
+
+export function adminUserToDetail(user) {
+  const card = adminUserToCard(user);
+  return {
+    ...card,
+    lastLoginAt: user.lastLoginAt ?? null,
+    addresses: (user.addresses ?? []).map((a) =>
+      [a.label, a.street, a.building, a.city, a.details]
+        .filter(Boolean)
+        .join("، "),
+    ),
+  };
+}
+
+export function adminRestaurantToCard(restaurant) {
+  return {
+    id: restaurant.id,
+    name: restaurant.name ?? "مطعم",
+    cuisine: restaurant.cuisine ?? "",
+    status: restaurant.status,
+    statusLabel:
+      RESTAURANT_STATUS_LABELS[restaurant.status] ?? restaurant.status,
+    ownerName: restaurant.owner
+      ? `${restaurant.owner.firstName ?? ""} ${restaurant.owner.lastName ?? ""}`.trim() ||
+        "مالك"
+      : "—",
+    ownerEmail: restaurant.owner?.email ?? "",
+    createdAt: restaurant.createdAt,
+  };
+}
+
+export function adminRestaurantToDetail(restaurant) {
+  const card = adminRestaurantToCard(restaurant);
+  const address = restaurant.address ?? {};
+  return {
+    ...card,
+    ownerId: restaurant.owner?.id ?? null,
+    phone: restaurant.phone ?? "",
+    email: restaurant.email ?? "",
+    estimatedDeliveryTime: restaurant.estimatedDeliveryTime ?? null,
+    addressLine: [address.label, address.street, address.building, address.city, address.details]
+      .filter(Boolean)
+      .join("، "),
+    counts: restaurant._count ?? { categories: 0, meals: 0, orders: 0, reviews: 0 },
+  };
+}
