@@ -24,7 +24,8 @@ function isCustomerOnlyRoute(pathname) {
 // Role guard for the CUSTOMER route group. Guests may browse freely (each
 // customer-only page handles its own "login required" redirect). An
 // authenticated non-customer (OWNER/DRIVER/ADMIN) may still view the public
-// storefront, but any customer-only route sends them to the owner dashboard.
+// storefront, but any customer-only route sends them to their dashboard
+// (DRIVER → /driver, otherwise → /owner).
 export default function CustomerGuard({ children }) {
   const { status, user } = useAuth();
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function CustomerGuard({ children }) {
       user?.role !== "CUSTOMER" &&
       isCustomerOnlyRoute(pathname)
     ) {
-      router.replace("/owner");
+      router.replace(user?.role === "DRIVER" ? "/driver" : "/owner");
     }
   }, [status, user, pathname, router]);
 
