@@ -675,7 +675,11 @@ async function main() {
   // so re-running the seed rebuilds them cleanly.
   await prisma.order.deleteMany({ where: { customerId: customer.id } });
 
-  // Demo addresses.
+  // Demo addresses. The customer's existing addresses are cleared first so the
+  // creates below are idempotent — the account screen enforces a single default
+  // per user (Address_one_default_per_user), so a plain re-create would crash on
+  // a second "البيت" default and re-runs were already accumulating duplicate rows.
+  await prisma.address.deleteMany({ where: { userId: customer.id } });
   const homeAddress = await upsertAddress({
     userId: customer.id,
     label: "البيت",
@@ -710,14 +714,30 @@ async function main() {
 
     // The demo owner's addresses mirror the original "restaurant address" idea
     // (each restaurant gets its own city/street row under the owner's account).
-    const restaurantAddress = await prisma.address.create({
-      data: {
-        userId: owner.id,
-        label: "موقع المطعم",
-        city: fixture.city,
-        street: fixture.street,
-      },
+    // When the restaurant already exists, update the address currently linked to
+    // it in place — this keeps addressId stable and re-runs idempotent. A plain
+    // create here would accumulate a duplicate "موقع المطعم" row per re-run.
+    const existingRestaurant = await prisma.restaurant.findUnique({
+      where: { slug: fixture.slug },
+      select: { addressId: true },
     });
+    const restaurantAddress = existingRestaurant
+      ? await prisma.address.update({
+          where: { id: existingRestaurant.addressId },
+          data: {
+            label: "موقع المطعم",
+            city: fixture.city,
+            street: fixture.street,
+          },
+        })
+      : await prisma.address.create({
+          data: {
+            userId: owner.id,
+            label: "موقع المطعم",
+            city: fixture.city,
+            street: fixture.street,
+          },
+        });
 
     const restaurant = await prisma.restaurant.upsert({
       where: { slug: fixture.slug },
@@ -726,6 +746,7 @@ async function main() {
         cuisine: fixture.cuisine,
         description: fixture.description,
         phone: fixture.phone,
+        email: fixture.ownerEmail,
         deliveryFee: fixture.deliveryFee,
         minimumOrder: fixture.minimumOrder,
         estimatedDeliveryTime: fixture.estimatedDeliveryTime,
@@ -737,6 +758,7 @@ async function main() {
         cuisine: fixture.cuisine,
         description: fixture.description,
         phone: fixture.phone,
+        email: fixture.ownerEmail,
         deliveryFee: fixture.deliveryFee,
         minimumOrder: fixture.minimumOrder,
         estimatedDeliveryTime: fixture.estimatedDeliveryTime,
