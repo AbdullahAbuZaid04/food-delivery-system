@@ -6,13 +6,15 @@ export const metadata = {
   description: "سجّل دخولك لحسابك بوجبة واطلب من مطاعمك المفضلة بغزة.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }) {
+  const { next } = await searchParams;
+
   return (
     <AuthLayout
       title="سجّل دخولك"
       subtitle="أهلاً بك، سجّل دخولك واطلب من مطاعمك المفضلة."
     >
-      <LoginForm />
+      <LoginForm next={next} />
     </AuthLayout>
   );
 }

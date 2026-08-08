@@ -1,21 +1,66 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import AuthField from "@components/auth/AuthField";
 import PasswordField from "@components/auth/PasswordField";
 import AuthSubmitButton from "@components/auth/AuthSubmitButton";
+import { useAuth } from "@context/AuthContext";
 
-export default function RegisterForm() {
-  function handleSubmit(event) {
+function safeNextPath(value) {
+  return typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
+    ? value
+    : null;
+}
+
+export default function RegisterForm({ next }) {
+  const { register } = useAuth();
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  function splitFullName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/);
+    if (parts.length === 0) return { firstName: "", lastName: "" };
+    if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
+    return {
+      firstName: parts[0],
+      lastName: parts.slice(1).join(" "),
+    };
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
+    setError(null);
+
     const data = new FormData(event.currentTarget);
-    console.log("إنشاء حساب (placeholder):", {
-      fullName: data.get("fullName"),
-      email: data.get("email"),
-      phone: data.get("phone"),
-      password: data.get("password"),
-      confirmPassword: data.get("confirmPassword"),
-    });
+    const password = data.get("password");
+    const confirmPassword = data.get("confirmPassword");
+
+    if (password !== confirmPassword) {
+      setError("كلمتا السر مش متطابقتين.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const user = await register({
+        ...splitFullName(data.get("fullName")),
+        email: data.get("email"),
+        phone: data.get("phone"),
+        password,
+      });
+      toast.success(`أهلًا ${user.firstName}! حسابك اتسجّل`);
+      router.push(safeNextPath(next) || "/home");
+    } catch (err) {
+      setError(err.message || "تعذر إنشاء الحساب، حاول مرة تانية.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -72,7 +117,16 @@ export default function RegisterForm() {
           required
         />
 
-        <AuthSubmitButton>أنشئ حسابك</AuthSubmitButton>
+        {error ? (
+          <p
+            role="alert"
+            className="rounded-2xl border border-error/20 bg-error/10 px-4 py-3 text-[13.5px] font-semibold text-error leading-relaxed"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        <AuthSubmitButton pending={submitting}>أنشئ حسابك</AuthSubmitButton>
       </form>
 
       <p className="mt-6 text-center text-sm text-cocoa-soft">
