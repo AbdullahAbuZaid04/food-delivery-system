@@ -337,12 +337,14 @@ section on any page.
   self-guard instead of the context rejecting sessions: the customer group's
   `CustomerGuard` lets any authenticated user browse the public storefront but
   redirects non-customers (`user.role !== "CUSTOMER"`) away from customer-only
-  routes (cart/checkout/orders/account/order-confirmation) to `/owner`; the
+  routes (cart/checkout/orders/account/order-confirmation) to their dashboard
+  (DRIVER → `/driver`, ADMIN → `/admin`, otherwise → `/owner`); the
   owner dashboard shell (`components/owner/OwnerShell.jsx`) redirects
   unauthenticated users to `/login?next=/owner` and non-OWNER users to `/home`.
-  `LoginForm` routes an OWNER session to `/owner` after login; every other role
-  follows `?next=` (default `/home`). The server's `authorize("OWNER")`/
-  `authorize("CUSTOMER")` remain the authorization backstop.
+  `LoginForm` routes OWNER → `/owner`, DRIVER → `/driver`, and ADMIN → `/admin`
+  after login; every other role follows
+  `?next=` (default `/home`). The server's `authorize("OWNER")`/
+  `authorize("CUSTOMER")`/`authorize("ADMIN")` remain the authorization backstop.
 - **Owner dashboard (`/owner/*`) — DONE (`feature/owner-dashboard`)**: routes
   live under the `(dashboard)` route group → `src/app/(dashboard)/layout.js`
   (metadata + `<OwnerShell>`) and `src/app/(dashboard)/owner/{,orders,menu,
@@ -424,6 +426,34 @@ section on any page.
   like the owner dashboard (§5 exception). The owner ↔ driver loop is complete:
   the owner assigns a driver on READY orders (per-restaurant driver list), and
   the driver sees and advances only their own assigned deliveries.
+- **Admin dashboard (`/admin/*`) — DONE (`feature/admin-dashboard`)**: routes
+  live under the `(admin)` route group → `src/app/(admin)/layout.js` (metadata
+  + `<AdminShell>`) and `src/app/(admin)/admin/{,users,users/[id],
+  restaurants,restaurants/[id]}/page.js` (overview / users list / user detail /
+  restaurants list / restaurant detail). `AdminShell` (sidebar + topbar + mobile
+  drawer, auth-gated) wraps the pages and is built from the owner-shell pattern;
+  it redirects unauthenticated users to `/login?next=/admin` and non-ADMIN roles
+  to `/home`. Screens: overview (`GET /users` + `GET /restaurants` at
+  `?limit=100` → stat cards + recent users/restaurants), users list (role filter
+  tabs CUSTOMER/OWNER/DRIVER/ADMIN + per-row status picker), user detail (account
+  info + saved addresses + status), restaurants list (OPEN/CLOSED/SUSPENDED
+  filter tabs + per-row status picker), restaurant detail (counts for
+  meals/categories/orders/reviews + owner card with link to the owner's account
+  + contact info). Destructive transitions are confirm-gated via
+  `ConfirmStatusModal`: blocking a user (`BLOCKED`) or suspending a restaurant
+  (`SUSPENDED`) require confirmation, while ACTIVE/INACTIVE and OPEN/CLOSED apply
+  immediately via `AdminStatusSelect` — all mutations call
+  `PATCH /users/:id/status` / `PATCH /restaurants/:id/status` through the new
+  `src/lib/api/admin.js` module (`getUsers/getUserById/updateUserStatus/
+  getRestaurants/getRestaurantById/updateRestaurantStatus`, exposed on the shared
+  client as `adminApi`). Admin presenters live in `presenters.js` under the ADMIN
+  section (`adminUserToCard/adminUserToDetail/adminRestaurantToCard/
+  adminRestaurantToDetail`, reusing `RESTAURANT_STATUS_LABELS`). Because the API
+  client's interceptor drops the response envelope's sidecar `pagination`, the
+  admin lists fetch up to 100 rows and filter/paginate client-side (same pattern
+  as the owner reviews screen). Admin login uses the shared `/login` form
+  (seeded `admin@wajba.com`/`Admin$$1234`); admin numbers are Latin digits like
+  the owner/driver dashboards (§5 exception).
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 
