@@ -1,9 +1,14 @@
-import { restaurants } from "@lib/mock/restaurants";
-import { getRestaurantMenu } from "@lib/mock/menu";
+import { getRestaurantBySlug } from "@lib/api/restaurants";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const restaurant = restaurants.find((item) => item.id === slug);
+
+  let restaurant = null;
+  try {
+    restaurant = await getRestaurantBySlug(slug);
+  } catch {
+    restaurant = null;
+  }
 
   if (!restaurant) {
     return {
@@ -14,7 +19,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `وجبة | ${restaurant.name}`,
-    description: `اطلب من ${restaurant.name} — ${restaurant.cuisine}، توصيل خلال ${restaurant.time}، وأسعار شفافة.`,
+    description: `اطلب من ${restaurant.name} — ${restaurant.cuisine}، وتوصيل ضمن غزة.`,
     openGraph: {
       title: `وجبة | ${restaurant.name}`,
       description: `اطلب من ${restaurant.name} — ${restaurant.cuisine}.`,
@@ -24,7 +29,13 @@ export async function generateMetadata({ params }) {
 
 export default async function RestaurantRouteLayout({ children, params }) {
   const { slug } = await params;
-  const restaurant = restaurants.find((item) => item.id === slug);
+
+  let restaurant = null;
+  try {
+    restaurant = await getRestaurantBySlug(slug);
+  } catch {
+    restaurant = null;
+  }
 
   const restaurantSchema = restaurant
     ? {
@@ -32,13 +43,7 @@ export default async function RestaurantRouteLayout({ children, params }) {
         "@type": "Restaurant",
         name: restaurant.name,
         description: restaurant.cuisine,
-        servesCuisine: restaurant.category,
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: restaurant.rating,
-          bestRating: "5",
-          reviewCount: getRestaurantMenu(slug)?.reviewsCount ?? 0,
-        },
+        servesCuisine: restaurant.cuisine,
         areaServed: "قطاع غزة",
       }
     : null;

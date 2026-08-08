@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Bike, Clock, Heart, Star } from "lucide-react";
+import { ArrowRight, Bike, Clock, Star } from "lucide-react";
 import StarRow from "@components/ui/StarRow";
 import { toArabicDigits } from "@lib/format";
 
@@ -29,8 +29,6 @@ function RestaurantHeader({
   restaurant,
   coverImage,
   reviewCount = 0,
-  isFavorite = false,
-  onToggleFavorite,
 }) {
   const router = useRouter();
 
@@ -68,29 +66,6 @@ function RestaurantHeader({
             <ArrowRight className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
-
-        <div className="absolute top-3 end-3 sm:top-4 sm:end-4">
-          <button
-            type="button"
-            onClick={onToggleFavorite}
-            aria-pressed={isFavorite}
-            aria-label={
-              isFavorite
-                ? `إزالة ${restaurant.name} من المفضلة`
-                : `إضافة ${restaurant.name} إلى المفضلة`
-            }
-            className={`w-11 h-11 flex items-center justify-center rounded-full shadow-[0_10px_24px_-8px_rgba(42,36,28,0.6)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream ${
-              isFavorite
-                ? "bg-terra text-cream"
-                : "bg-cream/95 backdrop-blur text-cocoa-soft hover:text-terra"
-            }`}
-          >
-            <Heart
-              className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
-        </div>
       </div>
 
       <div className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -110,7 +85,9 @@ function RestaurantHeader({
               accent="bg-gold/20 text-terra"
               icon={<Star className="w-5 h-5 fill-current" strokeWidth={0} />}
             >
-              <StarRow />
+              <span aria-hidden="true">
+                <StarRow />
+              </span>
               <span className="font-display font-bold text-[15px]">
                 {restaurant.rating}
               </span>

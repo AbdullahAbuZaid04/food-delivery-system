@@ -1,23 +1,91 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, UserRound, Menu } from "lucide-react";
-import { useRef, useState } from "react";
+import {
+  ChevronDown,
+  History,
+  LogOut,
+  Menu,
+  ShoppingCart,
+  UserRound,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import BrandMark from "@components/ui/BrandMark";
 import MobileMenu from "@components/layout/MobileMenu";
+import { useCart } from "@context/CartContext";
+import { useAuth } from "@context/AuthContext";
+import { formatArabicCount, toArabicDigits } from "@lib/format";
 
 /**
- * Header — fixed site header: brand, desktop nav, cart, login/CTA and the mobile
- * hamburger. Owns the mobile-menu open state and renders <MobileMenu />.
+ * Header — fixed marketing header: brand, desktop nav, cart (live count, links
+ * to /cart), an auth-aware sign-in/avatar area and the "اطلب الآن" CTA. Owns
+ * the mobile-menu open state and renders <MobileMenu />.
+ *
+ * Auth state comes from AuthContext (the marketing page is public — signed-in
+ * users are allowed to visit it), so the header shows the avatar menu when
+ * signed in and the sign-in CTA only for guests (same pattern as AppHeader).
  */
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const hamburgerRef = useRef(null);
+  const { totalItems } = useCart();
+  const { user, status, logout } = useAuth();
+  const router = useRouter();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const avatarButtonRef = useRef(null);
+
+  // While AuthContext is still restoring we don't know yet whether the visitor
+  // is signed in — render a neutral placeholder so a returning user doesn't
+  // flash a "سجل الدخول" button (same rule as AppHeader).
+  const isAuthLoading = status === "loading";
+  const displayName = user?.firstName ?? "";
+  const isGuest = !displayName && !isAuthLoading;
+
+  const cartBadge = totalItems > 0 ? toArabicDigits(totalItems) : null;
+  const cartLabel =
+    totalItems > 0
+      ? `سلة الطلبات — فيك ${formatArabicCount(totalItems)}`
+      : "سلة الطلبات — فاضية";
 
   const closeMenu = () => {
     setIsMobileMenuOpen(false);
     hamburgerRef.current?.focus();
   };
+
+  const closeUserMenu = () => {
+    setIsUserMenuOpen(false);
+    avatarButtonRef.current?.focus();
+  };
+
+  const handleLogout = async () => {
+    closeUserMenu();
+    await logout();
+    toast.success("منوّر، بلاستقبال في أي وقت");
+    router.push("/");
+  };
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const onPointerDown = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) closeUserMenu();
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") closeUserMenu();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isUserMenuOpen]);
+
+  const initial = displayName.trim().charAt(0) || "ز";
 
   return (
     <>
@@ -56,25 +124,115 @@ function Header() {
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Cart icon, 44px touch target, visible on all breakpoints. Badge will show real count when the cart exists. */}
-            <button
-              className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
-              aria-label="سلة الطلبات"
-            >
-              <ShoppingCart className="w-5 h-5" />
-            </button>
-
+            {/* Cart icon → live /cart link with real count (AGENTS.md §11). */}
             <Link
-              href="/login"
-              className="hidden sm:inline-flex items-center gap-2 border-2 border-terra text-terra font-bold text-sm px-5 py-3 rounded-full hover:bg-terra/5 transition-colors"
+              href="/cart"
+              aria-label={cartLabel}
+              className="relative w-11 h-11 flex items-center justify-center rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
             >
-              <UserRound className="w-4 h-4" />
-              سجّل الدخول
+              <ShoppingCart className="w-5 h-5" aria-hidden="true" />
+              {cartBadge ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -end-1 min-w-5 h-5 px-1 rounded-full bg-terra text-cream text-[11px] font-bold flex items-center justify-center border-2 border-cream"
+                >
+                  {cartBadge}
+                </span>
+              ) : null}
             </Link>
+
+            {isGuest ? (
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex items-center gap-2 border-2 border-terra text-terra font-bold text-sm px-5 py-3 rounded-full hover:bg-terra/5 transition-colors"
+              >
+                <UserRound className="w-4 h-4" />
+                سجّل الدخول
+              </Link>
+            ) : isAuthLoading ? (
+              <span
+                aria-hidden="true"
+                className="hidden sm:flex w-11 h-11 rounded-full bg-terra/20 text-terra font-display font-bold text-sm items-center justify-center shrink-0"
+              >
+                ز
+              </span>
+            ) : (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  ref={avatarButtonRef}
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((open) => !open)}
+                  aria-haspopup="menu"
+                  aria-expanded={isUserMenuOpen}
+                  aria-label="قائمة الحساب"
+                  className="flex items-center gap-2 ps-1.5 pe-2.5 py-1 rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0"
+                >
+                  <span className="w-9 h-9 rounded-full bg-terra text-cream font-display font-bold text-sm flex items-center justify-center">
+                    {initial}
+                  </span>
+                  <span className="hidden lg:block text-[14px] font-bold">
+                    {displayName}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`w-4 h-4 transition-transform ${
+                      isUserMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isUserMenuOpen ? (
+                  <div
+                    role="menu"
+                    aria-label="قائمة الحساب"
+                    className="absolute start-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
+                  >
+                    <Link
+                      href="/account"
+                      role="menuitem"
+                      onClick={closeUserMenu}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
+                    >
+                      <UserRound
+                        className="w-5 h-5 text-terra shrink-0"
+                        aria-hidden="true"
+                      />
+                      حسابي
+                    </Link>
+                    <Link
+                      href="/orders"
+                      role="menuitem"
+                      onClick={closeUserMenu}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-cocoa hover:bg-terra/10 hover:text-terra transition-colors"
+                    >
+                      <History
+                        className="w-5 h-5 text-terra shrink-0"
+                        aria-hidden="true"
+                      />
+                      طلباتي
+                    </Link>
+                    <div
+                      role="separator"
+                      aria-hidden="true"
+                      className="h-px bg-clay/10 my-1"
+                    />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-error hover:bg-error/10 transition-colors"
+                    >
+                      <LogOut className="w-5 h-5 shrink-0" aria-hidden="true" />
+                      تسجيل خروج
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <a
               href="#restaurants"
-              className="bg-terra text-cream font-bold text-sm px-5 sm:px-6 py-3 rounded-full shadow-[0_8px_20px_-8px_rgba(184,74,38,0.7)] hover:bg-terra-dark transition-colors"
+              className="hidden sm:inline-flex bg-terra text-cream font-bold text-sm px-5 sm:px-6 py-3 rounded-full shadow-[0_8px_20px_-8px_rgba(184,74,38,0.7)] hover:bg-terra-dark transition-colors"
             >
               اطلب الآن
             </a>

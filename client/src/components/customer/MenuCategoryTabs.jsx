@@ -61,6 +61,8 @@ function MenuCategoryTabs({ categories }) {
     });
   }, [activeId]);
 
+  if (categories.length === 0) return null;
+
   const handleTabListKeyDown = (event) => {
     const currentIndex = categories.findIndex(
       (category) => category.id === activeId,

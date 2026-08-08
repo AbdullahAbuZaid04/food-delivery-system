@@ -6,12 +6,6 @@ import { toast } from "react-hot-toast";
 import { useCart } from "@context/CartContext";
 import { formatPrice, toArabicDigits } from "@lib/format";
 
-/**
- * MenuItemCard — reads quantity + cart actions straight from CartContext
- * (no more addItem/updateQuantity props from the parent page). When addItem
- * reports a restaurant conflict it calls the optional `onConflict` callback so
- * the parent page can open RestaurantConflictModal.
- */
 function MenuItemCard({ item, restaurantId, restaurantName, onConflict }) {
   const { items, addItem, updateQuantity } = useCart();
 

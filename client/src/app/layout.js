@@ -2,6 +2,7 @@ import { Tajawal, Inter, Cairo } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import ScrollToTop from "@components/layout/ScrollToTop";
 import { CartProvider } from "@context/CartContext";
+import { AuthProvider } from "@context/AuthContext";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -61,7 +62,9 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-screen bg-background text-foreground font-tajawal antialiased">
         <ScrollToTop />
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </CartProvider>
         <Toaster
           position="top-center"
           toastOptions={{
