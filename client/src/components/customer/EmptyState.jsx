@@ -1,10 +1,5 @@
 import { SearchX } from "lucide-react";
 
-/**
- * EmptyState — shared empty-state block (AGENTS.md §6). Defaults match the home
- * screen wording; other routes override title/description/actionLabel to fit
- * their own empty case (e.g. "ما في طلبات بهالتصنيف" on the orders page).
- */
 function EmptyState({
   onClearFilters,
   title = "ما لقينا مطاعم تطابق بحثك",

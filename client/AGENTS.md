@@ -49,9 +49,27 @@ per feature.
   `RestaurantConflictModal` — the context never mutates on conflict. No external
   state library (Zustand or otherwise) — this is the documented decision
   (§10); if it ever changes, update this file.
-- No backend/database is defined yet. When one is added (API routes, external
-  API, ORM), this file must be updated with the chosen pattern before agents
-  start writing data-fetching code — don't invent a data layer ad hoc.
+- **Data layer**: the client talks to the Express REST API in `../server/`
+  (port 5000 during development; base URL comes from `NEXT_PUBLIC_API_URL`,
+  defaulting to `http://localhost:5000/api`). All requests go through the
+  shared API client in `src/lib/api/` (one `client.js` axios instance with
+  interceptors + per-domain modules: `auth`, `restaurants`, `meals`,
+  `categories`, `orders`, `cart`, `addresses`) — never call `fetch`/`axios`
+  directly from components or pages, and never bypass the envelope. The server
+  wraps every response: success is `{ success: true, data: ... }`, errors are
+  `{ success: false, message }` with the matching HTTP status
+  (400/401/403/404); the API client unwraps `data` on success and throws on
+  failure. Auth is bearer-token based (`Authorization: Bearer <accessToken>`)
+  with automatic refresh via `POST /api/auth/refresh`; customer endpoints
+  require the `CUSTOMER` role. Server money/Decimal fields arrive as strings
+  (`deliveryFee`, `total`, `price`, …) and are normalized to numbers inside
+  the API layer before reaching components.
+- Auth + cart state stay in React Context (`src/context/AuthContext.jsx`,
+  `src/context/CartContext.jsx`). `zustand` remains installed but unused — the
+  Context-only decision in §10 stands. Restaurant URLs stay slug-based
+  (`/restaurants/:slug`) exactly as the seed fixtures use; keep the mock data
+  under `src/lib/mock/` as the reference shapes until each screen is
+  converted, then remove it — don't mix static and live data in one file.
 
 ## 3. Repository Structure Conventions
 
@@ -225,55 +243,95 @@ section on any page.
 - [ ] Hero floating trust badges (١٢٠ مطعم / ٤٫٩ تقييم / ٢٥ دقيقة توصيل) were
   removed during a responsiveness fix — restore using the safe positioning
   pattern in section 8 before treating the homepage as final.
-- [ ] Checkout + order-confirmation are UI-only this phase: Cash-on-Delivery is
-  the only active payment (بطاقة ائتمان is a disabled teaser card with a
-  "قريبًا" badge — no e-payment logic/form yet), the delivery fee is a flat
-  mock ٥ ₪, order numbers are fake (`WB-` + last 6 digits of `Date.now()`), and
-  the last placed order persists under the `wajba-last-order` localStorage key
-  (deliberately separate from `wajba-cart`). No real API or payment gateway —
-  replace with the real data layer before production (AGENTS.md §2/§10).
-- [ ] The orders screens (`src/app/(customer)/orders/` + the per-order tracking
-  page `/orders/[id]`) are UI-only this phase: data is mock
-  (`src/lib/mock/orders.js` — 6 orders with static dates/timestamps anchored to
-  the authoring day so the statically prerendered routes stay hydration-safe, no
-  real API). The tracking page is a static snapshot — no real-time updates, the
-  shown status never changes live; it does show a mock ETA + payment info for
-  active orders. A just-placed order (stored by checkout under
-  `wajba-last-order`) gets its own tracking id and renders the same shared screen
-  (`components/orders/OrderTrackingView.jsx`) via the client fallback
-  `components/orders/LastOrderTracking.jsx`, so the confirmation page's
-  "تتبع طلبك" link works end-to-end with mock data. The "اطلب نفس الطلبية" button
-  only `console.log`s the order id — later it should auto-fill `CartContext` with
-  the previous order's items and navigate to that restaurant's page (TODO comment
-  in `src/components/orders/OrderHistoryCard.jsx`). The courier "اتصال" button
-  opens the dialer via a `tel:` link to the mock courier phone (real courier
-  numbers come with the API). The "إلغاء الطلب" button (shown only for
-  "قيد التحضير") is still a disabled placeholder with a "قريبًا" badge — it
-  needs a real cancellation API. The "تواصل مع الدعم" button links to `/account` —
-  the account screen now exists (see the account-phase note below); it currently
-  has no visible support entry (the settings menu was removed — see below).
-- [ ] The account screen (`src/app/(customer)/account/`) is UI-only this phase:
-  it shows just the profile card and saved addresses. Mock user data lives in
-  `src/lib/mock/user.js` (its shape mirrors the `GET /api/auth/profile`
-  response: `firstName`/`lastName`, `profileImage`, `role`,
-  `addresses[].city/street/building/details/isDefault`, and `createdAt` used for
-  the "عضو من" year — saved-address `city` values reuse `GAZA_AREAS` from the
-  checkout step). Profile edits (first/last name, phone) update local component
-  state only — no real API; saved addresses are deleted from local state only;
-  the "أضف عنوان جديد" button is a disabled teaser with a "قريبًا" badge (no
-  add-address form yet — TODO in `src/components/account/SavedAddressesList.jsx`).
-  The settings menu (`AccountMenuList`) was removed entirely by product decision
-  — its "الإشعارات" and "الدعم والمساعدة" entries and the "تسجيل خروج" button
-  (which would call `/api/auth/logout`, clear cookies and redirect to `/login`)
-  are all deferred; logout currently exists only as the placeholder button in the
-  `AppHeader` user dropdown (it just closes the menu). "غيّر كلمة السر" was also
-  deliberately omitted — the `/reset-password` route doesn't exist yet and should
-  be built with the auth phase before adding that link.
+- [ ] ~~Checkout + order-confirmation are UI-only this phase~~ — DONE
+  (`feature/api-integration`): checkout mirrors the client cart into the
+  SERVER-side cart, calls `POST /api/orders` (createOrder builds the order from
+  the server cart, then clears it), and navigates to
+  `/order-confirmation?order=<id>`; the confirmation screen re-fetches that
+  order via `GET /api/orders/:id` (`useSearchParams` behind a `<Suspense>`
+  boundary) and renders `orderToConfirm(order)`. The old `wajba-last-order`
+  localStorage key and fake `WB-` order numbers are gone — order numbers come
+  from the server (`ORD-…`). Remaining: بطاقة ائتمان is still a disabled teaser
+  card with a "قريبًا" badge (no e-payment logic yet) and CASH is the only real
+  payment method; the delivery fee is the restaurant's real `deliveryFee` from
+  the API, not a flat mock.
+- [ ] ~~The orders screens (`src/app/(customer)/orders/` + the per-order tracking
+  page `/orders/[id]`) are UI-only this phase~~ — DONE (`feature/api-integration`):
+  "طلباتي" fetches `GET /api/orders/my` and maps through `orderToHistoryCard`
+  (server order number, real statuses/totals); the tracking page is a Client
+  Component that fetches `GET /api/orders/:id` and renders the shared
+  `OrderTrackingView` via `orderToTracking` (progress timeline derived from the
+  order's `statusHistory`, real courier name/phone when a driver is assigned).
+  `LastOrderTracking` and `src/lib/mock/orders.js` were deleted. The "إلغاء
+  الطلب" button (shown for "قيد التحضير" = server PENDING/ACCEPTED, the only
+  cancellable statuses) is now real: it opens a confirmation **modal**
+  (`CancelOrderModal`, same `role="alertdialog"`/focus-trap/Escape pattern as
+  `ClearCartDialog` — AGENTS.md §7) whose confirm button calls
+  `PATCH /api/orders/:id/cancel`, then the order is refetched and re-rendered
+  as "ملغي". "اطلب نفس
+  الطلبية" is now real: `GET /api/orders/my` enriches every item with its meal
+  (`id`/`name`/`price`/`imageUrl`) plus the restaurant `slug`, and
+  `OrderHistoryCard` refills `CartContext` (clears the cart, sets the order's
+  `deliveryFee`, re-adds each item) then navigates to `/restaurants/:slug`. The "تواصل مع الدعم" button
+  was **removed** from `OrderTrackingView` by product decision — there is no
+  real support endpoint/number yet (contact stays as the marketing footer's
+  `support@wajba.ps` until a support channel exists).
+- [ ] ~~The account screen (`src/app/(customer)/account/`) is UI-only this phase~~ —
+  DONE (`feature/api-integration`): the page is a Client Component gated on
+  `AuthContext` status (redirects to `/login` when `unauthenticated`, shows a
+  loading shell while restoring), fetches `GET /api/auth/profile` on mount so
+  addresses/`createdAt` are always fresh (login/refresh payloads don't carry
+  them), and renders `ProfileHeader` + `SavedAddressesList`. Saved addresses are
+  now real: delete calls `DELETE /api/auth/profile/address/:id` and the
+  "أضف عنوان جديد" button opens an inline form that posts via
+  `POST /api/auth/profile/address` (`label`/`city`/`street` required,
+  `building`/`details`/`isDefault` optional). `src/lib/mock/user.js` and
+  `src/lib/mock/gazaAreas.js` were deleted. Profile edits (first/last name,
+  phone) ARE live via `PUT /api/auth/profile` (`updateProfileSchema`: each field
+  optional but at least one required, phone must match `^05\d{8}$`, phone unique
+  except self) — `ProfileHeader` saves through `AuthContext.updateUser`, which
+  refreshes the session user and the account page re-renders from the returned
+  profile. "جعله الافتراضي" per existing address lives on the account screen
+  (`updateAddress(id, { isDefault: true })`); the checkout picker
+  (`SavedAddressPicker`) stays selection-only and links back to `/account`. The settings menu (`AccountMenuList`) was
+  removed entirely by product decision — its "الإشعارات" and "الدعم والمساعدة"
+  entries and a full "غيّر كلمة السر" flow are all deferred. Logout IS live:
+  the `AppHeader` user dropdown calls `logout()` → `POST /api/auth/logout`
+  (clears local tokens) and redirects to `/home`. "غيّر كلمة السر" was
+  deliberately omitted — the
+  `/reset-password` route doesn't exist yet and should be built with the auth
+  phase before adding that link.
 - [ ] ~~Active orders (قيد التحضير / بالطريق) temporarily made the whole
   `OrderHistoryCard` a Link to `/order-confirmation`~~ — DONE: active order cards
   now link to the dedicated per-order tracking page `/orders/[id]`
   (`feature/order-tracking-ui`), rendered by the shared
   `components/orders/OrderProgressSteps.jsx`.
+- **Guest (logged-out) flow — browsing-first, like global delivery apps**: a
+  guest browses restaurants/menus and builds the cart freely. The `AppHeader`
+  never shows the old "زائر" placeholder — when nobody is signed in it renders
+  a "تسجيل الدخول" CTA (plus "إنشاء حساب" on `sm+`) next to the live cart icon,
+  instead of the avatar menu. On the **cart** page a guest gets a notice block
+  ("إكمال الطلب متوقف هلق…") with login/signup buttons instead of the
+  "أكمل الطلب" checkout link — checkout itself stays an auth-only route that
+  redirects `/login` (the safety net for direct URL visits). The same gate is
+  applied to `/orders`, `/orders/[id]`, and `/account` (account-only data):
+  `status === "unauthenticated"` → `router.replace("/login?next=<current>")`,
+  `"loading"` → loading shell (early returns kept AFTER all hooks so the React
+  Rules of Hooks hold). The login/register
+  forms accept `?next=` (e.g. `/login?next=/cart`) and return to that same-app
+  path after success (open-redirect guarded); without `next` they go to `/home`.
+  While `AuthContext` is restoring the session, the header shows a neutral
+  avatar placeholder so signed-in users don't flash a login button. All pages
+  pass `userName={user?.firstName}` (no `زائر` fallback) — see the header note
+  in `components/customer/AppHeader.jsx`.
+- **Role guard — this client is the CUSTOMER app only**: `AuthContext` rejects
+  any non-CUSTOMER session (DRIVER/OWNER/ADMIN). `login`/`register` throw a
+  clear error ("هالتطبيق للزبائن بس…") and clear the tokens if the returned
+  user's role isn't `CUSTOMER`, and `restoreSession` drops a non-CUSTOMER
+  profile back to `unauthenticated`. So a driver logging into the customer app
+  never sees the cart/menu/checkout UI — the server's `authorize("CUSTOMER")`
+  was already the backstop (403), this makes the UI reject the session up
+  front. Driver/owner/admin dashboards are future phases, not this app.
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 

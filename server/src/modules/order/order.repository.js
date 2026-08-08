@@ -60,8 +60,15 @@ const findOrdersByCustomerId = async (customerId, page = 1, limit = 10) => {
     prisma.order.findMany({
       where: { customerId },
       include: {
-        items: true,
-        restaurant: { select: { id: true, name: true } },
+        items: {
+          include: {
+            meal: {
+              select: { id: true, name: true, price: true, imageUrl: true },
+            },
+          },
+        },
+        restaurant: { select: { id: true, name: true, slug: true } },
+        address: true,
       },
       skip,
       take: limit,

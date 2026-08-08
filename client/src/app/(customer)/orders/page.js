@@ -1,21 +1,17 @@
-// src/app/(customer)/orders/page.js
-// "طلباتي" — UI-only order-history screen with local filtering (no real API,
-// mock data from @lib/mock/orders.js). "use client" because filtering is done
-// in-browser with local state + useMemo.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import BottomNav from "@components/customer/BottomNav";
 import CategoryFilterBar from "@components/customer/CategoryFilterBar";
 import EmptyState from "@components/customer/EmptyState";
 import OrderHistoryCard from "@components/orders/OrderHistoryCard";
-import { orders } from "@lib/mock/orders";
+import { getMyOrders } from "@lib/api/orders";
+import { orderToHistoryCard } from "@lib/api/presenters";
+import { useAuth } from "@context/AuthContext";
 import { toArabicDigits } from "@lib/format";
-
-const MOCK_USER_NAME = "أحمد";
-// Same key the checkout screen persists its just-placed order under.
-const LAST_ORDER_KEY = "wajba-last-order";
 
 const ORDER_TABS = ["الكل", "جارية", "سابقة"];
 
@@ -25,57 +21,78 @@ const STATUSES_BY_TAB = {
   "سابقة": ["تم التوصيل", "ملغي"],
 };
 
+function OrdersLoading() {
+  return (
+    <section aria-busy="true" aria-label="جاري تحميل طلباتك">
+      <div className="mt-6 md:mt-8 space-y-3 sm:space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-36 rounded-[24px] bg-clay/10 animate-pulse motion-reduce:animate-none"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function OrdersPage() {
+  const { user, status } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("الكل");
-  // The order placed in this session (from localStorage) is merged on top of the
-  // static mock list so a brand-new order shows up here the same way it renders
-  // on the tracking page — read in a useEffect to stay hydration-safe (AGENTS.md §2).
-  const [extraOrders, setExtraOrders] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const result = await getMyOrders();
+      setOrders(Array.isArray(result) ? result : (result?.orders ?? []));
+    } catch (err) {
+      setError(err?.message || "صارت مشكلة في تحميل طلباتك");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let lastOrder = null;
-    try {
-      const raw = window.localStorage.getItem(LAST_ORDER_KEY);
-      if (raw) lastOrder = JSON.parse(raw);
-    } catch {}
-
-    if (!lastOrder || !lastOrder.id || !lastOrder.orderNumber) return;
-
-    // Normalize the checkout shape onto the mock-order shape OrderHistoryCard
-    // reads (date is derived from createdAt, deliveryArea from the address).
-    const normalized = {
-      id: lastOrder.id,
-      restaurantName: lastOrder.restaurantName,
-      status: lastOrder.status ?? "قيد التحضير",
-      date: (lastOrder.createdAt ?? "").slice(0, 10),
-      deliveryArea: lastOrder.address?.area ?? "",
-      items: (lastOrder.items ?? []).map((item) => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-      })),
-      total: lastOrder.total ?? 0,
-    };
-
-    // Same intentional localStorage-read pattern as CartContext /
-    // order-confirmation (AGENTS.md §2).
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setExtraOrders([normalized]);
-  }, []);
+    if (status === "authenticated") fetchOrders();
+  }, [status, fetchOrders]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login");
+  }, [status, router]);
 
   const visibleOrders = useMemo(() => {
     const statuses = STATUSES_BY_TAB[activeTab];
-    const all = [...extraOrders, ...orders];
+    const mapped = orders.map(orderToHistoryCard);
     const filtered =
       statuses.length === 0
-        ? all
-        : all.filter((order) => statuses.includes(order.status));
+        ? mapped
+        : mapped.filter((order) => statuses.includes(order.status));
     return [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [activeTab, extraOrders]);
+  }, [activeTab, orders]);
+
+  const userName = user?.firstName ?? "";
+
+  if (status === "loading") {
+    return (
+      <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
+        <AppHeader userName="" showSearch={false} />
+        <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-20 md:pb-0">
+          <OrdersLoading />
+        </main>
+        <BottomNav activeKey="orders" />
+      </div>
+    );
+  }
 
   return (
     <div className="grain min-h-screen w-full bg-cream text-cocoa font-tajawal">
-      <AppHeader userName={MOCK_USER_NAME} showSearch={false} />
+      <AppHeader userName={userName} showSearch={false} />
 
       <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-20 md:pb-0">
         <header>
@@ -96,14 +113,35 @@ function OrdersPage() {
         />
 
         <p className="sr-only" role="status">
-          {visibleOrders.length === 1
-            ? "عندك طلب واحد بهالتصنيف"
-            : visibleOrders.length === 2
-              ? "عندك طلبين بهالتصنيف"
-              : `عندك ${toArabicDigits(visibleOrders.length)} طلبات بهالتصنيف`}
+          {isLoading
+            ? "عم نحمّل طلباتك"
+            : visibleOrders.length === 1
+              ? "عندك طلب واحد بهالتصنيف"
+              : visibleOrders.length === 2
+                ? "عندك طلبين بهالتصنيف"
+                : `عندك ${toArabicDigits(visibleOrders.length)} طلبات بهالتصنيف`}
         </p>
 
-        {visibleOrders.length > 0 ? (
+        {isLoading ? (
+          <OrdersLoading />
+        ) : error ? (
+          <div
+            role="alert"
+            className="mt-8 rounded-[24px] border border-clay/10 bg-cream-deep p-8 text-center"
+          >
+            <p className="font-display font-bold text-lg text-cocoa">
+              صارت مشكلة في تحميل طلباتك
+            </p>
+            <p className="text-cocoa-soft text-[14px] mt-2">{error}</p>
+            <button
+              type="button"
+              onClick={fetchOrders}
+              className="mt-5 h-11 px-6 rounded-full bg-terra text-cream font-bold text-[14.5px] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+            >
+              أعد المحاولة
+            </button>
+          </div>
+        ) : visibleOrders.length > 0 ? (
           <ul className="mt-6 md:mt-8 space-y-3 sm:space-y-4">
             {visibleOrders.map((order) => (
               <li key={order.id}>

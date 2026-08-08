@@ -4,14 +4,20 @@ const restaurantRepository = require("./restaurant.repository");
 // HELPERS
 // ========================
 
+// ASCII-only slug generator. Arabic restaurant names strip down to nothing
+// (the regex keeps only a-z/0-9/whitespace), so we fall back to a timestamped
+// slug instead of returning an empty string (which would break the @unique
+// slug on the DB and the public /restaurants/:slug route).
 const generateSlug = (name) => {
-  return name
+  const slug = name
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+
+  return slug || `restaurant-${Date.now()}`;
 };
 
 const checkOwnerHasRestaurant = async (ownerId) => {

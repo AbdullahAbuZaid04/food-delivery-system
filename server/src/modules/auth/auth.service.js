@@ -176,8 +176,47 @@ const getProfile = async (userId) => {
   };
 };
 
+const updateProfile = async (userId, data) => {
+  const updateData = {};
+
+  if (data.firstName !== undefined) updateData.firstName = data.firstName;
+  if (data.lastName !== undefined) updateData.lastName = data.lastName;
+
+  if (data.phone !== undefined) {
+    const existing = await authRepository.findUserByPhone(data.phone);
+    if (existing && existing.id !== userId) {
+      throw new Error("Phone number already exists.");
+    }
+    updateData.phone = data.phone;
+  }
+
+  const user = await authRepository.updateUserProfile(userId, updateData);
+
+  return {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phone: user.phone,
+    profileImage: user.profileImage,
+    status: user.status,
+    isVerified: user.isVerified,
+    role: user.role.name,
+    addresses: user.addresses,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+};
+
 const addAddress = async (userId, addressData) => {
-  return await authRepository.createAddress(userId, addressData);
+  try {
+    return await authRepository.createAddress(userId, addressData);
+  } catch (error) {
+    if (error?.code === "P2002") {
+      throw new Error("Only one default address is allowed.");
+    }
+    throw error;
+  }
 };
 
 const deleteAddress = async (userId, addressId) => {
@@ -191,7 +230,7 @@ const deleteAddress = async (userId, addressId) => {
     throw new Error("Access denied.");
   }
 
-  return await authRepository.deleteAddress(addressId);
+  return await authRepository.deleteAddress(addressId, userId);
 };
 
 const updateAddress = async (userId, addressId, addressData) => {
@@ -205,7 +244,14 @@ const updateAddress = async (userId, addressId, addressData) => {
     throw new Error("Access denied.");
   }
 
-  return await authRepository.updateAddress(addressId, addressData);
+  try {
+    return await authRepository.updateAddress(addressId, userId, addressData);
+  } catch (error) {
+    if (error?.code === "P2002") {
+      throw new Error("Only one default address is allowed.");
+    }
+    throw error;
+  }
 };
 
 module.exports = {
@@ -216,4 +262,5 @@ module.exports = {
   addAddress,
   deleteAddress,
   updateAddress,
+  updateProfile,
 };

@@ -7,13 +7,15 @@ export const metadata = {
     "انضم لوجبة — زبون أو صاحب مطعم — وابدأ اطلب أو بيع من مطعمك بغزة.",
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage({ searchParams }) {
+  const { next } = await searchParams;
+
   return (
     <AuthLayout
       title="أنشئ حسابك"
       subtitle="انضم لوجبة — زبون أو صاحب مطعم، كلكم أهل."
     >
-      <RegisterForm />
+      <RegisterForm next={next} />
     </AuthLayout>
   );
 }

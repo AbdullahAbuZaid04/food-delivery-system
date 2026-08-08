@@ -10,9 +10,12 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import BrandMark from "@components/ui/BrandMark";
 import { useCart } from "@context/CartContext";
+import { useAuth } from "@context/AuthContext";
 import { formatArabicCount, toArabicDigits } from "@lib/format";
 
 export const APP_HEADER_HEIGHT = 72;
@@ -24,11 +27,16 @@ function AppHeader({
   showSearch = true,
 }) {
   const { totalItems } = useCart();
+  const { user, logout, status } = useAuth();
+  const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const avatarButtonRef = useRef(null);
 
-  // live badge from the shared cart — no more static mock count (AGENTS.md §11)
+  const displayName = user?.firstName ?? (userName ? userName.trim() : "");
+  const isAuthLoading = status === "loading";
+  const isGuest = !displayName && !isAuthLoading;
+
   const cartBadge = totalItems > 0 ? toArabicDigits(totalItems) : null;
   const cartLabel =
     totalItems > 0
@@ -38,6 +46,13 @@ function AppHeader({
   const closeUserMenu = () => {
     setIsUserMenuOpen(false);
     avatarButtonRef.current?.focus();
+  };
+
+  const handleLogout = async () => {
+    closeUserMenu();
+    await logout();
+    toast.success("منوّر، بلاستقبال في أي وقت");
+    router.push("/home");
   };
 
   useEffect(() => {
@@ -60,7 +75,7 @@ function AppHeader({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isUserMenuOpen]);
 
-  const initial = userName.trim().charAt(0) || "ز";
+  const initial = displayName.trim().charAt(0) || "ز";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-cream/90 backdrop-blur-md border-b border-clay/10">
@@ -125,7 +140,30 @@ function AppHeader({
             ) : null}
           </Link>
 
-          <div className="relative" ref={userMenuRef}>
+          {isGuest ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href="/register"
+                className="hidden sm:inline-flex h-12 items-center justify-center px-5 rounded-full border-2 border-clay/20 text-cocoa font-bold text-[14px] hover:border-terra hover:text-terra transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+              >
+                إنشاء حساب
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex h-12 items-center justify-center px-6 rounded-full bg-terra text-cream font-bold text-[14px] shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+              >
+                تسجيل الدخول
+              </Link>
+            </div>
+          ) : isAuthLoading ? (
+            <span
+              aria-hidden="true"
+              className="w-11 h-11 rounded-full bg-terra/20 text-terra font-display font-bold text-sm flex items-center justify-center shrink-0"
+            >
+              ز
+            </span>
+          ) : (
+            <div className="relative" ref={userMenuRef}>
             <button
               ref={avatarButtonRef}
               type="button"
@@ -139,7 +177,7 @@ function AppHeader({
                 {initial}
               </span>
               <span className="hidden lg:block text-[14px] font-bold">
-                {userName}
+                {displayName}
               </span>
               <ChevronDown
                 aria-hidden="true"
@@ -187,7 +225,7 @@ function AppHeader({
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={closeUserMenu}
+                  onClick={handleLogout}
                   className="w-full flex items-center gap-3 rounded-xl px-3 py-3 text-[14.5px] font-semibold text-error hover:bg-error/10 transition-colors"
                 >
                   <LogOut className="w-5 h-5 shrink-0" aria-hidden="true" />
@@ -195,7 +233,8 @@ function AppHeader({
                 </button>
               </div>
             ) : null}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

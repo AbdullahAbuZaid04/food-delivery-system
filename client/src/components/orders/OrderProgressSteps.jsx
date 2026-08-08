@@ -1,20 +1,3 @@
-// src/components/orders/OrderProgressSteps.jsx
-// Shared horizontal order-progress summary (تم التأكيد ← قيد التحضير ← بالطريق ←
-// وصل). Extracted from the Order Confirmation screen (checkout phase) so the
-// confirmation page AND the per-order tracking page render the SAME visual —
-// one implementation, no duplication (AGENTS.md §3, §12).
-//
-// The Order Confirmation page still passes an `activeStep` index; its thin
-// adapter in components/checkout/OrderProgressSteps.jsx maps that onto this
-// `timeline` prop. A cancelled order skips the steps entirely and shows a simple
-// error banner instead (the tracking page passes `cancelled`).
-//
-// Visual logic:
-// - completed steps → terra (colored border + tinted circle + colored label)
-// - current step (first non-completed) → terra too, PLUS a soft pulse ring
-//   (`animate-pulse motion-reduce:animate-none` — AGENTS.md §7)
-// - future steps → muted gray
-// - connectors turn terra once the step before them is completed
 import { Fragment } from "react";
 import {
   Bike,
@@ -24,8 +7,6 @@ import {
   PackageCheck,
 } from "lucide-react";
 
-// Canonical journey steps, in order. Mock timelines use these exact strings, and
-// the checkout adapter derives its steps from this list.
 export const ORDER_PROGRESS_STEPS = [
   "تم التأكيد",
   "قيد التحضير",
@@ -71,8 +52,6 @@ export default function OrderProgressSteps({ timeline = [], cancelled = false })
 
   if (!timeline.length) return null;
 
-  // Current step = the first one that hasn't finished yet. -1 means every step
-  // is done (delivered order) → nothing pulses.
   const currentIndex = timeline.findIndex((entry) => !entry.completed);
 
   return (

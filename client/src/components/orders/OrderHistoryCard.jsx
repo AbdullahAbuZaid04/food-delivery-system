@@ -1,19 +1,12 @@
-// src/components/orders/OrderHistoryCard.jsx
-// One card per past order in the "طلباتي" screen: restaurant, date, status
-// badge, a short item summary, the total and a "اطلب نفس الطلبية" button.
-//
-// Click behavior depends on the order status:
-// - Active orders (قيد التحضير / بالطريق): the WHOLE card is a Link (absolute
-//   overlay, same pattern as RestaurantCard) so tapping anywhere on the card
-//   opens the per-order tracking page /orders/[order.id] — with a hover bg
-//   change + a small "اضغط لمتابعة التتبع" hint as the visual affordance
-//   (AGENTS.md §6).
-// - Past orders (تم التوصيل / ملغي): the card is NOT clickable as a whole —
-//   the reorder button is the only interactive element.
-// The reorder button is a visual-only placeholder this phase.
+"use client";
+
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { CalendarDays, ChevronLeft, Loader2, RotateCcw } from "lucide-react";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
+import { useCart } from "@context/CartContext";
 import { formatOrderDate, formatPrice, toArabicDigits } from "@lib/format";
 
 const ACTIVE_STATUSES = ["قيد التحضير", "بالطريق"];
@@ -25,7 +18,31 @@ function summarizeItems(items) {
 }
 
 function OrderHistoryCard({ order }) {
+  const router = useRouter();
+  const { clearCart, setDeliveryFee, addItem } = useCart();
+  const [isReordering, setIsReordering] = useState(false);
+
   const isActive = ACTIVE_STATUSES.includes(order.status);
+
+  const handleReorder = async () => {
+    if (!order.restaurantSlug || order.items.length === 0) {
+      toast.error("ما بنقدر نعيد نفس الطلبية لهالطلب");
+      return;
+    }
+    setIsReordering(true);
+    clearCart();
+    setDeliveryFee(order.deliveryFee);
+    order.items.forEach((item) => {
+      addItem(
+        { id: item.menuItemId, name: item.name, price: item.price, image: item.image },
+        order.restaurantId,
+        order.restaurantName,
+      );
+    });
+    toast.success("عبّينا سلتك بنفس الطلبية — كمل من عندك");
+    router.push(`/restaurants/${order.restaurantSlug}`);
+    setIsReordering(false);
+  };
 
   return (
     <article
@@ -73,20 +90,18 @@ function OrderHistoryCard({ order }) {
 
         <button
           type="button"
-          onClick={(event) => {
-            // لا تدع ضغطة "اطلب نفس الطلبية" تفعّل Link البطاقة (للطلبات
-            // الجارية) — بوقف انتشار الحدث والسلوك الافتراضي عشان ما يصير
-            // تعارض بين الضغطتين. الـ z-20 كمان بيفصلها عن overlay الـ Link.
-            event.preventDefault();
-            event.stopPropagation();
-            // TODO: "اطلب نفس الطلبية" — هاد الزر لاحقًا رح يعبّي CartContext
-            // تلقائيًا بنفس عناصر الطلب القديم وينقل المستخدم لصفحة المطعم.
-            // خارج نطاق هالمرحلة — بس console.log للتوثيق.
-            console.log("reorder", order.id);
-          }}
-          className="relative z-20 inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[14px] px-5 shadow-[0_10px_22px_-10px_rgba(184,74,38,0.9)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+          onClick={handleReorder}
+          disabled={isReordering}
+          className="relative z-20 inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[14px] px-5 shadow-[0_10px_22px_-10px_rgba(184,74,38,0.9)] hover:bg-terra-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
         >
-          <RotateCcw className="w-4 h-4" aria-hidden="true" />
+          {isReordering ? (
+            <Loader2
+              className="w-4 h-4 animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+          ) : (
+            <RotateCcw className="w-4 h-4" aria-hidden="true" />
+          )}
           اطلب نفس الطلبية
         </button>
       </div>

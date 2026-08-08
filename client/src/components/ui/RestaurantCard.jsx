@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Star, Clock, Bike, Heart } from "lucide-react";
+import { Star, Clock, Bike } from "lucide-react";
 
-function RestaurantCard({ restaurant, isFavorite = false, onToggleFavorite }) {
+function RestaurantCard({ restaurant }) {
   const href = restaurant.id ? `/restaurants/${restaurant.id}` : null;
 
   return (
@@ -40,41 +40,20 @@ function RestaurantCard({ restaurant, isFavorite = false, onToggleFavorite }) {
             {restaurant.time}
           </span>
         </div>
-
-        {onToggleFavorite ? (
-          <button
-            type="button"
-            onClick={onToggleFavorite}
-            aria-pressed={isFavorite}
-            aria-label={
-              isFavorite
-                ? `إزالة ${restaurant.name} من المفضلة`
-                : `إضافة ${restaurant.name} إلى المفضلة`
-            }
-            className={`relative z-20 w-11 h-11 shrink-0 -me-1 rounded-full border-2 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
-              isFavorite
-                ? "border-terra bg-terra/10 text-terra"
-                : "border-clay/20 text-cocoa-soft hover:border-terra hover:text-terra"
-            }`}
-          >
-            <Heart
-              className={`w-5 h-5 ${isFavorite ? "fill-terra" : ""}`}
-              aria-hidden="true"
-            />
-          </button>
-        ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4">
-        {restaurant.dishes.map((dish) => (
-          <span
-            key={dish}
-            className="bg-cream border border-clay/15 rounded-full text-[12px] text-cocoa-soft px-3 py-1"
-          >
-            {dish}
-          </span>
-        ))}
-      </div>
+      {restaurant.dishes?.length ? (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {restaurant.dishes.map((dish) => (
+            <span
+              key={dish}
+              className="bg-cream border border-clay/15 rounded-full text-[12px] text-cocoa-soft px-3 py-1"
+            >
+              {dish}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mt-4 pt-3 border-t border-dashed border-clay/20 flex items-center justify-between text-[12.5px]">
         <span className="text-cocoa-soft flex items-center gap-1.5">

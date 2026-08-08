@@ -1,12 +1,3 @@
-// src/components/orders/CourierInfoCard.jsx
-// Small card for the active courier — rendered ONLY when the order is on the way
-// (courierName exists). Shows a circular avatar with the courier's first letter,
-// their name and role, plus a call button that opens the dialer via a `tel:`
-// link (phone numbers are LTR, AGENTS.md §5).
-//
-// If a courier has no phone number yet (mock/API gap), the button falls back to
-// the disabled "قريبًا" placeholder instead of a dead link — the disabled state
-// is still never communicated by color alone (AGENTS.md §7).
 import { Phone } from "lucide-react";
 
 export default function CourierInfoCard({ courierName, courierPhone }) {

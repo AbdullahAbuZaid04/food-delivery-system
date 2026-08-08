@@ -3,23 +3,6 @@
 import { useEffect, useRef } from "react";
 import { TriangleAlert, X } from "lucide-react";
 
-/**
- * RestaurantConflictModal — shown when addItem() returns `{ conflict: true }`
- * (the cart already holds items from a different restaurant). The decision is
- * left to the user: cancel (keep the current cart untouched) or empty the cart
- * and add the pending item.
- *
- * Accessibility follows AGENTS.md §6/§7 (same pattern as the landing menu
- * modal in MobileMenu): body scroll lock while open, focus moves into the
- * dialog, Escape closes, Tab is trapped inside, and focus returns to the
- * previously-focused element on close.
- *
- * @param {boolean} open
- * @param {string} currentRestaurantName - restaurant already in the cart.
- * @param {string} incomingRestaurantName - restaurant the user tried to add from.
- * @param {() => void} onClose - cancel; cart stays untouched.
- * @param {() => void} onConfirm - clear the cart and add the pending item.
- */
 function RestaurantConflictModal({
   open,
   currentRestaurantName = "",

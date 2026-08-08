@@ -1,4 +1,3 @@
-// src/app/(customer)/orders/layout.js
 export const metadata = {
   title: "وجبة | طلباتي",
   description:

@@ -1,8 +1,3 @@
-// src/components/orders/OrderStatusBadge.jsx
-// Small colored pill showing an order status. Always carries text + an icon
-// alongside the color so the state is never communicated by color alone
-// (AGENTS.md §7). "قيد التحضير" maps to gold, "بالطريق" to terra, delivered to
-// success, cancelled to error — per the status-color mapping in AGENTS.md §4.
 import { Bike, CircleCheck, CircleX, Clock, CookingPot } from "lucide-react";
 
 const STATUS_ICONS = {

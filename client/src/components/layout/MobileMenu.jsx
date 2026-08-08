@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { X, ChevronLeft, UserRound } from "lucide-react";
+import { X, ChevronLeft, LogOut, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import BrandMark from "@components/ui/BrandMark";
 import { mobileMenuLinks } from "@lib/constants";
+import { useAuth } from "@context/AuthContext";
 
 /**
  * MobileMenu — opaque full-screen overlay with body scroll lock, focus move on
@@ -14,6 +17,20 @@ import { mobileMenuLinks } from "@lib/constants";
  */
 function MobileMenu({ open, onClose }) {
   const menuRef = useRef(null);
+  const { user, status, logout } = useAuth();
+  const router = useRouter();
+
+  const isAuthLoading = status === "loading";
+  const displayName = user?.firstName ?? "";
+  const isGuest = !displayName && !isAuthLoading;
+  const initial = displayName.trim().charAt(0) || "ز";
+
+  const handleLogout = async () => {
+    onClose();
+    await logout();
+    toast.success("منوّر، بلاستقبال في أي وقت");
+    router.push("/");
+  };
 
   // lock body scroll while the menu is open, and move focus into it
   useEffect(() => {
@@ -108,14 +125,53 @@ function MobileMenu({ open, onClose }) {
         </nav>
 
         <div className="flex flex-col gap-3 mt-8">
-          <Link
-            href="/login"
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
-          >
-            <UserRound className="w-5 h-5" />
-            سجّل الدخول
-          </Link>
+          {isGuest ? (
+            <>
+              <Link
+                href="/register"
+                onClick={onClose}
+                className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
+              >
+                <UserRound className="w-5 h-5" />
+                إنشاء حساب
+              </Link>
+              <Link
+                href="/login"
+                onClick={onClose}
+                className="flex items-center justify-center gap-2 rounded-full bg-terra text-cream font-bold text-base py-3.5 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors"
+              >
+                <UserRound className="w-5 h-5" />
+                تسجيل الدخول
+              </Link>
+            </>
+          ) : isAuthLoading ? null : (
+            <>
+              <div className="flex items-center gap-3 rounded-2xl border border-clay/10 bg-cream-deep px-4 py-3.5">
+                <span className="w-11 h-11 rounded-full bg-terra text-cream font-display font-bold text-sm flex items-center justify-center shrink-0">
+                  {initial}
+                </span>
+                <span className="text-[16px] font-bold text-cocoa truncate">
+                  {displayName}
+                </span>
+              </div>
+              <Link
+                href="/account"
+                onClick={onClose}
+                className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
+              >
+                <UserRound className="w-5 h-5" />
+                حسابي
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center justify-center gap-2 rounded-full border-2 border-error/30 text-error font-bold text-base py-3.5 hover:border-error hover:bg-error/5 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                تسجيل خروج
+              </button>
+            </>
+          )}
           <a
             href="#restaurants"
             onClick={onClose}
