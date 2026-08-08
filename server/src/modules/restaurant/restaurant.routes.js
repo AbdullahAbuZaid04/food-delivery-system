@@ -32,6 +32,13 @@ router.get(
   restaurantController.getMyRestaurant,
 );
 
+router.get(
+  "/owner/my/drivers",
+  authenticate,
+  authorize("OWNER"),
+  restaurantController.getDrivers,
+);
+
 router.put(
   "/owner/my",
   authenticate,

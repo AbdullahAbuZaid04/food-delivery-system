@@ -4,6 +4,7 @@ const validate = require("../../middlewares/validate");
 const {
   createMealSchema,
   updateMealSchema,
+  updateMealAvailabilitySchema,
 } = require("./meal.schemas");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
 
@@ -59,6 +60,14 @@ router.patch(
   authenticate,
   authorize("OWNER"),
   mealController.toggleFeatured
+);
+
+router.patch(
+  "/:id/availability",
+  authenticate,
+  authorize("OWNER"),
+  validate(updateMealAvailabilitySchema),
+  mealController.updateAvailability
 );
 
 module.exports = router;

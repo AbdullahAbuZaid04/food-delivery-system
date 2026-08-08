@@ -197,6 +197,23 @@ const updateAddress = async (addressId, data) => {
   });
 };
 
+const findActiveDrivers = async () => {
+  return await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      status: "ACTIVE",
+      role: { name: "DRIVER" },
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+    },
+    orderBy: { firstName: "asc" },
+  });
+};
+
 module.exports = {
   createRestaurant,
   findRestaurantByOwnerId,
@@ -206,4 +223,5 @@ module.exports = {
   updateRestaurant,
   updateRestaurantStatus,
   updateAddress,
+  findActiveDrivers,
 };

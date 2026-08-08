@@ -126,6 +126,22 @@ const getRestaurantBySlug = async (req, res) => {
   }
 };
 
+const getDrivers = async (req, res) => {
+  try {
+    const drivers = await restaurantService.getDrivers();
+
+    return res.status(200).json({
+      success: true,
+      data: drivers,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createRestaurant,
   getMyRestaurant,
@@ -133,4 +149,5 @@ module.exports = {
   updateStatus,
   getAllRestaurants,
   getRestaurantBySlug,
+  getDrivers,
 };

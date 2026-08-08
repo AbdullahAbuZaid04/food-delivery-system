@@ -92,6 +92,11 @@ const toggleFeatured = async (ownerId, mealId) => {
   });
 };
 
+const updateAvailability = async (ownerId, mealId, status) => {
+  await checkMealOwnership(mealId, ownerId);
+  return await mealRepository.updateMeal(mealId, { status });
+};
+
 const searchMeals = async (query, restaurantId, page, limit) => {
   return await mealRepository.searchMeals(query, restaurantId, page, limit);
 };
@@ -103,5 +108,6 @@ module.exports = {
   updateMeal,
   deleteMeal,
   toggleFeatured,
+  updateAvailability,
   searchMeals,
 };
