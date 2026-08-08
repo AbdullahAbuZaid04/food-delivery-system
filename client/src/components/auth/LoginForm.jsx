@@ -39,6 +39,10 @@ export default function LoginForm({ next }) {
         router.push("/driver");
         return;
       }
+      if (user.role === "ADMIN") {
+        router.push("/admin");
+        return;
+      }
       router.push(safeNextPath(next) || "/home");
     } catch (err) {
       setError(err.message || "تعذر تسجيل الدخول، حاول مرة تانية.");
