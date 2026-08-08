@@ -53,10 +53,35 @@ const updateAddressSchema = z.object({
   isDefault: z.boolean().optional(),
 });
 
+const updateProfileSchema = z
+  .object({
+    firstName: z
+      .string()
+      .trim()
+      .min(2, "First name must be at least 2 characters.")
+      .max(50)
+      .optional(),
+    lastName: z
+      .string()
+      .trim()
+      .min(2, "Last name must be at least 2 characters.")
+      .max(50)
+      .optional(),
+    phone: z
+      .string()
+      .regex(/^05\d{8}$/, "Invalid Palestinian phone number.")
+      .optional(),
+  })
+  .refine(
+    (data) => data.firstName !== undefined || data.lastName !== undefined || data.phone !== undefined,
+    { message: "At least one field is required." },
+  );
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
   addAddressSchema,
   updateAddressSchema,
+  updateProfileSchema,
 };
