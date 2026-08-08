@@ -2,7 +2,7 @@ import AuthLayout from "@components/auth/AuthLayout";
 import RegisterForm from "@components/auth/RegisterForm";
 
 export const metadata = {
-  title: "إنشاء حساب | وجبة",
+  title: "وجبة | إنشاء حساب",
   description:
     "انضم لوجبة — زبون أو صاحب مطعم — وابدأ اطلب أو بيع من مطعمك بغزة.",
 };
