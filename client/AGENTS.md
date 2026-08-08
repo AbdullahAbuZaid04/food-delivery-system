@@ -132,7 +132,8 @@ section on any page.
   LTR widgets).
 - All visible numbers use **Arabic-Indic digits** (٠١٢٣٤٥٦٧٨٩), not Latin digits —
   this applies to prices, order counts, ratings, dashboard stats, everywhere.
-  **Exception — owner dashboard**: `/owner/*` uses Latin digits for business data
+  **Exception — business dashboards (owner + driver)**: `/owner/*` and `/driver/*`
+  use Latin digits for business data
   (prices, quantities, order numbers, phone numbers, ratings) — decided by the
   owner product decision for POS-style clarity. The shared formatters take a
   `latin` flag rather than duplicating logic: `formatPrice(value, true)`,
@@ -401,6 +402,28 @@ section on any page.
   a driver/owner order feed push channel (real-time), an owner earnings
   breakdown beyond totals, and a dedicated owner login page (owners sign in via
   the shared `/login` today).
+- **Driver dashboard (`/driver/*`) — DONE (`feature/driver-dashboard`)**: routes
+  live under the `(driver)` route group → `src/app/(driver)/layout.js` (metadata
+  + `<DriverShell>`) and `src/app/(driver)/driver/{,orders/[id]}/page.js`. The
+  shell (`components/driver/DriverShell.jsx`) is a slim mobile-first header
+  (BrandMark + وجبة wordmark, account menu, logout) that redirects
+  unauthenticated users to `/login?next=/driver` and non-DRIVER roles to `/home`.
+  The list screen fetches `GET /orders/driver/my` and maps each order through
+  `orderToDriverCard` (presenters.js), split into "جارية" (ASSIGNED/PICKED_UP/
+  ON_THE_WAY) and "مكتملة" (DELIVERED) tabs with a shared `RefreshButton`; the
+  detail screen fetches `GET /orders/:id` (already DRIVER-aware server-side),
+  shows the customer + address + a `tel:` call button + itemized totals, and a
+  single primary action button that advances the delivery via
+  `PATCH /orders/:id/driver-status` using the transition map
+  `ASSIGNED→PICKED_UP→ON_THE_WAY→DELIVERED` (server rejects illegal transitions
+  and orders not assigned to the caller with 403 "Access denied."). Status
+  rendering reuses the customer-app `OrderStatusBadge` via the Arabic
+  `statusLabel`. `LoginForm` routes a DRIVER session to `/driver` after login,
+  and `CustomerGuard` sends authenticated non-customers to their dashboard
+  (DRIVER → `/driver`, otherwise → `/owner`). Driver numbers are Latin digits
+  like the owner dashboard (§5 exception). The owner ↔ driver loop is complete:
+  the owner assigns a driver on READY orders (per-restaurant driver list), and
+  the driver sees and advances only their own assigned deliveries.
 - As new features ship (auth, cart, checkout, dashboard), add their own
   placeholder/TODO items here rather than leaving them undocumented in code only.
 

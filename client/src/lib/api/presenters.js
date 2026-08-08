@@ -515,3 +515,75 @@ export function restaurantFormToPayload(form) {
 export function formatOwnerDateTime(iso) {
   return formatDateTime(iso, true);
 }
+
+// ========================
+// DRIVER DASHBOARD PRESENTERS
+// ========================
+
+// The single legal next step per status for the driver (mirrors the server's
+// driverTransitions in order.service.js). The driver only moves the delivery
+// leg forward once the owner has assigned them the order — the UI shows one
+// action per status, no branching.
+export const DRIVER_STATUS_TRANSITIONS = {
+  ASSIGNED: ["PICKED_UP"],
+  PICKED_UP: ["ON_THE_WAY"],
+  ON_THE_WAY: ["DELIVERED"],
+};
+
+export function driverNextAction(status) {
+  return DRIVER_STATUS_TRANSITIONS[status]?.[0] ?? null;
+}
+
+export const DRIVER_ACTION_LABELS = {
+  PICKED_UP: "استلمت الطلبية",
+  ON_THE_WAY: "بالطريق هلق",
+  DELIVERED: "تم التسليم",
+};
+
+export function driverActionLabel(status) {
+  return DRIVER_ACTION_LABELS[status] ?? null;
+}
+
+// Server order → driver card shape (driver orders list + detail). Reuses
+// ownerOrderStatusLabel so the same Arabic label set covers every stage.
+export function orderToDriverCard(order) {
+  const address = order.address ?? {};
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    statusLabel: ownerOrderStatusLabel(order.status),
+    createdAt: order.createdAt,
+    restaurantName: order.restaurant?.name ?? "مطعم",
+    restaurantPhone: order.restaurant?.phone ?? "",
+    customerName: order.customer
+      ? `${order.customer.firstName} ${order.customer.lastName}`
+      : "زبون",
+    customerPhone: order.customer?.phone ?? order.phone ?? "",
+    addressLine: [
+      address.label,
+      address.street,
+      address.building,
+      address.city,
+      address.details,
+    ]
+      .filter(Boolean)
+      .join("، "),
+    items: (order.items ?? []).map((item) => ({
+      name: item.mealName ?? item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice ?? item.price,
+    })),
+    itemCount: (order.items ?? []).reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0,
+    ),
+    subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    total: order.total,
+    paymentLabel: PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod,
+    notes: order.notes ?? "",
+    nextAction: driverNextAction(order.status),
+    nextActionLabel: driverActionLabel(driverNextAction(order.status)),
+  };
+}

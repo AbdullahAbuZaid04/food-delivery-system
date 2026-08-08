@@ -27,3 +27,11 @@ export async function updateOrderStatus(orderId, status) {
 export async function assignDriver(orderId, driverId) {
   return api.patch(`/orders/${orderId}/assign`, { driverId });
 }
+
+export async function getMyDriverOrders({ page = 1, limit = 50 } = {}) {
+  return api.get("/orders/driver/my", { params: { page, limit } });
+}
+
+export async function updateDriverOrderStatus(orderId, status) {
+  return api.patch(`/orders/${orderId}/driver-status`, { status });
+}
