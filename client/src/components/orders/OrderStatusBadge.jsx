@@ -1,20 +1,40 @@
-import { Bike, CircleCheck, CircleX, Clock, CookingPot } from "lucide-react";
+import {
+  Bike,
+  CheckCheck,
+  CircleCheck,
+  CircleX,
+  Clock,
+  CookingPot,
+  PackageCheck,
+  PackageOpen,
+  UserCheck,
+} from "lucide-react";
 
 const STATUS_ICONS = {
-  "تم التوصيل": CircleCheck,
+  "قيد الانتظار": Clock,
+  "تم القبول": CheckCheck,
   "قيد التحضير": CookingPot,
+  "جاهز": PackageCheck,
+  "تم تعيين سائق": UserCheck,
+  "استلمه السائق": PackageOpen,
   "بالطريق": Bike,
+  "تم التوصيل": CircleCheck,
   "ملغي": CircleX,
 };
 
 const STATUS_STYLES = {
-  "تم التوصيل": "bg-success/15 text-success",
+  "قيد الانتظار": "bg-warning/15 text-warning",
+  "تم القبول": "bg-terra/15 text-terra-dark",
   "قيد التحضير": "bg-gold/20 text-terra-dark",
+  "جاهز": "bg-olive/15 text-olive-deep",
+  "تم تعيين سائق": "bg-terra/15 text-terra-dark",
+  "استلمه السائق": "bg-olive/15 text-olive-deep",
   "بالطريق": "bg-terra/15 text-terra-dark",
+  "تم التوصيل": "bg-success/15 text-success",
   "ملغي": "bg-error/15 text-error",
 };
 
-const FALLBACK_STYLE = "bg-clay/15 text-cocoa-soft";
+const FALLBACK_STYLE = "bg-muted/15 text-muted";
 
 function OrderStatusBadge({ status }) {
   const Icon = STATUS_ICONS[status] ?? Clock;

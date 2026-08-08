@@ -248,7 +248,7 @@ export default function SavedAddressPicker({
           id="checkout-phone"
           name="phone"
           label="رقم الهاتف للتواصل"
-          hint="مطلوب — المندوب بيعتمد هالرقم لو احتاج يتواصل معك"
+          hint="مطلوب — السائق بيعتمد هالرقم لو احتاج يتواصل معك"
           type="tel"
           dir="ltr"
           inputClassName="text-left"

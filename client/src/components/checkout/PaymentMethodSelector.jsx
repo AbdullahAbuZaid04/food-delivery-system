@@ -4,7 +4,7 @@ const PAYMENT_OPTIONS = [
   {
     id: "cash",
     label: "الدفع عند الاستلام",
-    description: "بتحاسب المندوب كاش لما توصلك الطلبية",
+    description: "بتحاسب السائق كاش لما توصلك الطلبية",
     icon: <Banknote className="w-6 h-6" strokeWidth={1.7} aria-hidden="true" />,
     disabled: false,
   },
