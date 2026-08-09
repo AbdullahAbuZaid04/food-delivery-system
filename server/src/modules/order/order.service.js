@@ -190,14 +190,14 @@ const updateOrderStatus = async (orderId, ownerId, status) => {
     throw new Error("Access denied.");
   }
 
+  // The owner owns the kitchen leg only: from the moment an order is handed to
+  // a driver (ASSIGNED, via assignDriver — the sole path out of READY) every
+  // remaining transition belongs to the driver's own endpoint. The owner can
+  // never advance or complete a delivery.
   const validTransitions = {
     PENDING: ["ACCEPTED", "CANCELLED"],
     ACCEPTED: ["PREPARING", "CANCELLED"],
     PREPARING: ["READY"],
-    READY: ["ASSIGNED"],
-    ASSIGNED: ["PICKED_UP"],
-    PICKED_UP: ["ON_THE_WAY"],
-    ON_THE_WAY: ["DELIVERED"],
   };
 
   const allowed = validTransitions[order.status];
