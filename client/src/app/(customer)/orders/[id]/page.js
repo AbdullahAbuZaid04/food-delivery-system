@@ -9,6 +9,7 @@ import OrderTrackingView from "@components/orders/OrderTrackingView";
 import { cancelOrder, getOrderById } from "@lib/api/orders";
 import { orderToTracking } from "@lib/api/presenters";
 import { useAuth } from "@context/AuthContext";
+import { useOrderEvents } from "@hooks/useOrderEvents";
 
 function TrackingLoading({ userName }) {
   return (
@@ -100,6 +101,17 @@ export default function OrderTrackingPage({ params }) {
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
   }, [status, router]);
+
+  // Live updates for this order: refetch when an event names it, so the
+  // timeline advances without a manual refresh.
+  useOrderEvents(
+    useCallback(
+      (event) => {
+        if (event.orderId === id) loadOrder();
+      },
+      [id, loadOrder],
+    ),
+  );
 
   const handleCancel = useCallback(async () => {
     await cancelOrder(id);

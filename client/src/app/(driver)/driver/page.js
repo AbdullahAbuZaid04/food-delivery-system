@@ -5,6 +5,7 @@ import { ChevronLeft, MapPin, PackageOpen, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import RefreshButton from "@components/owner/RefreshButton";
+import { useOrderEvents } from "@hooks/useOrderEvents";
 import { getMyDriverOrders } from "@lib/api/orders";
 import { formatOwnerDateTime, orderToDriverCard } from "@lib/api/presenters";
 import { formatPrice } from "@lib/format";
@@ -65,8 +66,8 @@ export default function DriverOrdersPage() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("active");
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const data = await getMyDriverOrders({ limit: 100 });
@@ -86,6 +87,9 @@ export default function DriverOrdersPage() {
   const activeOrders = orders.filter((order) => ACTIVE_STATUSES.has(order.status));
   const completedOrders = orders.filter((order) => !ACTIVE_STATUSES.has(order.status));
   const visibleOrders = tab === "active" ? activeOrders : completedOrders;
+
+  // Live refresh: a new assignment or a status change re-fetches silently.
+  useOrderEvents(() => load({ silent: true }));
 
   return (
     <div>
