@@ -269,8 +269,19 @@ section on any page.
   Component that fetches `GET /api/orders/:id` and renders the shared
   `OrderTrackingView` via `orderToTracking` (progress timeline derived from the
   order's `statusHistory`, real courier name/phone when a driver is assigned).
+  **Customer flow steps (`feature/real-time-orders`)**: the progress timeline is
+  now driven by real actions — "تم التأكيد" lights on the owner accepting
+  (`ACCEPTED`), "قيد التحضير" on the owner pressing تحضير (`PREPARING`),
+  "بالطريق" only when the driver reports on-the-way (`ON_THE_WAY`), and "وصل" on
+  delivery (`DELIVERED`) — intermediate statuses (READY/ASSIGNED/PICKED_UP)
+  leave the upcoming step unlit. Badge labels follow the same split: PENDING →
+  "بانتظار تأكيد المطعم", ACCEPTED → "تم التأكيد", PREPARING/READY →
+  "قيد التحضير", ASSIGNED/PICKED_UP/ON_THE_WAY → "بالطريق". Presenters expose
+  the raw server status as `statusCode` and all logic that used to branch on
+  Arabic labels (cancel visibility, active-card link, ETA) now branches on
+  `statusCode` — never compare labels in logic.
   `LastOrderTracking` and `src/lib/mock/orders.js` were deleted. The "إلغاء
-  الطلب" button (shown for "قيد التحضير" = server PENDING/ACCEPTED, the only
+  الطلب" button (shown for server PENDING/ACCEPTED, the only
   cancellable statuses) is now real: it opens a confirmation **modal**
   (`CancelOrderModal`, same `role="alertdialog"`/focus-trap/Escape pattern as
   `ClearCartDialog` — AGENTS.md §7) whose confirm button calls
@@ -401,9 +412,29 @@ section on any page.
   `components/owner/RefreshButton.jsx` (icon + label + spin-on-load) used
   everywhere it appears — overview, orders, reviews, and the menu manager — so
   its shape never drifts. Deferred:
-  a driver/owner order feed push channel (real-time), an owner earnings
-  breakdown beyond totals, and a dedicated owner login page (owners sign in via
-  the shared `/login` today).
+  an owner earnings breakdown beyond totals and a dedicated owner login page
+  (owners sign in via the shared `/login` today).
+- **Real-time order updates — DONE (`feature/real-time-orders`)**: the server
+  streams order events over SSE at `GET /api/orders/events` (registered BEFORE
+  the `authenticate` middleware because EventSource can't set an Authorization
+  header — the handler validates a `?token=` query param itself and is scoped to
+  the caller's role: OWNER → `restaurant:<id>`, DRIVER → `driver:<id>`,
+  CUSTOMER → `customer:<id>`, ADMIN → `admin`). Every mutation in
+  `order.service.js` publishes a lightweight event (type `ORDER_CREATED` /
+  `ORDER_UPDATED` / `DRIVER_ASSIGNED` / `ORDER_CANCELLED` + order ids + new
+  status only — never the full payload) through the in-memory
+  `server/src/utils/eventBus.js`; clients refetch through the normal
+  authenticated endpoints, they never trust SSE payloads. The bus is in-memory
+  by design for a single server process — swap for Redis pub/sub if the server
+  ever scales horizontally. The client subscribes via the shared
+  `src/hooks/useOrderEvents.js` hook (`@hooks` alias, added to `jsconfig.json`),
+  which reconnects after errors with the current localStorage token (survives
+  background access-token refreshes). Wired into: owner orders
+  (`/owner/orders`), driver list (`/driver` — reload is `{ silent: true }` so
+  the list never flashes a skeleton), customer tracking
+  (`/orders/[id]` — only refetches when the event names that order), and the
+  customer orders history (`/orders` — silent refresh). The manual
+  `RefreshButton` stays as the always-available fallback.
 - **Driver dashboard (`/driver/*`) — DONE (`feature/driver-dashboard`)**: routes
   live under the `(driver)` route group → `src/app/(driver)/layout.js` (metadata
   + `<DriverShell>`) and `src/app/(driver)/driver/{,orders/[id]}/page.js`. The

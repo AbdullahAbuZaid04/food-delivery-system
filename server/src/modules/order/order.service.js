@@ -1,7 +1,31 @@
 const orderRepository = require("./order.repository");
 const cartRepository = require("../cart/cart.repository");
 const restaurantRepository = require("../restaurant/restaurant.repository");
+const eventBus = require("../../utils/eventBus");
 const prisma = require("../../config/prisma");
+
+// Publish an order event to every scope that cares (AGENTS: real-time). The
+// event carries only ids + the new status — subscribers refetch the full order
+// through the normal authenticated endpoints rather than trusting SSE payloads.
+const emitOrderEvent = (type, order) => {
+  const event = {
+    type,
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    restaurantId: order.restaurantId,
+    customerId: order.customerId,
+    driverId: order.driverId ?? null,
+    changedAt: new Date().toISOString(),
+  };
+
+  if (order.restaurantId) eventBus.publish(`restaurant:${order.restaurantId}`, event);
+  if (order.customerId) eventBus.publish(`customer:${order.customerId}`, event);
+  if (order.driverId) eventBus.publish(`driver:${order.driverId}`, event);
+  eventBus.publish("admin", event);
+
+  return event;
+};
 
 const generateOrderNumber = () => {
   const date = new Date();
@@ -79,6 +103,8 @@ const createOrder = async (customerId, data) => {
 
   await cartRepository.clearCart(cart.id);
 
+  emitOrderEvent("ORDER_CREATED", order);
+
   return order;
 };
 
@@ -147,7 +173,10 @@ const updateDriverStatus = async (orderId, driverId, status) => {
     throw new Error(`Cannot change status from ${order.status} to ${status}.`);
   }
 
-  return await orderRepository.updateOrderStatus(orderId, status);
+  const updated = await orderRepository.updateOrderStatus(orderId, status);
+  emitOrderEvent("ORDER_UPDATED", updated);
+
+  return updated;
 };
 
 const updateOrderStatus = async (orderId, ownerId, status) => {
@@ -161,14 +190,14 @@ const updateOrderStatus = async (orderId, ownerId, status) => {
     throw new Error("Access denied.");
   }
 
+  // The owner owns the kitchen leg only: from the moment an order is handed to
+  // a driver (ASSIGNED, via assignDriver — the sole path out of READY) every
+  // remaining transition belongs to the driver's own endpoint. The owner can
+  // never advance or complete a delivery.
   const validTransitions = {
     PENDING: ["ACCEPTED", "CANCELLED"],
     ACCEPTED: ["PREPARING", "CANCELLED"],
     PREPARING: ["READY"],
-    READY: ["ASSIGNED"],
-    ASSIGNED: ["PICKED_UP"],
-    PICKED_UP: ["ON_THE_WAY"],
-    ON_THE_WAY: ["DELIVERED"],
   };
 
   const allowed = validTransitions[order.status];
@@ -176,7 +205,10 @@ const updateOrderStatus = async (orderId, ownerId, status) => {
     throw new Error(`Cannot change status from ${order.status} to ${status}.`);
   }
 
-  return await orderRepository.updateOrderStatus(orderId, status);
+  const updated = await orderRepository.updateOrderStatus(orderId, status);
+  emitOrderEvent("ORDER_UPDATED", updated);
+
+  return updated;
 };
 
 const assignDriver = async (orderId, ownerId, driverId) => {
@@ -203,7 +235,10 @@ const assignDriver = async (orderId, ownerId, driverId) => {
     throw new Error("Invalid driver.");
   }
 
-  return await orderRepository.assignDriver(orderId, driverId);
+  const updated = await orderRepository.assignDriver(orderId, driverId);
+  emitOrderEvent("DRIVER_ASSIGNED", updated);
+
+  return updated;
 };
 
 const cancelOrder = async (orderId, customerId) => {
@@ -220,7 +255,10 @@ const cancelOrder = async (orderId, customerId) => {
     throw new Error(`Cannot cancel order in ${order.status} status.`);
   }
 
-  return await orderRepository.cancelOrder(orderId);
+  const updated = await orderRepository.cancelOrder(orderId);
+  emitOrderEvent("ORDER_CANCELLED", updated);
+
+  return updated;
 };
 
 module.exports = {

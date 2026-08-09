@@ -1,4 +1,78 @@
 const orderService = require("./order.service");
+const restaurantRepository = require("../restaurant/restaurant.repository");
+const { verifyToken } = require("../../utils/jwt");
+const eventBus = require("../../utils/eventBus");
+const prisma = require("../../config/prisma");
+
+// SSE stream for order events (GET /api/orders/events). Declared BEFORE the
+// `authenticate` router middleware because EventSource cannot send headers —
+// auth happens here via a `?token=` query param instead. The stream only
+// delivers events for the caller's own scope(s); every event is a hint to
+// re-fetch the order through the normal authenticated endpoints.
+const streamEvents = async (req, res) => {
+  let user;
+  try {
+    const header = req.headers.authorization || "";
+    const token =
+      req.query.token || header.replace(/^Bearer\s+/i, "");
+    const decoded = verifyToken(token);
+
+    user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: { role: true },
+    });
+  } catch {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token.",
+    });
+  }
+
+  if (!user || user.status !== "ACTIVE") {
+    return res.status(403).json({
+      success: false,
+      message: "Account is not active.",
+    });
+  }
+
+  let scopes;
+  if (user.role.name === "OWNER") {
+    const restaurant =
+      await restaurantRepository.findRestaurantByOwnerId(user.id);
+    scopes = restaurant ? [`restaurant:${restaurant.id}`] : [];
+  } else if (user.role.name === "DRIVER") {
+    scopes = [`driver:${user.id}`];
+  } else if (user.role.name === "CUSTOMER") {
+    scopes = [`customer:${user.id}`];
+  } else {
+    scopes = ["admin"];
+  }
+
+  res.status(200).set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+
+  res.write(": connected\n\n");
+
+  const unsubscribes = scopes.map((scope) =>
+    eventBus.subscribe(scope, (payload) => res.write(payload)),
+  );
+
+  // Comment frames keep proxies from closing the idle connection; EventSource
+  // ignores them (they never reach `onmessage`).
+  const heartbeat = setInterval(() => {
+    res.write(": keep-alive\n\n");
+  }, 25000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    unsubscribes.forEach((off) => off());
+  });
+};
 
 const createOrder = async (req, res) => {
   try {
@@ -207,6 +281,7 @@ const cancelOrder = async (req, res) => {
 };
 
 module.exports = {
+  streamEvents,
   createOrder,
   getOrderById,
   getMyOrders,

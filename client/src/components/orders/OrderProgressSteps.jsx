@@ -52,7 +52,10 @@ export default function OrderProgressSteps({ timeline = [], cancelled = false })
 
   if (!timeline.length) return null;
 
-  const currentIndex = timeline.findIndex((entry) => !entry.completed);
+  let currentIndex = -1;
+  for (let index = 0; index < timeline.length; index += 1) {
+    if (timeline[index].completed) currentIndex = index;
+  }
 
   return (
     <section

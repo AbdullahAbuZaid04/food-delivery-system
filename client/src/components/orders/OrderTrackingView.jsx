@@ -22,7 +22,15 @@ const PAYMENT_STATUS_LABELS = {
   CANCELLED: "أُلغي",
 };
 
-const ACTIVE_STATUSES = new Set(["قيد التحضير", "بالطريق"]);
+const ACTIVE_STATUS_CODES = new Set([
+  "PENDING",
+  "ACCEPTED",
+  "PREPARING",
+  "READY",
+  "ASSIGNED",
+  "PICKED_UP",
+  "ON_THE_WAY",
+]);
 
 function CancelOrderModal({
   open,
@@ -194,12 +202,12 @@ export default function OrderTrackingView({ order, userName = "", onCancel }) {
     0,
   );
   const deliveryFee = order.total - subtotal;
-  const isCancelled = order.status === "ملغي";
+  const isCancelled = order.statusCode === "CANCELLED";
   const orderNumber = order.orderNumber
     ? order.orderNumber
     : String(order.id).replace(/\D/g, "");
   const showEta =
-    ACTIVE_STATUSES.has(order.status) && Boolean(order.estimatedDeliveryAt);
+    ACTIVE_STATUS_CODES.has(order.statusCode) && Boolean(order.estimatedDeliveryAt);
   const showPayment = !isCancelled;
   const paymentMethodLabel =
     PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod ?? "—";
@@ -327,7 +335,8 @@ export default function OrderTrackingView({ order, userName = "", onCancel }) {
               </dl>
             </section>
 
-            {order.status === "قيد التحضير" && onCancel ? (
+            {(order.statusCode === "PENDING" || order.statusCode === "ACCEPTED") &&
+            onCancel ? (
               <div className="flex justify-center pt-1">
                 <CancelOrderControl
                   onCancel={onCancel}

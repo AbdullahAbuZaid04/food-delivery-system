@@ -11,6 +11,7 @@ import OwnerPageHeader from "@components/owner/OwnerPageHeader";
 import RefreshButton from "@components/owner/RefreshButton";
 import { OwnerListSkeleton } from "@components/owner/OwnerSkeleton";
 import { useOwner } from "@context/OwnerContext";
+import { useOrderEvents } from "@hooks/useOrderEvents";
 import { orderApi } from "@lib/api";
 import {
   OWNER_STATUS_LABELS,
@@ -51,6 +52,10 @@ export default function OwnerOrdersPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  // Live refresh: whenever an order event arrives (new order, status change,
+  // driver assigned/cancelled) re-fetch instead of waiting for manual refresh.
+  useOrderEvents(load);
 
   const visibleOrders = useMemo(
     () =>

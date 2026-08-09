@@ -11,13 +11,14 @@ import OrderHistoryCard from "@components/orders/OrderHistoryCard";
 import { getMyOrders } from "@lib/api/orders";
 import { orderToHistoryCard } from "@lib/api/presenters";
 import { useAuth } from "@context/AuthContext";
+import { useOrderEvents } from "@hooks/useOrderEvents";
 import { toArabicDigits } from "@lib/format";
 
 const ORDER_TABS = ["الكل", "جارية", "سابقة"];
 
 const STATUSES_BY_TAB = {
   "الكل": [],
-  "جارية": ["قيد التحضير", "بالطريق"],
+  "جارية": ["بانتظار تأكيد المطعم", "تم التأكيد", "قيد التحضير", "بالطريق"],
   "سابقة": ["تم التوصيل", "ملغي"],
 };
 
@@ -44,8 +45,8 @@ function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
+  const fetchOrders = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setIsLoading(true);
     setError("");
     try {
       const result = await getMyOrders();
@@ -65,6 +66,14 @@ function OrdersPage() {
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/login");
   }, [status, router]);
+
+  // Live updates: refresh the history silently when one of the customer's
+  // orders changes (status advance, driver assigned, cancellation).
+  useOrderEvents(
+    useCallback(() => {
+      if (status === "authenticated") fetchOrders({ silent: true });
+    }, [status, fetchOrders]),
+  );
 
   const visibleOrders = useMemo(() => {
     const statuses = STATUSES_BY_TAB[activeTab];
