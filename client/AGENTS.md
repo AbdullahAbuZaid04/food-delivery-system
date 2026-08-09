@@ -290,7 +290,15 @@ section on any page.
   الطلبية" is now real: `GET /api/orders/my` enriches every item with its meal
   (`id`/`name`/`price`/`imageUrl`) plus the restaurant `slug`, and
   `OrderHistoryCard` refills `CartContext` (clears the cart, sets the order's
-  `deliveryFee`, re-adds each item) then navigates to `/restaurants/:slug`. The "تواصل مع الدعم" button
+  `deliveryFee`, re-adds each item) then navigates to `/restaurants/:slug`.
+  Guard rails (so reorder can't build a cart that checkout can't submit):
+  `handleReorder` refuses items whose `menuItemId` isn't a real meal link
+  ("ما بنقدر نعيد نفس الطلبية لهالطلب — المنيو تغيّر"), and `CartContext`
+  hydration drops persisted entries that lack a valid `menuItemId` string
+  (self-heals stale carts that would otherwise POST `/cart/items` with
+  `mealId: undefined` → "Invalid input: expected string, received undefined").
+  The demo seed orders (`ORD-SEED-*`) link their items to real meals by name in
+  `server/prisma/seed.js`, so reordering demo history works too. The "تواصل مع الدعم" button
   was **removed** from `OrderTrackingView` by product decision — there is no
   real support endpoint/number yet (contact stays as the marketing footer's
   `support@wajba.ps` until a support channel exists).
