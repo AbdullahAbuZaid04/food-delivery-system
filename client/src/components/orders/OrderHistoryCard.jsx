@@ -37,6 +37,19 @@ function OrderHistoryCard({ order }) {
       toast.error("ما بنقدر نعيد نفس الطلبية لهالطلب");
       return;
     }
+    // "اطلب نفس الطلبية" refills the cart from the order's items, and checkout
+    // mirrors those items into the SERVER cart by mealId — so any item without a
+    // real meal link (older/demo orders) would POST `mealId: undefined` and fail.
+    // Refuse instead of building a cart that cannot be checked out.
+    if (
+      order.items.some(
+        (item) =>
+          typeof item.menuItemId !== "string" || item.menuItemId.length === 0,
+      )
+    ) {
+      toast.error("ما بنقدر نعيد نفس الطلبية لهالطلب — المنيو تغيّر");
+      return;
+    }
     setIsReordering(true);
     clearCart();
     setDeliveryFee(order.deliveryFee);

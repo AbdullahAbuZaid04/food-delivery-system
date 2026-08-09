@@ -49,6 +49,7 @@ const findOrderById = async (id) => {
       restaurant: { select: { id: true, name: true, phone: true } },
       address: true,
       statusHistory: { orderBy: { changedAt: "asc" } },
+      review: { select: { id: true, rating: true, comment: true, createdAt: true } },
     },
   });
 };

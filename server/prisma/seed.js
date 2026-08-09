@@ -700,6 +700,11 @@ async function main() {
 
   const createdRestaurants = new Map();
 
+  // Meal id lookup keyed by `${restaurantId}::${mealName}` so the demo order
+  // fixtures below can link their items to real meals — "اطلب نفس الطلبية" needs
+  // a real mealId to refill the server cart (an unlinked OrderItem has mealId null).
+  const mealIdByRestaurantAndName = new Map();
+
   for (const fixture of RESTAURANT_FIXTURES) {
     const owner = await upsertUser({
       email: fixture.ownerEmail,
@@ -789,7 +794,7 @@ async function main() {
       });
 
       for (const meal of category.items) {
-        await prisma.meal.create({
+        const createdMeal = await prisma.meal.create({
           data: {
             restaurantId: restaurant.id,
             categoryId: created.id,
@@ -801,6 +806,10 @@ async function main() {
             status: meal.available === false ? "OUT_OF_STOCK" : "AVAILABLE",
           },
         });
+        mealIdByRestaurantAndName.set(
+          `${restaurant.id}::${meal.name}`,
+          createdMeal.id,
+        );
       }
     }
 
@@ -941,6 +950,9 @@ async function main() {
         createdAt: fixture.createdAt,
         items: {
           create: fixture.items.map((item) => ({
+            mealId: mealIdByRestaurantAndName.get(
+              `${restaurant.id}::${item.name}`,
+            ) ?? null,
             mealName: item.name,
             quantity: item.quantity,
             unitPrice: item.price,

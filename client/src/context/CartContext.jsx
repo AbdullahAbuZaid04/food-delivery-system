@@ -49,14 +49,25 @@ export function CartProvider({ children }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && Array.isArray(parsed.items)) {
+          // Drop lines that can't be sent to the server cart: an entry without
+          // a real menuItemId would make checkout POST /cart/items with
+          // `mealId: undefined` and fail validation ("Invalid input: expected
+          // string, received undefined"). Self-heals carts persisted by older
+          // code paths that wrote malformed items.
+          const items = parsed.items.filter(
+            (entry) =>
+              entry &&
+              typeof entry.menuItemId === "string" &&
+              entry.menuItemId.length > 0,
+          );
           // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: reading browser storage must run in an effect (not a lazy useState initializer) so server + first client render both show an empty cart and we avoid an SSR hydration mismatch.
           setCart({
             restaurantId:
-              parsed.items.length > 0 ? parsed.restaurantId ?? null : null,
+              items.length > 0 ? parsed.restaurantId ?? null : null,
             restaurantName:
-              parsed.items.length > 0 ? parsed.restaurantName ?? null : null,
+              items.length > 0 ? parsed.restaurantName ?? null : null,
             deliveryFee: Number(parsed.deliveryFee) || 0,
-            items: parsed.items,
+            items,
           });
         }
       }

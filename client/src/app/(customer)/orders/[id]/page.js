@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderTrackingView from "@components/orders/OrderTrackingView";
 import { cancelOrder, getOrderById } from "@lib/api/orders";
+import { createReview } from "@lib/api/reviews";
 import { orderToTracking } from "@lib/api/presenters";
 import { useAuth } from "@context/AuthContext";
 import { useOrderEvents } from "@hooks/useOrderEvents";
@@ -119,6 +120,15 @@ export default function OrderTrackingPage({ params }) {
     await loadOrder();
   }, [id, loadOrder]);
 
+  const handleReview = useCallback(
+    async (rating, comment) => {
+      await createReview(id, { rating, comment });
+      toast.success("تم إرسال تقييمك، شكرًا!");
+      await loadOrder();
+    },
+    [id, loadOrder],
+  );
+
   if (status === "loading") {
     return <TrackingLoading userName="" />;
   }
@@ -136,5 +146,12 @@ export default function OrderTrackingPage({ params }) {
     );
   }
 
-  return <OrderTrackingView order={order} userName={userName} onCancel={handleCancel} />;
+  return (
+    <OrderTrackingView
+      order={order}
+      userName={userName}
+      onCancel={handleCancel}
+      onReview={handleReview}
+    />
+  );
 }
