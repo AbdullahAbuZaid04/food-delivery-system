@@ -20,6 +20,8 @@ const STATUS_ICONS = {
   "بالطريق": Bike,
   "تم التوصيل": CircleCheck,
   "ملغي": CircleX,
+  "بانتظار تأكيد المطعم": Clock,
+  "تم التأكيد": CheckCheck,
 };
 
 const STATUS_STYLES = {
@@ -32,6 +34,8 @@ const STATUS_STYLES = {
   "بالطريق": "bg-terra/15 text-terra-dark",
   "تم التوصيل": "bg-success/15 text-success",
   "ملغي": "bg-error/15 text-error",
+  "بانتظار تأكيد المطعم": "bg-warning/15 text-warning",
+  "تم التأكيد": "bg-terra/15 text-terra-dark",
 };
 
 const FALLBACK_STYLE = "bg-muted/15 text-muted";

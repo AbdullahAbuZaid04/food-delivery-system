@@ -9,7 +9,15 @@ import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import { useCart } from "@context/CartContext";
 import { formatOrderDate, formatPrice, toArabicDigits } from "@lib/format";
 
-const ACTIVE_STATUSES = ["قيد التحضير", "بالطريق"];
+const ACTIVE_STATUS_CODES = new Set([
+  "PENDING",
+  "ACCEPTED",
+  "PREPARING",
+  "READY",
+  "ASSIGNED",
+  "PICKED_UP",
+  "ON_THE_WAY",
+]);
 
 function summarizeItems(items) {
   const names = items.map((item) => item.name);
@@ -22,7 +30,7 @@ function OrderHistoryCard({ order }) {
   const { clearCart, setDeliveryFee, addItem } = useCart();
   const [isReordering, setIsReordering] = useState(false);
 
-  const isActive = ACTIVE_STATUSES.includes(order.status);
+  const isActive = ACTIVE_STATUS_CODES.has(order.statusCode);
 
   const handleReorder = async () => {
     if (!order.restaurantSlug || order.items.length === 0) {

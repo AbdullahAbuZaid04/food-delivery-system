@@ -147,10 +147,10 @@ export function orderToConfirm(order) {
 // The UI only distinguishes four buckets, so several server statuses collapse
 // onto the same label (AGENTS.md §5 colloquial tone).
 const ORDER_STATUS_LABELS = {
-  PENDING: "قيد التحضير",
-  ACCEPTED: "قيد التحضير",
+  PENDING: "بانتظار تأكيد المطعم",
+  ACCEPTED: "تم التأكيد",
   PREPARING: "قيد التحضير",
-  READY: "بالطريق",
+  READY: "قيد التحضير",
   ASSIGNED: "بالطريق",
   PICKED_UP: "بالطريق",
   ON_THE_WAY: "بالطريق",
@@ -166,21 +166,20 @@ export function orderIsActive(order) {
   return order.status !== "DELIVERED" && order.status !== "CANCELLED";
 }
 
-// Canonical journey phases → the minimum server statuses that complete each
-// phase. Used to derive the shared progress/timeline visuals from a server
-// order's statusHistory (the UI never sees raw enums).
+// Canonical journey phases → the exact server status that activates each step,
+// so every phase reflects a real action by a real person (AGENTS: the owner
+// owns the kitchen leg, the driver owns the delivery leg):
+//   تم التأكيد  ← the owner accepts (ACCEPTED)
+//   قيد التحضير ← the owner starts preparing (PREPARING)
+//   بالطريق    ← the driver reports on-the-way (ON_THE_WAY)
+//   وصل        ← the driver delivers (DELIVERED)
+// Intermediate statuses (READY / ASSIGNED / PICKED_UP) leave the upcoming step
+// unlit: a prepared-but-unassigned order is still "قيد التحضير", and an
+// assigned-but-not-driving order is not yet "بالطريق".
 const TIMELINE_PHASES = [
-  { step: "تم التأكيد", statuses: ["PENDING"], completeAt: 0 },
-  {
-    step: "قيد التحضير",
-    statuses: ["ACCEPTED", "PREPARING"],
-    completeAt: 2,
-  },
-  {
-    step: "بالطريق",
-    statuses: ["READY", "ASSIGNED", "PICKED_UP", "ON_THE_WAY"],
-    completeAt: 6,
-  },
+  { step: "تم التأكيد", statuses: ["ACCEPTED"], completeAt: 1 },
+  { step: "قيد التحضير", statuses: ["PREPARING"], completeAt: 2 },
+  { step: "بالطريق", statuses: ["ON_THE_WAY"], completeAt: 6 },
   { step: "وصل", statuses: ["DELIVERED"], completeAt: 7 },
 ];
 
@@ -231,6 +230,7 @@ export function orderToHistoryCard(order) {
     restaurantSlug: order.restaurant?.slug,
     deliveryFee: Number(order.deliveryFee) || 0,
     status: orderStatusLabel(order.status),
+    statusCode: order.status,
     date: (order.createdAt ?? "").slice(0, 10),
     deliveryArea: address.city ?? "",
     items: (order.items ?? []).map((item) => {
@@ -257,6 +257,7 @@ export function orderToTracking(order) {
     orderNumber: order.orderNumber,
     restaurantName: order.restaurant?.name,
     status: orderStatusLabel(order.status),
+    statusCode: order.status,
     timeline: buildOrderTimeline(statusHistory, order.status),
     courierName: order.driver
       ? `${order.driver.firstName} ${order.driver.lastName}`
@@ -306,18 +307,20 @@ export function ownerOrderStatusLabel(status) {
 }
 
 // Mirrors the server's validTransitions (order.service.js) so the owner UI
-// only offers legal next steps per status. READY is left empty on purpose:
-// the next step for a ready order is assigning a driver (order.service.js
-// requires status === "READY"), which the orders screen handles via a modal
-// rather than a plain status button.
+// only offers legal next steps per status. The owner owns the kitchen leg
+// only: READY is empty because a ready order moves on by assigning a driver
+// (order.service.js requires status === "READY"), handled via a modal rather
+// than a plain status button — and once the order is ASSIGNED the remaining
+// stages belong exclusively to the driver's own screen, so the owner sees no
+// action buttons for them.
 export const OWNER_STATUS_TRANSITIONS = {
   PENDING: ["ACCEPTED", "CANCELLED"],
   ACCEPTED: ["PREPARING", "CANCELLED"],
   PREPARING: ["READY"],
   READY: [],
-  ASSIGNED: ["PICKED_UP"],
-  PICKED_UP: ["ON_THE_WAY"],
-  ON_THE_WAY: ["DELIVERED"],
+  ASSIGNED: [],
+  PICKED_UP: [],
+  ON_THE_WAY: [],
 };
 
 export function ownerNextActions(status) {
