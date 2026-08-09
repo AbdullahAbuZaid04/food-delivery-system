@@ -281,6 +281,13 @@ export function orderToTracking(order) {
     estimatedDeliveryAt: order.estimatedDeliveryAt ?? null,
     paymentMethod: order.paymentMethod ?? "CASH",
     paymentStatus: order.paymentStatus ?? "PENDING",
+    review: order.review
+      ? {
+          id: order.review.id,
+          rating: Number(order.review.rating),
+          comment: order.review.comment ?? "",
+        }
+      : null,
   };
 }
 

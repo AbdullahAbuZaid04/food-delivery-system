@@ -6,6 +6,7 @@ import { Ban, ChevronRight, Clock, MapPin, X } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import OrderProgressSteps from "@components/orders/OrderProgressSteps";
+import OrderReviewCard from "@components/orders/OrderReviewCard";
 import CourierInfoCard from "@components/orders/CourierInfoCard";
 import OrderTimeline from "@components/orders/OrderTimeline";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
@@ -196,7 +197,7 @@ function CancelOrderControl({ onCancel, orderNumber }) {
   );
 }
 
-export default function OrderTrackingView({ order, userName = "", onCancel }) {
+export default function OrderTrackingView({ order, userName = "", onCancel, onReview }) {
   const subtotal = (order.items ?? []).reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -263,6 +264,13 @@ export default function OrderTrackingView({ order, userName = "", onCancel }) {
             ) : null}
 
             <OrderTimeline timeline={order.timeline ?? []} />
+
+            {order.statusCode === "DELIVERED" ? (
+              <OrderReviewCard
+                review={order.review ?? null}
+                onSubmit={onReview}
+              />
+            ) : null}
 
             <section
               aria-labelledby="delivery-address-title"

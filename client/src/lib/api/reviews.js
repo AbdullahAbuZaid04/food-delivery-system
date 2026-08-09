@@ -11,3 +11,10 @@ export async function getRestaurantReviews(
     params: { page, limit },
   });
 }
+
+// Customer rates a delivered order (1–5 stars + optional comment). The server
+// enforces: order must belong to the caller, must be DELIVERED, one review
+// per order.
+export async function createReview(orderId, { rating, comment } = {}) {
+  return api.post("/reviews", { orderId, rating, comment });
+}
