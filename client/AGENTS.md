@@ -294,6 +294,15 @@ section on any page.
   was **removed** from `OrderTrackingView` by product decision — there is no
   real support endpoint/number yet (contact stays as the marketing footer's
   `support@wajba.ps` until a support channel exists).
+  **Post-delivery reviews (`feature/post-delivery-review`)**: the tracking page
+  for a DELIVERED order shows a rating form (1–5 stars + optional comment, see
+  `components/orders/OrderReviewCard.jsx`). Submitting posts
+  `POST /api/reviews` (`reviewApi.createReview` — server enforces ownership,
+  DELIVERED status, one review per order) and the page refetches, swapping the
+  form for the read-only rating. `GET /api/orders/:id` now includes the order's
+  `review` relation so the screen knows whether it was already rated;
+  `orderToTracking` maps it as `review`. The owner reviews dashboard picks the
+  new reviews up automatically via the existing public `GET /reviews/restaurant/:id`.
 - [ ] ~~The account screen (`src/app/(customer)/account/`) is UI-only this phase~~ —
   DONE (`feature/api-integration`): the page is a Client Component gated on
   `AuthContext` status (redirects to `/login` when `unauthenticated`, shows a
