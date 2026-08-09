@@ -11,6 +11,10 @@ const { authenticate, authorize } = require("../../middlewares/auth.middleware")
 
 const router = express.Router();
 
+// SSE stream — registered before `authenticate` because EventSource can't set
+// an Authorization header; the handler validates `?token=` itself.
+router.get("/events", orderController.streamEvents);
+
 router.use(authenticate);
 
 router.post(
