@@ -428,9 +428,31 @@ section on any page.
   like the customer app. The "حدّث" refresh action is a single shared
   `components/owner/RefreshButton.jsx` (icon + label + spin-on-load) used
   everywhere it appears — overview, orders, reviews, and the menu manager — so
-  its shape never drifts. Deferred:
+  its shape never drifts.   Deferred:
   an owner earnings breakdown beyond totals and a dedicated owner login page
   (owners sign in via the shared `/login` today).
+- **Restaurant signup (`feature/restaurant-signup`)**: a public, two-step
+  signup page at `/register/restaurant` (`components/auth/
+  RestaurantSignupForm.jsx` under the `(auth)` group) lets a new owner create
+  their account AND their restaurant in one flow. Step 1 validates and posts
+  `register({ firstName, lastName, email, phone, password, role: "OWNER" })`
+  — `AuthContext.register` auto-logs the owner in and returns the user — then
+  step 2 posts `restaurantApi.createRestaurant(restaurantFormToPayload(form))`
+  using the same presenters/shape as `RestaurantSetupForm`, and the flow
+  lands on `/owner` where the dashboard takes over. The stepper is an `<ol>`
+  with `aria-current="step"` and RTL-correct progress connector lines
+  (`ChevronRight` for "التالي"); field names, defaults (`deliveryFee` `0`,
+  `minimumOrder` `0`, `estimatedDeliveryTime` `30`), and validation mirror
+  `RestaurantForm`. Re-entering the page while already signed in as an OWNER
+  redirects to `/owner` (the `initialRole` guard intentionally only watches
+  the role present at first render so it can't fire mid-submit right after
+  `register()` sets the session). The login page links to it ("صاحب مطعم؟
+  سجّل مطعمك وابدأ بيع"). Server-side the flow is two guarded calls: register
+  accepts `role` (`z.enum(["CUSTOMER","OWNER","DRIVER"])`, default CUSTOMER),
+  and `POST /restaurants` enforces OWNER + one restaurant per owner
+  ("You already have a restaurant.") and stores `cuisine` (`createRestaurantSchema`
+  now includes it, matching `restaurant.repository.js` which writes
+  `cuisine: data.cuisine`).
 - **Real-time order updates — DONE (`feature/real-time-orders`)**: the server
   streams order events over SSE at `GET /api/orders/events` (registered BEFORE
   the `authenticate` middleware because EventSource can't set an Authorization

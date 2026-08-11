@@ -96,6 +96,15 @@ export default function LoginForm({ next }) {
           سجّل معنا
         </Link>
       </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
+        صاحب مطعم؟{" "}
+        <Link
+          href="/register/restaurant"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل مطعمك وابدأ بيع
+        </Link>
+      </p>
     </>
   );
 }
