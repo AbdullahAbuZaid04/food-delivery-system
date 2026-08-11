@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft } from "lucide-react";
 import AuthField from "@components/auth/AuthField";
 import PasswordField from "@components/auth/PasswordField";
 import AuthSubmitButton from "@components/auth/AuthSubmitButton";
@@ -14,6 +14,7 @@ import { restaurantFormToPayload } from "@lib/api/presenters";
 import { toArabicDigits } from "@lib/format";
 
 const PHONE_PATTERN = /^05\d{8}$/;
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 const EMPTY_RESTAURANT = {
   name: "",
@@ -32,7 +33,9 @@ const EMPTY_RESTAURANT = {
 const STEP_LABELS = ["حساب المالك", "بيانات المطعم"];
 
 function splitFullName(fullName) {
-  const parts = String(fullName || "").trim().split(/\s+/);
+  const parts = String(fullName || "")
+    .trim()
+    .split(/\s+/);
   if (parts.length === 0) return { firstName: "", lastName: "" };
   if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
   return {
@@ -127,11 +130,33 @@ export default function RestaurantSignupForm() {
   const validateRestaurant = () => {
     const errors = {};
     if (!form.name.trim()) errors.name = "اكتب اسم المطعم.";
+    if (!form.cuisine.trim()) errors.cuisine = "اكتب نوع الأكل.";
     if (!PHONE_PATTERN.test(form.phone.trim()))
       errors.phone = "رقم هاتف المطعم لازم يبلّش بـ 05 ويكون ١٠ أرقام.";
+    if (!form.email.trim()) errors.email = "اكتب بريد المطعم.";
+    else if (!EMAIL_PATTERN.test(form.email.trim()))
+      errors.email = "اكتب بريد إلكتروني صحيح.";
     if (!form.address.label.trim()) errors.addressLabel = "اكتب عنوان المكان.";
     if (!form.address.city.trim()) errors.addressCity = "اكتب المدينة.";
     if (!form.address.street.trim()) errors.addressStreet = "اكتب الشارع.";
+    if (
+      form.deliveryFee === "" ||
+      Number.isNaN(Number(form.deliveryFee)) ||
+      Number(form.deliveryFee) < 0
+    )
+      errors.deliveryFee = "اكتب رسوم توصيل صحيحة.";
+    if (
+      form.minimumOrder === "" ||
+      Number.isNaN(Number(form.minimumOrder)) ||
+      Number(form.minimumOrder) < 0
+    )
+      errors.minimumOrder = "اكتب حد أدنى صحيح.";
+    if (
+      form.estimatedDeliveryTime === "" ||
+      Number.isNaN(Number(form.estimatedDeliveryTime)) ||
+      Number(form.estimatedDeliveryTime) < 1
+    )
+      errors.estimatedDeliveryTime = "اكتب وقت توصيل صحيح.";
     return errors;
   };
 
@@ -161,10 +186,25 @@ export default function RestaurantSignupForm() {
         role: "OWNER",
       });
       await restaurantApi.createRestaurant(restaurantFormToPayload(form));
-      toast.success(`مبروك يا ${owner.firstName}! مطعمك عمّر وبيظهر للزبائن`);
+      toast.success(
+        `مبروك يا ${owner.firstName}! مطعمك اتسجّل — بيجري مراجعته من الأدمن وبنوّصلك.`,
+      );
       router.push("/owner");
     } catch (err) {
-      setError(err.message || "صارت مشكلة بالتسجيل، حاول مرة تانية.");
+      const msg = err.message || "";
+      if (msg.includes("Phone number already exists.")) {
+        setStep(0);
+        setFieldErrors({
+          phone: "رقم الهاتف مستخدم من قبل — استخدم رقم ثاني أو سجّل دخول.",
+        });
+      } else if (msg.includes("Email already exists.")) {
+        setStep(0);
+        setFieldErrors({
+          email: "البريد مستخدم من قبل — استخدم بريد ثاني أو سجّل دخول.",
+        });
+      } else {
+        setError(msg || "صارت مشكلة بالتسجيل، حاول مرة تانية.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -172,10 +212,7 @@ export default function RestaurantSignupForm() {
 
   return (
     <>
-      <ol
-        aria-label="خطوات تسجيل المطعم"
-        className="mb-6 flex items-center gap-2"
-      >
+      <ol aria-label="خطوات تسجيل المطعم" className="mb-6 flex items-center">
         {STEP_LABELS.map((label, index) => {
           const isCurrent = step === index;
           const isDone = index < step;
@@ -189,10 +226,12 @@ export default function RestaurantSignupForm() {
                 <span
                   aria-hidden="true"
                   className={`h-px flex-1 ${
-                    isDone || isCurrent ? "bg-terra" : "bg-clay/20"
+                    index <= step ? "bg-terra" : "bg-clay/20"
                   }`}
                 />
-              ) : null}
+              ) : (
+                <span aria-hidden="true" className="flex-1" />
+              )}
               <span
                 className={`inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[12.5px] font-bold ${
                   isCurrent
@@ -209,6 +248,16 @@ export default function RestaurantSignupForm() {
                 )}
                 {label}
               </span>
+              {index < STEP_LABELS.length - 1 ? (
+                <span
+                  aria-hidden="true"
+                  className={`h-px flex-1 ${
+                    index <= step ? "bg-terra" : "bg-clay/20"
+                  }`}
+                />
+              ) : (
+                <span aria-hidden="true" className="flex-1" />
+              )}
             </li>
           );
         })}
@@ -239,9 +288,7 @@ export default function RestaurantSignupForm() {
               placeholder="ahmad@example.com"
               autoComplete="email"
               value={account.email}
-              onChange={(event) =>
-                setAccountField("email", event.target.value)
-              }
+              onChange={(event) => setAccountField("email", event.target.value)}
               error={fieldErrors.email}
               required
             />
@@ -255,9 +302,7 @@ export default function RestaurantSignupForm() {
               placeholder="0590000000"
               autoComplete="tel"
               value={account.phone}
-              onChange={(event) =>
-                setAccountField("phone", event.target.value)
-              }
+              onChange={(event) => setAccountField("phone", event.target.value)}
               error={fieldErrors.phone}
               required
             />
@@ -289,8 +334,8 @@ export default function RestaurantSignupForm() {
             />
 
             <AuthSubmitButton>
+              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
               التالي
-              <ChevronRight className="w-5 h-5" aria-hidden="true" />
             </AuthSubmitButton>
           </div>
         ) : (
@@ -314,6 +359,8 @@ export default function RestaurantSignupForm() {
                 onChange={(event) =>
                   setFormField("cuisine", event.target.value)
                 }
+                error={fieldErrors.cuisine}
+                required
               />
 
               <AuthField
@@ -324,9 +371,7 @@ export default function RestaurantSignupForm() {
                 inputClassName="text-left"
                 placeholder="0590000000"
                 value={form.phone}
-                onChange={(event) =>
-                  setFormField("phone", event.target.value)
-                }
+                onChange={(event) => setFormField("phone", event.target.value)}
                 error={fieldErrors.phone}
                 required
               />
@@ -339,9 +384,9 @@ export default function RestaurantSignupForm() {
                 inputClassName="text-left"
                 placeholder="owner@example.com"
                 value={form.email}
-                onChange={(event) =>
-                  setFormField("email", event.target.value)
-                }
+                onChange={(event) => setFormField("email", event.target.value)}
+                error={fieldErrors.email}
+                required
               />
 
               <AuthTextarea
@@ -425,6 +470,8 @@ export default function RestaurantSignupForm() {
                 onChange={(event) =>
                   setFormField("deliveryFee", event.target.value)
                 }
+                error={fieldErrors.deliveryFee}
+                required
               />
 
               <AuthField
@@ -438,6 +485,8 @@ export default function RestaurantSignupForm() {
                 onChange={(event) =>
                   setFormField("minimumOrder", event.target.value)
                 }
+                error={fieldErrors.minimumOrder}
+                required
               />
 
               <AuthField
@@ -451,6 +500,8 @@ export default function RestaurantSignupForm() {
                 onChange={(event) =>
                   setFormField("estimatedDeliveryTime", event.target.value)
                 }
+                error={fieldErrors.estimatedDeliveryTime}
+                required
               />
             </StepSection>
 
@@ -502,7 +553,7 @@ export default function RestaurantSignupForm() {
               </button>
               <div className="flex-1">
                 <AuthSubmitButton pending={submitting}>
-                  عمّر مطعمي
+                  نوّر مطعمي
                 </AuthSubmitButton>
               </div>
             </div>

@@ -352,9 +352,11 @@ export const MEAL_STATUS_LABELS = {
 };
 
 export const RESTAURANT_STATUS_LABELS = {
+  PENDING: "قيد المراجعة",
   OPEN: "مفتوح",
   CLOSED: "مغلق",
   SUSPENDED: "معلّق",
+  REJECTED: "مرفوض",
 };
 
 export const PAYMENT_LABELS = {
@@ -614,6 +616,24 @@ export function adminUserStatusLabel(status) {
 
 export function adminRestaurantStatusLabel(status) {
   return RESTAURANT_STATUS_LABELS[status] ?? status;
+}
+
+// Legal admin moves per current restaurant status — the picker shows only the
+// current status plus the transitions the server actually allows (a state
+// machine, not a free-for-all). PENDING offers exactly accept (OPEN) or reject
+// (REJECTED); REJECTED lets the admin undo; SUSPENDED can be lifted to OPEN or
+// CLOSED. The owner's own transitions (OPEN ↔ CLOSED, REJECTED → PENDING) are
+// not admin options here.
+const ADMIN_RESTAURANT_STATUS_OPTIONS = {
+  PENDING: ["PENDING", "OPEN", "REJECTED"],
+  REJECTED: ["REJECTED", "OPEN"],
+  OPEN: ["OPEN", "CLOSED", "SUSPENDED"],
+  CLOSED: ["CLOSED", "OPEN", "SUSPENDED"],
+  SUSPENDED: ["SUSPENDED", "OPEN", "CLOSED"],
+};
+
+export function adminRestaurantStatusOptions(status) {
+  return ADMIN_RESTAURANT_STATUS_OPTIONS[status] ?? [status];
 }
 
 // Server user → admin list/detail card shape. Reuses RESTAURANT_STATUS_LABELS

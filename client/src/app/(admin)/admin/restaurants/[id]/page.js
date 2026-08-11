@@ -25,11 +25,10 @@ import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
 import { getRestaurantById, updateRestaurantStatus } from "@lib/api/admin";
 import {
   adminRestaurantStatusLabel,
+  adminRestaurantStatusOptions,
   adminRestaurantToDetail,
   formatOwnerDateTime,
 } from "@lib/api/presenters";
-
-const RESTAURANT_STATUSES = ["OPEN", "CLOSED", "SUSPENDED"];
 
 export default function AdminRestaurantDetailPage({ params }) {
   const { id } = use(params);
@@ -38,6 +37,7 @@ export default function AdminRestaurantDetailPage({ params }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
 
   const loadRestaurant = useCallback(async () => {
     setIsLoading(true);
@@ -62,6 +62,7 @@ export default function AdminRestaurantDetailPage({ params }) {
       if (!restaurant || status === restaurant.status) return;
       setBusy(true);
       setConfirmOpen(false);
+      setPendingStatus(null);
       try {
         await updateRestaurantStatus(restaurant.id, status);
         toast.success(`تم تحديث حالة ${restaurant.name}`);
@@ -77,7 +78,8 @@ export default function AdminRestaurantDetailPage({ params }) {
 
   const handleRequestChange = (status) => {
     if (status === restaurant.status) return;
-    if (status === "SUSPENDED") {
+    if (status === "SUSPENDED" || status === "REJECTED") {
+      setPendingStatus(status);
       setConfirmOpen(true);
       return;
     }
@@ -156,7 +158,7 @@ export default function AdminRestaurantDetailPage({ params }) {
 
         <AdminStatusSelect
           value={restaurant.status}
-          statuses={RESTAURANT_STATUSES}
+          statuses={adminRestaurantStatusOptions(restaurant.status)}
           labelFor={adminRestaurantStatusLabel}
           onRequestChange={handleRequestChange}
           disabled={busy}
@@ -298,14 +300,35 @@ export default function AdminRestaurantDetailPage({ params }) {
         </p>
       ) : null}
 
+      {restaurant.status === "PENDING" ? (
+        <p className="mt-4 flex items-center gap-2 rounded-2xl border border-warning/25 bg-warning/10 px-4 py-3.5 text-[14px] font-bold text-warning">
+          <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />
+          هالمطعم جديد عم يستنى قرارك — افحص بياناته وبعدين اقبله أو ارفضه.
+        </p>
+      ) : null}
+
+      {restaurant.status === "REJECTED" ? (
+        <p className="mt-4 flex items-center gap-2 rounded-2xl border border-error/25 bg-error/10 px-4 py-3.5 text-[14px] font-bold text-error">
+          <ShieldAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+          هالمطعم مرفوض — ما بيظهر للزبائن، وبقدّر المالك يعيد طلب المراجعة.
+        </p>
+      ) : null}
+
       <ConfirmStatusModal
         open={confirmOpen}
-        title="تعليق المطعم"
-        message={`هل أنت متأكد من تعليق ${restaurant.name}؟ بعد التعليق ما رح يظهر المطعم للزبائن ولا بيقدر يستقبل طلبات.`}
-        confirmLabel="علّق المطعم"
+        title={pendingStatus === "REJECTED" ? "رفض المطعم" : "تعليق المطعم"}
+        message={
+          pendingStatus === "REJECTED"
+            ? `هل أنت متأكد من رفض ${restaurant.name}؟ رح يظهر للمالك إنه مرفوض، وما رح يشتغل على المنصة.`
+            : `هل أنت متأكد من تعليق ${restaurant.name}؟ بعد التعليق ما رح يظهر المطعم للزبائن ولا بيقدر يستقبل طلبات.`
+        }
+        confirmLabel={pendingStatus === "REJECTED" ? "ارفض المطعم" : "علّق المطعم"}
         busy={busy}
-        onConfirm={() => applyStatus("SUSPENDED")}
-        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => pendingStatus && applyStatus(pendingStatus)}
+        onClose={() => {
+          setConfirmOpen(false);
+          setPendingStatus(null);
+        }}
       />
     </div>
   );

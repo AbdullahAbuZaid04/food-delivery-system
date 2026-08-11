@@ -138,6 +138,15 @@ export default function RegisterForm({ next }) {
           سجّل دخولك
         </Link>
       </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
+        بدّك تسجّل كصاحب مطعم؟{" "}
+        <Link
+          href="/register/restaurant"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل حساب صاحب مطعم
+        </Link>
+      </p>
     </>
   );
 }

@@ -19,7 +19,9 @@ export default function RestaurantSetupForm() {
     try {
       await restaurantApi.createRestaurant(payload);
       await reloadRestaurant();
-      toast.success("مبروك! مطعمك عمّر وظاهر للزبائن");
+      toast.success(
+        "مبروك! مطعمك اتسجّل — بيجري مراجعته من الأدمن وبنوّصلك.",
+      );
     } catch (err) {
       setError(err.message || "تعذر حفظ المطعم، حاول مرة تانية.");
     } finally {
@@ -33,7 +35,7 @@ export default function RestaurantSetupForm() {
       onSave={handleSave}
       submitting={submitting}
       error={error}
-      submitLabel="عمّر مطعمي"
+      submitLabel="نوّر مطعمي"
       title="أهلاً بك يا مالك"
       subtitle="لسا ما عمّرتَ مطعمك بعد — عبّي هالمعلومات وخلّيك جاهز تستقبل طلبات."
     />

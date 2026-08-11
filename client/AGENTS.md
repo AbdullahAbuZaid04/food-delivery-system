@@ -441,18 +441,53 @@ section on any page.
   using the same presenters/shape as `RestaurantSetupForm`, and the flow
   lands on `/owner` where the dashboard takes over. The stepper is an `<ol>`
   with `aria-current="step"` and RTL-correct progress connector lines
-  (`ChevronRight` for "التالي"); field names, defaults (`deliveryFee` `0`,
-  `minimumOrder` `0`, `estimatedDeliveryTime` `30`), and validation mirror
-  `RestaurantForm`. Re-entering the page while already signed in as an OWNER
+  (`ChevronLeft` for "التالي" — forward in RTL); field names, defaults
+  (`deliveryFee` `0`, `minimumOrder` `0`, `estimatedDeliveryTime` `30`), and
+  validation mirror `RestaurantForm`. Required (starred) fields: account step
+  (fullName/email/phone/password) + restaurant step (`name`, `cuisine`, `phone`,
+  `email`, and the address label/city/street) + the delivery trio
+  (`deliveryFee`, `minimumOrder`, `estimatedDeliveryTime`); only `description`,
+  address building/details, and the image URLs stay optional. The same set is
+  enforced server-side: `createRestaurantSchema` requires `cuisine`, `email`,
+  `deliveryFee`, `minimumOrder`, and `estimatedDeliveryTime` (the old
+  `.optional()`/`.default(0)` are gone). Re-entering the page while already
+  signed in as an OWNER
   redirects to `/owner` (the `initialRole` guard intentionally only watches
   the role present at first render so it can't fire mid-submit right after
   `register()` sets the session). The login page links to it ("صاحب مطعم؟
   سجّل مطعمك وابدأ بيع"). Server-side the flow is two guarded calls: register
   accepts `role` (`z.enum(["CUSTOMER","OWNER","DRIVER"])`, default CUSTOMER),
   and `POST /restaurants` enforces OWNER + one restaurant per owner
-  ("You already have a restaurant.") and stores `cuisine` (`createRestaurantSchema`
-  now includes it, matching `restaurant.repository.js` which writes
-  `cuisine: data.cuisine`).
+  ("You already have a restaurant.") and stores `cuisine` (matching
+  `restaurant.repository.js` which writes `cuisine: data.cuisine`).
+- **Restaurant approval queue (`feature/restaurant-approval`)**: new
+  restaurants no longer go live instantly — they enter the `RestaurantStatus`
+  `PENDING` state (schema default) and stay invisible to customers until an
+  admin acts. The admin restaurants list/detail (`/admin/restaurants*`) gained
+  `PENDING`/`REJECTED` options in the filter tabs, a "قيد المراجعة" callout
+  banner with a count, and both `SUSPENDED` and `REJECTED` transitions are
+  confirm-gated (`ConfirmStatusModal`); approving is `OPEN`. The admin status
+  picker is a state machine, not a free-for-all:
+  `adminRestaurantStatusOptions(status)` (presenters.js) shows only the current
+  status + legal targets per state — `PENDING` offers exactly `OPEN`/`REJECTED`
+  (accept/reject), `REJECTED` only an admin undo to `OPEN`, `OPEN`/`CLOSED` add
+  `SUSPENDED`, `SUSPENDED` can lift to `OPEN`/`CLOSED`. The server still allows
+  the admin the full enum as a safety valve (admin is the authority); the
+  owner-side is strictly enforced (below).
+  Public visibility is enforced server-side: `GET /restaurants` already
+  filters `status: "OPEN"`, `getRestaurantBySlug` now 404s anything not `OPEN`
+  (the guard lives in the service so the same repository fn still serves slug
+  uniqueness), and `createOrder` already rejects non-OPEN restaurants. The
+  owner can NEVER self-approve: `updateStatusSchema` is `OPEN`/`CLOSED`/
+  `PENDING` only (admin-only `SUSPENDED` removed from the owner enum), and
+  `updateStatus` service guards enforce `OPEN ↔ CLOSED` only when the
+  restaurant is active and `REJECTED → PENDING` for re-submission. The owner
+  dashboard shell (`OwnerShell` → `OwnerMain`) hides the pages behind a single
+  `RestaurantApprovalView` while the restaurant is `PENDING`/`REJECTED`
+  (pending → waiting message; rejected → "أعد طلب المراجعة" button that PATCHes
+  status back to `PENDING` via `updateMyRestaurantStatus`); `SUSPENDED` keeps
+  the normal dashboard. Signup/setup success toasts now say the restaurant was
+  submitted for admin review instead of "الزبائن بستنوك".
 - **Real-time order updates — DONE (`feature/real-time-orders`)**: the server
   streams order events over SSE at `GET /api/orders/events` (registered BEFORE
   the `authenticate` middleware because EventSource can't set an Authorization
