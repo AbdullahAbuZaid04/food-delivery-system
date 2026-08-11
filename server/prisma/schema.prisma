@@ -22,10 +22,12 @@ enum UserStatus {
 }
 
 enum RestaurantStatus {
+  PENDING
   OPEN
 
   CLOSED
   SUSPENDED
+  REJECTED
 }
 
 enum MealStatus {
@@ -159,7 +161,7 @@ model Restaurant {
   deliveryFee           Decimal          @db.Decimal(10, 2)
   minimumOrder          Decimal          @db.Decimal(10, 2)
   estimatedDeliveryTime Int?
-  status                RestaurantStatus @default(OPEN)
+  status                RestaurantStatus @default(PENDING)
 
   owner   User    @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   address Address @relation("RestaurantAddress", fields: [addressId], references: [id], onDelete: Restrict)

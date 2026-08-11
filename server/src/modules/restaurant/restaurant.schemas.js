@@ -9,11 +9,11 @@ const createRestaurantSchema = z.object({
 
   description: z.string().trim().max(500).optional(),
 
-  cuisine: z.string().trim().min(2).max(50).optional(),
+  cuisine: z.string().trim().min(2).max(50),
 
   phone: z.string().regex(/^05\d{8}$/, "Invalid Palestinian phone number."),
 
-  email: z.email("Invalid email address.").toLowerCase().optional(),
+  email: z.email("Invalid email address.").toLowerCase(),
 
   logoUrl: z.string().url("Invalid URL.").optional(),
 
@@ -21,19 +21,16 @@ const createRestaurantSchema = z.object({
 
   deliveryFee: z
     .number()
-    .min(0, "Delivery fee must be at least 0.")
-    .default(0),
+    .min(0, "Delivery fee must be at least 0."),
 
   minimumOrder: z
     .number()
-    .min(0, "Minimum order must be at least 0.")
-    .default(0),
+    .min(0, "Minimum order must be at least 0."),
 
   estimatedDeliveryTime: z
     .number()
     .int()
-    .min(1, "Estimated delivery time must be at least 1 minute.")
-    .optional(),
+    .min(1, "Estimated delivery time must be at least 1 minute."),
 
   address: z.object({
     label: z.string().trim().min(1, "Label is required."),
@@ -93,8 +90,12 @@ const updateRestaurantSchema = z.object({
     .optional(),
 });
 
+// Owner status transitions: the owner can only open/close their restaurant
+// (OPEN ↔ CLOSED) or re-request review after a rejection (PENDING from
+// REJECTED). Suspending is an admin-only action, and an owner can never
+// self-approve — those transitions are rejected in restaurant.service.updateStatus.
 const updateStatusSchema = z.object({
-  status: z.enum(["OPEN", "CLOSED", "SUSPENDED"]),
+  status: z.enum(["OPEN", "CLOSED", "PENDING"]),
 });
 
 module.exports = {
