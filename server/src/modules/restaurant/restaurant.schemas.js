@@ -9,6 +9,8 @@ const createRestaurantSchema = z.object({
 
   description: z.string().trim().max(500).optional(),
 
+  cuisine: z.string().trim().min(2).max(50).optional(),
+
   phone: z.string().regex(/^05\d{8}$/, "Invalid Palestinian phone number."),
 
   email: z.email("Invalid email address.").toLowerCase().optional(),
