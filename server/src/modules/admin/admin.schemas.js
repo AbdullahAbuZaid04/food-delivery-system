@@ -5,7 +5,13 @@ const updateUserStatusSchema = z.object({
 });
 
 const updateRestaurantStatusSchema = z.object({
-  status: z.enum(["OPEN", "CLOSED", "SUSPENDED"]),
+  status: z.enum([
+    "PENDING",
+    "OPEN",
+    "CLOSED",
+    "SUSPENDED",
+    "REJECTED",
+  ]),
 });
 
 module.exports = {

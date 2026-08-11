@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Search, Store } from "lucide-react";
+import { ChevronLeft, Clock, Search, Store } from "lucide-react";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
@@ -11,15 +11,17 @@ import RefreshButton from "@components/owner/RefreshButton";
 import { getRestaurants, updateRestaurantStatus } from "@lib/api/admin";
 import {
   adminRestaurantStatusLabel,
+  adminRestaurantStatusOptions,
   adminRestaurantToCard,
 } from "@lib/api/presenters";
 
-const RESTAURANT_STATUSES = ["OPEN", "CLOSED", "SUSPENDED"];
 const STATUS_FILTERS = [
   { value: null, label: "الكل" },
+  { value: "PENDING", label: "قيد المراجعة" },
   { value: "OPEN", label: "مفتوح" },
   { value: "CLOSED", label: "مغلق" },
   { value: "SUSPENDED", label: "معلّق" },
+  { value: "REJECTED", label: "مرفوض" },
 ];
 
 function RestaurantsScreen() {
@@ -71,7 +73,7 @@ function RestaurantsScreen() {
 
   const handleRequestChange = (restaurant, status) => {
     if (status === restaurant.status) return;
-    if (status === "SUSPENDED") {
+    if (status === "SUSPENDED" || status === "REJECTED") {
       setPending({ restaurant, status });
       return;
     }
@@ -87,6 +89,10 @@ function RestaurantsScreen() {
       .toLowerCase()
       .includes(query);
   });
+
+  const pendingCount = restaurants.filter(
+    (restaurant) => restaurant.status === "PENDING",
+  ).length;
 
   const countFor = (status) =>
     status
@@ -155,6 +161,20 @@ function RestaurantsScreen() {
           ))}
         </div>
       </div>
+
+      {pendingCount > 0 && statusFilter !== "PENDING" ? (
+        <button
+          type="button"
+          onClick={() => setStatusFilter("PENDING")}
+          className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3.5 text-start transition-colors hover:bg-warning/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <span className="flex items-center gap-2 text-[14px] font-bold text-warning">
+            <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />
+            عندك {pendingCount} {pendingCount === 1 ? "مطعم" : "مطاعم"} قيد المراجعة — افحصهم هلق
+          </span>
+          <ChevronLeft className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+        </button>
+      ) : null}
 
       {error ? (
         <div className="mt-6 rounded-2xl border border-border bg-surface p-8 text-center">
@@ -230,7 +250,7 @@ function RestaurantsScreen() {
                 <div className="flex items-center justify-between gap-3 sm:justify-end">
                   <AdminStatusSelect
                     value={restaurant.status}
-                    statuses={RESTAURANT_STATUSES}
+                    statuses={adminRestaurantStatusOptions(restaurant.status)}
                     labelFor={adminRestaurantStatusLabel}
                     onRequestChange={(status) =>
                       handleRequestChange(restaurant, status)
@@ -253,15 +273,19 @@ function RestaurantsScreen() {
 
       <ConfirmStatusModal
         open={Boolean(pending)}
-        title="تعليق المطعم"
+        title={pending?.status === "REJECTED" ? "رفض المطعم" : "تعليق المطعم"}
         message={
           pending
-            ? `هل أنت متأكد من تعليق ${pending.restaurant.name}؟ بعد التعليق ما رح يظهر المطعم للزبائن ولا بيقدر يستقبل طلبات.`
+            ? pending.status === "REJECTED"
+              ? `هل أنت متأكد من رفض ${pending.restaurant.name}؟ رح يظهر للمالك إنه مرفوض، وما رح يشتغل على المنصة.`
+              : `هل أنت متأكد من تعليق ${pending.restaurant.name}؟ بعد التعليق ما رح يظهر المطعم للزبائن ولا بيقدر يستقبل طلبات.`
             : ""
         }
-        confirmLabel="علّق المطعم"
+        confirmLabel={pending?.status === "REJECTED" ? "ارفض المطعم" : "علّق المطعم"}
         busy={Boolean(pending && busyId === pending.restaurant.id)}
-        onConfirm={() => pending && applyStatus(pending.restaurant, "SUSPENDED")}
+        onConfirm={() =>
+          pending && applyStatus(pending.restaurant, pending.status)
+        }
         onClose={() => setPending(null)}
       />
     </div>

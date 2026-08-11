@@ -92,8 +92,26 @@ const updateRestaurant = async (ownerId, data) => {
   return updated;
 };
 
+// The owner can only toggle an active restaurant (OPEN ↔ CLOSED) or, from a
+// rejection, re-request review (REJECTED → PENDING). Pending/suspended
+// restaurants can't be flipped to OPEN by the owner — approval is admin-only.
 const updateStatus = async (ownerId, status) => {
-  await getOwnedRestaurant(ownerId);
+  const restaurant = await getOwnedRestaurant(ownerId);
+
+  if (status === "OPEN" || status === "CLOSED") {
+    if (restaurant.status !== "OPEN" && restaurant.status !== "CLOSED") {
+      throw new Error(
+        "Restaurant status can only be toggled when the restaurant is active.",
+      );
+    }
+  } else if (status === "PENDING") {
+    if (restaurant.status !== "REJECTED") {
+      throw new Error("Restaurant can only be re-submitted after a rejection.");
+    }
+  } else {
+    throw new Error("Invalid status.");
+  }
+
   return await restaurantRepository.updateRestaurantStatus(ownerId, status);
 };
 
@@ -101,9 +119,13 @@ const getAllRestaurants = async (page, limit, search) => {
   return await restaurantRepository.findAllRestaurants(page, limit, search);
 };
 
+// Public slug lookup must only surface approved, live restaurants — a
+// PENDING/REJECTED/SUSPENDED restaurant is invisible on the storefront. The
+// guard lives here (not the repository) because the same repository function
+// also serves the slug-uniqueness check during create/update.
 const getRestaurantBySlug = async (slug) => {
   const restaurant = await restaurantRepository.findRestaurantBySlug(slug);
-  if (!restaurant) {
+  if (!restaurant || restaurant.status !== "OPEN") {
     throw new Error("Restaurant not found.");
   }
   return restaurant;

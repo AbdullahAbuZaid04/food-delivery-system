@@ -11,12 +11,18 @@ export default function AuthField({
   trailing,
   className,
   inputClassName,
+  required,
   ...props
 }) {
   return (
     <div className={className}>
       <label htmlFor={id} className="block text-sm font-bold text-cocoa mb-1.5">
         {label}
+        {required ? (
+          <span className="ms-1 text-error" aria-hidden="true">
+            *
+          </span>
+        ) : null}
       </label>
 
       <div className="relative">
@@ -25,6 +31,7 @@ export default function AuthField({
           type={type}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          required={required}
           className={`w-full rounded-2xl border-2 border-clay/20 bg-white px-4 py-3 text-cocoa placeholder:text-cocoa-soft/60 transition-colors focus:border-terra focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40 ${
             trailing ? "pe-12" : ""
           } ${inputClassName ?? ""}`}
