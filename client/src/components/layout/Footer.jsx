@@ -77,13 +77,22 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="register"
+                <Link
+                  href="/register/restaurant"
                   className="group flex items-center gap-2 py-2 hover:text-terra transition-colors"
                 >
                   <ChevronLeft className="w-3.5 h-3.5 text-cocoa-soft/50 group-hover:text-terra transition-colors" />
                   سجّل مطعمك معنا
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/register/driver"
+                  className="group flex items-center gap-2 py-2 hover:text-terra transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 text-cocoa-soft/50 group-hover:text-terra transition-colors" />
+                  سجّل سائق توصيل
+                </Link>
               </li>
             </ul>
           </div>

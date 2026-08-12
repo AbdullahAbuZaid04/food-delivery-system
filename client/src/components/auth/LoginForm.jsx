@@ -105,6 +105,15 @@ export default function LoginForm({ next }) {
           سجّل مطعمك وابدأ بيع
         </Link>
       </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
+        سائق توصيل؟{" "}
+        <Link
+          href="/register/driver"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل وانضم لفريق التوصيل
+        </Link>
+      </p>
     </>
   );
 }

@@ -4,7 +4,7 @@ import RegisterForm from "@components/auth/RegisterForm";
 export const metadata = {
   title: "وجبة | إنشاء حساب",
   description:
-    "انضم لوجبة — زبون أو صاحب مطعم — وابدأ اطلب أو بيع من مطعمك بغزة.",
+    "انضم لوجبة — زبون أو صاحب مطعم أو سائق توصيل — وابدأ اطلب أو بيع أو وضّي طلبات بغزة.",
 };
 
 export default async function RegisterPage({ searchParams }) {
@@ -13,7 +13,7 @@ export default async function RegisterPage({ searchParams }) {
   return (
     <AuthLayout
       title="أنشئ حسابك"
-      subtitle="انضم لوجبة — زبون أو صاحب مطعم، كلكم أهل."
+      subtitle="انضم لوجبة — زبون أو صاحب مطعم أو سائق توصيل، كلكم أهل."
     >
       <RegisterForm next={next} />
     </AuthLayout>
