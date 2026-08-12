@@ -43,6 +43,21 @@ const getOwnedRestaurant = async (ownerId) => {
   return restaurant;
 };
 
+// A driver only reaches order routes after the admin approves their
+// application (driverStatus APPROVED). PENDING/REJECTED drivers get 403 so the
+// dashboard stays empty until they are live — same idea as the restaurant
+// approval gate, enforced here as the server-side backstop.
+const assertApprovedDriver = async (driverId) => {
+  const driver = await prisma.user.findUnique({
+    where: { id: driverId },
+    select: { driverStatus: true },
+  });
+
+  if (!driver || driver.driverStatus !== "APPROVED") {
+    throw new Error("Driver application is not approved.");
+  }
+};
+
 const createOrder = async (customerId, data) => {
   const cart = await cartRepository.findCartByCustomerId(customerId);
 
@@ -126,8 +141,11 @@ const getOrderById = async (orderId, userId, role) => {
     }
   }
 
-  if (role === "DRIVER" && order.driverId !== userId) {
-    throw new Error("Access denied.");
+  if (role === "DRIVER") {
+    if (order.driverId !== userId) {
+      throw new Error("Access denied.");
+    }
+    await assertApprovedDriver(userId);
   }
 
   return order;
@@ -147,10 +165,13 @@ const getRestaurantOrders = async (ownerId, page, limit) => {
 };
 
 const getDriverOrders = async (driverId, page, limit) => {
+  await assertApprovedDriver(driverId);
   return await orderRepository.findOrdersByDriverId(driverId, page, limit);
 };
 
 const updateDriverStatus = async (orderId, driverId, status) => {
+  await assertApprovedDriver(driverId);
+
   const order = await orderRepository.findOrderById(orderId);
   if (!order) {
     throw new Error("Order not found.");
@@ -233,6 +254,12 @@ const assignDriver = async (orderId, ownerId, driverId) => {
 
   if (!driver || driver.role.name !== "DRIVER") {
     throw new Error("Invalid driver.");
+  }
+
+  // Only approved drivers appear on the owner's assign list and can be
+  // assigned an order — pending/rejected applications can't take deliveries.
+  if (driver.driverStatus !== "APPROVED") {
+    throw new Error("Driver application is not approved.");
   }
 
   const updated = await orderRepository.assignDriver(orderId, driverId);

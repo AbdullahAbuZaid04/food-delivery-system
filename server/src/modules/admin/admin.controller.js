@@ -54,6 +54,46 @@ const updateUserStatus = async (req, res, next) => {
   }
 };
 
+const getDrivers = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const driverStatus = req.query.status || null;
+
+    const result = await adminService.getDrivers(page, limit, driverStatus);
+
+    res.status(200).json({
+      success: true,
+      message: "Drivers fetched successfully.",
+      data: result.drivers,
+      pagination: result.pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateDriverStatus = async (req, res, next) => {
+  try {
+    const { status } = req.validatedData;
+    const user = await adminService.updateDriverStatus(req.params.id, status);
+
+    res.status(200).json({
+      success: true,
+      message: "Driver status updated successfully.",
+      data: user,
+    });
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message.includes("not a driver")) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    next(error);
+  }
+};
+
 const getRestaurants = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -115,6 +155,8 @@ module.exports = {
   getUsers,
   getUserById,
   updateUserStatus,
+  getDrivers,
+  updateDriverStatus,
   getRestaurants,
   getRestaurantById,
   updateRestaurantStatus,

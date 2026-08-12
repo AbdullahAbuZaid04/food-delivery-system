@@ -4,6 +4,10 @@ const updateUserStatusSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE", "BLOCKED"]),
 });
 
+const updateDriverStatusSchema = z.object({
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+});
+
 const updateRestaurantStatusSchema = z.object({
   status: z.enum([
     "PENDING",
@@ -16,5 +20,6 @@ const updateRestaurantStatusSchema = z.object({
 
 module.exports = {
   updateUserStatusSchema,
+  updateDriverStatusSchema,
   updateRestaurantStatusSchema,
 };

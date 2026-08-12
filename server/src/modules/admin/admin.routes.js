@@ -4,6 +4,7 @@ const adminController = require("./admin.controller");
 const validate = require("../../middlewares/validate");
 const {
   updateUserStatusSchema,
+  updateDriverStatusSchema,
   updateRestaurantStatusSchema,
 } = require("./admin.schemas");
 
@@ -19,6 +20,14 @@ router.patch(
   "/users/:id/status",
   validate(updateUserStatusSchema),
   adminController.updateUserStatus
+);
+
+// Drivers (join requests / membership queue)
+router.get("/drivers", adminController.getDrivers);
+router.patch(
+  "/drivers/:id/status",
+  validate(updateDriverStatusSchema),
+  adminController.updateDriverStatus
 );
 
 // Restaurants

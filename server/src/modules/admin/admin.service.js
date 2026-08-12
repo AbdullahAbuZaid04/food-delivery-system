@@ -24,6 +24,24 @@ const updateUserStatus = async (id, status) => {
   return await adminRepository.updateUserStatus(id, status);
 };
 
+const getDrivers = async (page, limit, driverStatus) => {
+  return await adminRepository.findAllDrivers(page, limit, driverStatus);
+};
+
+const updateDriverStatus = async (id, driverStatus) => {
+  const user = await adminRepository.findUserById(id);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  if (user.role.name !== "DRIVER") {
+    throw new Error("User is not a driver.");
+  }
+
+  return await adminRepository.updateDriverStatus(id, driverStatus);
+};
+
 const getRestaurants = async (page, limit, status) => {
   return await adminRepository.findAllRestaurants(page, limit, status);
 };
@@ -52,6 +70,8 @@ module.exports = {
   getUsers,
   getUserById,
   updateUserStatus,
+  getDrivers,
+  updateDriverStatus,
   getRestaurants,
   getRestaurantById,
   updateRestaurantStatus,

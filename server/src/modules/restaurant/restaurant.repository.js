@@ -202,6 +202,7 @@ const findActiveDrivers = async () => {
     where: {
       deletedAt: null,
       status: "ACTIVE",
+      driverStatus: "APPROVED",
       role: { name: "DRIVER" },
     },
     select: {

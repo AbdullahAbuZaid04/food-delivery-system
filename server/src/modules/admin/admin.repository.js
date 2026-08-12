@@ -15,6 +15,7 @@ const findAllUsers = async (page = 1, limit = 10, role = null) => {
         email: true,
         phone: true,
         status: true,
+        driverStatus: true,
         isVerified: true,
         profileImage: true,
         createdAt: true,
@@ -44,6 +45,7 @@ const findUserById = async (id) => {
       email: true,
       phone: true,
       status: true,
+      driverStatus: true,
       isVerified: true,
       profileImage: true,
       lastLoginAt: true,
@@ -65,6 +67,62 @@ const updateUserStatus = async (id, status) => {
       lastName: true,
       email: true,
       status: true,
+      role: { select: { id: true, name: true } },
+    },
+  });
+};
+
+// Driver join requests — mirrors findAllRestaurants: DRIVER users filtered by
+// their driverStatus (PENDING = in the admin review queue).
+const findAllDrivers = async (page = 1, limit = 10, driverStatus = null) => {
+  const skip = (page - 1) * limit;
+
+  const where = {
+    role: { name: "DRIVER" },
+    ...(driverStatus ? { driverStatus } : {}),
+  };
+
+  const [drivers, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        status: true,
+        driverStatus: true,
+        isVerified: true,
+        profileImage: true,
+        createdAt: true,
+        updatedAt: true,
+        role: { select: { id: true, name: true } },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    drivers,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
+};
+
+const updateDriverStatus = async (id, driverStatus) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { driverStatus },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      status: true,
+      driverStatus: true,
       role: { select: { id: true, name: true } },
     },
   });
@@ -128,6 +186,8 @@ module.exports = {
   findAllUsers,
   findUserById,
   updateUserStatus,
+  findAllDrivers,
+  updateDriverStatus,
   findAllRestaurants,
   findRestaurantById,
   updateRestaurantStatus,

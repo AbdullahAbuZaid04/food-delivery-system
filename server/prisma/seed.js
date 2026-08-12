@@ -589,6 +589,7 @@ async function upsertUser({ email, roleId, ...data }) {
     lastName: data.lastName,
     phone: data.phone,
     status: data.status,
+    driverStatus: data.driverStatus,
     isVerified: data.isVerified,
     roleId,
   };
@@ -659,7 +660,9 @@ async function main() {
     roleId: customerRole.id,
   });
 
-  // Demo driver (real courier details arrive with the tracking flow).
+  // Demo driver (real courier details arrive with the tracking flow). Kept
+  // APPROVED so the seeded driver can take deliveries; real signups start
+  // PENDING and wait for admin approval.
   await upsertUser({
     email: "samer@wajba.ps",
     firstName: "سامر",
@@ -668,6 +671,7 @@ async function main() {
     password: "Samer$$1234",
     status: "ACTIVE",
     isVerified: true,
+    driverStatus: "APPROVED",
     roleId: driverRole.id,
   });
 
