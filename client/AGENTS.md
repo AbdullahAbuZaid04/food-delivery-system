@@ -460,6 +460,56 @@ section on any page.
   and `POST /restaurants` enforces OWNER + one restaurant per owner
   ("You already have a restaurant.") and stores `cuisine` (matching
   `restaurant.repository.js` which writes `cuisine: data.cuisine`).
+- **Driver signup (`feature/driver-signup`)**: a public, one-step signup page
+  at `/register/driver` (`components/auth/DriverSignupForm.jsx` under the
+  `(auth)` group) lets a new delivery driver create their account and submit
+  their application. Drivers carry no business entity (no driver model exists
+  in the schema — a driver is just a `User` with the `DRIVER` role), so there
+  is no second step: the form validates the same account fields as the
+  restaurant signup's step 1 (fullName/email/phone/password + confirm, phone
+  must match `^05\d{8}$`) and posts
+  `register({ firstName, lastName, email, phone, password, role: "DRIVER" })`
+  — `AuthContext.register` auto-logs the driver in and returns the user — then
+  the flow lands on `/driver` where the dashboard takes over. Re-entering the
+  page while already signed in as a DRIVER redirects to `/driver` (same
+  `initialRole` first-render guard as the restaurant form, so it can't fire
+  mid-submit). Entry points: the login page, the customer register page, the
+  restaurant signup page, and the marketing footer all link to it
+  ("سائق توصيل؟ سجّل وانضم لفريق التوصيل"). The footer's restaurant link was
+  also fixed to point at `/register/restaurant` (it used to be a relative
+  `register` → `/register`). Server-side `registerSchema` already accepts
+  `role: "DRIVER"` (`z.enum(["CUSTOMER","OWNER","DRIVER"])`).
+- **Driver approval queue (`feature/driver-approval`)**: driver membership is
+  gated exactly like restaurant approval — a new driver account starts
+  `driverStatus: PENDING` (a `DriverStatus` enum `PENDING|APPROVED|REJECTED`
+  column on `User`; the user-level `status` stays `ACTIVE` so the driver can
+  log in and see their approval screen). The admin reviews join requests on the
+  **users page** (`/admin/users`) — there is no separate drivers page; the
+  review queue is a **"قيد المراجعة" tab** on the same users list (matches
+  role DRIVER + `driverStatus: PENDING`; the count is shown in the tab, and a
+  "قيد المراجعة" callout banner appears when there are pending drivers). The
+  users list's per-row status picker is role-aware: DRIVER rows pick from the
+  membership statuses (`adminDriverStatusOptions` — PENDING → APPROVED/REJECTED,
+  REJECTED → APPROVED undo, APPROVED is stable) and show a small membership
+  badge, everyone else picks from `ACTIVE|INACTIVE|BLOCKED`. Rejecting a
+  driver and blocking a user both go through `ConfirmStatusModal`. Server:
+  `GET /admin/drivers` + `PATCH /admin/drivers/:id/status`
+  (`updateDriverStatusSchema` = PENDING/APPROVED/REJECTED, non-DRIVER users →
+  400) — the client only calls the PATCH (user list + user detail). The driver
+  account detail (`/admin/users/[id]`) shows a second "حالة الانضمام" picker
+  for DRIVER users. The driver dashboard shell (`DriverShell` → `DriverMain`)
+  hides the pages behind a single `DriverApprovalView` while PENDING/REJECTED
+  (pending → waiting message; rejected → "أعد طلب المراجعة" button that calls
+  `PATCH /auth/driver/reapply` via `authApi.reapplyAsDriver`, then
+  `AuthContext.refreshProfile`, back to PENDING). Server-side enforcement
+  mirrors the owner flow: `order.service.js` `assertApprovedDriver` rejects
+  PENDING/REJECTED drivers on `getDriverOrders`/`updateDriverStatus`/
+  `getOrderById` ("Driver application is not approved." → 400), and
+  `assignDriver` + `findActiveDrivers` only list APPROVED drivers so owners
+  can't assign a pending application. The demo driver (`samer@wajba.ps`) is
+  seeded `APPROVED` so the tracking flow keeps working; signup toasts/pages now
+  say the application is under admin review. The login/register/refresh/profile
+  payloads all carry `driverStatus`.
 - **Restaurant approval queue (`feature/restaurant-approval`)**: new
   restaurants no longer go live instantly — they enter the `RestaurantStatus`
   `PENDING` state (schema default) and stay invisible to customers until an
