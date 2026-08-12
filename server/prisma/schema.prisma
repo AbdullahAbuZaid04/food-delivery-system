@@ -30,6 +30,12 @@ enum RestaurantStatus {
   REJECTED
 }
 
+enum DriverStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum MealStatus {
   AVAILABLE
   OUT_OF_STOCK
@@ -92,6 +98,13 @@ model User {
   status      UserStatus @default(ACTIVE)
   isVerified  Boolean    @default(false)
   lastLoginAt DateTime?
+
+  // Driver membership — mirrors the restaurant approval flow: a driver joins
+  // the platform as a review request (PENDING) and the admin approves or
+  // rejects. The user-level `status` above stays ACTIVE so a pending driver can
+  // log in and see their approval screen; driver-specific routes are gated on
+  // this field instead.
+  driverStatus DriverStatus @default(PENDING)
 
   role       Role        @relation(fields: [roleId], references: [id])
   addresses  Address[]

@@ -177,6 +177,27 @@ const updateAddress = async (req, res) => {
   }
 };
 
+const reapplyAsDriver = async (req, res) => {
+  try {
+    const profile = await authService.reapplyAsDriver(req.user.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Driver application resubmitted successfully.",
+      data: { user: profile },
+    });
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -187,4 +208,5 @@ module.exports = {
   addAddress,
   deleteAddress,
   updateAddress,
+  reapplyAsDriver,
 };

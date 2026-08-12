@@ -614,6 +614,30 @@ export function adminUserStatusLabel(status) {
   return ADMIN_USER_STATUS_LABELS[status] ?? status;
 }
 
+export const ADMIN_DRIVER_STATUS_LABELS = {
+  PENDING: "قيد المراجعة",
+  APPROVED: "مقبول",
+  REJECTED: "مرفوض",
+};
+
+export function adminDriverStatusLabel(status) {
+  return ADMIN_DRIVER_STATUS_LABELS[status] ?? status;
+}
+
+// Legal admin moves per driver membership status — same state machine idea as
+// restaurants. PENDING offers exactly accept (APPROVED) or reject (REJECTED);
+// REJECTED lets the admin undo. APPROVED is stable (problematic drivers are
+// handled at the user level with BLOCKED).
+const ADMIN_DRIVER_STATUS_OPTIONS = {
+  PENDING: ["PENDING", "APPROVED", "REJECTED"],
+  REJECTED: ["REJECTED", "APPROVED"],
+  APPROVED: ["APPROVED"],
+};
+
+export function adminDriverStatusOptions(status) {
+  return ADMIN_DRIVER_STATUS_OPTIONS[status] ?? [status];
+}
+
 export function adminRestaurantStatusLabel(status) {
   return RESTAURANT_STATUS_LABELS[status] ?? status;
 }
@@ -647,6 +671,7 @@ export function adminUserToCard(user) {
     role: user.role?.name ?? "",
     status: user.status,
     statusLabel: adminUserStatusLabel(user.status),
+    driverStatus: user.driverStatus ?? null,
     isVerified: user.isVerified ?? false,
     createdAt: user.createdAt,
   };

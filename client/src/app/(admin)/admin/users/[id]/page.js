@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
 import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
-import { getUserById, updateUserStatus } from "@lib/api/admin";
+import { getUserById, updateDriverStatus, updateUserStatus } from "@lib/api/admin";
 import {
+  adminDriverStatusLabel,
+  adminDriverStatusOptions,
   adminUserStatusLabel,
   adminUserToDetail,
   formatOwnerDateTime,
@@ -37,6 +39,7 @@ export default function AdminUserDetailPage({ params }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [driverRejectOpen, setDriverRejectOpen] = useState(false);
 
   const loadUser = useCallback(async () => {
     setIsLoading(true);
@@ -81,6 +84,36 @@ export default function AdminUserDetailPage({ params }) {
       return;
     }
     applyStatus(status);
+  };
+
+  // Driver membership (join approval) is a separate status from the account's
+  // user status — it powers the "قيد المراجعة" tab on the users page. Only
+  // DRIVER users show it.
+  const applyDriverStatus = useCallback(
+    async (status) => {
+      if (!user || status === user.driverStatus) return;
+      setBusy(true);
+      setDriverRejectOpen(false);
+      try {
+        await updateDriverStatus(user.id, status);
+        toast.success(`تم تحديث حالة ${user.name}`);
+        await loadUser();
+      } catch (err) {
+        toast.error(err.message || "صارت مشكلة في تحديث الحالة.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [user, loadUser],
+  );
+
+  const handleDriverRequestChange = (status) => {
+    if (status === user.driverStatus) return;
+    if (status === "REJECTED") {
+      setDriverRejectOpen(true);
+      return;
+    }
+    applyDriverStatus(status);
   };
 
   if (isLoading) {
@@ -152,13 +185,24 @@ export default function AdminUserDetailPage({ params }) {
           </div>
         </div>
 
-        <AdminStatusSelect
-          value={user.status}
-          statuses={USER_STATUSES}
-          labelFor={adminUserStatusLabel}
-          onRequestChange={handleRequestChange}
-          disabled={busy}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {user.role === "DRIVER" ? (
+            <AdminStatusSelect
+              value={user.driverStatus}
+              statuses={adminDriverStatusOptions(user.driverStatus)}
+              labelFor={adminDriverStatusLabel}
+              onRequestChange={handleDriverRequestChange}
+              disabled={busy}
+            />
+          ) : null}
+          <AdminStatusSelect
+            value={user.status}
+            statuses={USER_STATUSES}
+            labelFor={adminUserStatusLabel}
+            onRequestChange={handleRequestChange}
+            disabled={busy}
+          />
+        </div>
       </header>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -180,6 +224,14 @@ export default function AdminUserDetailPage({ params }) {
               <dt className="text-muted">الحالة</dt>
               <dd className="font-semibold text-foreground">{user.statusLabel}</dd>
             </div>
+            {user.role === "DRIVER" ? (
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted">حالة الانضمام</dt>
+                <dd className="font-semibold text-foreground">
+                  {adminDriverStatusLabel(user.driverStatus)}
+                </dd>
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted">توثيق الحساب</dt>
               <dd className="font-semibold text-foreground">
@@ -249,6 +301,16 @@ export default function AdminUserDetailPage({ params }) {
         busy={busy}
         onConfirm={() => applyStatus("BLOCKED")}
         onClose={() => setConfirmOpen(false)}
+      />
+
+      <ConfirmStatusModal
+        open={driverRejectOpen}
+        title="رفض طلب السائق"
+        message={`هل أنت متأكد من رفض طلب انضمام ${user.name}؟ رح يظهر له إنه مرفوض، وما رح يقدر يستلم توصيلات.`}
+        confirmLabel="ارفض الطلب"
+        busy={busy}
+        onConfirm={() => applyDriverStatus("REJECTED")}
+        onClose={() => setDriverRejectOpen(false)}
       />
     </div>
   );

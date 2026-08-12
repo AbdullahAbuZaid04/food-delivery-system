@@ -33,6 +33,13 @@ export async function logout() {
   }
 }
 
+// Re-submit a rejected driver application back into the admin review queue.
+// Returns the refreshed user profile (driverStatus → PENDING).
+export async function reapplyAsDriver() {
+  const data = await api.patch("/auth/driver/reapply");
+  return data.user;
+}
+
 export async function addAddress(address) {
   return api.post("/auth/profile/address", address);
 }

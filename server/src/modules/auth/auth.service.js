@@ -62,6 +62,7 @@ const register = async (userData) => {
       email: user.email,
       phone: user.phone,
       role: user.role.name,
+      driverStatus: user.driverStatus ?? null,
     },
     token,
     refreshToken,
@@ -106,6 +107,7 @@ const login = async (loginData) => {
       email: user.email,
       phone: user.phone,
       role: user.role.name,
+      driverStatus: user.driverStatus ?? null,
     },
     token,
     refreshToken,
@@ -147,6 +149,7 @@ const refresh = async (refreshToken) => {
       email: user.email,
       phone: user.phone,
       role: user.role.name,
+      driverStatus: user.driverStatus ?? null,
     },
     token,
     refreshToken: newRefreshToken,
@@ -168,6 +171,7 @@ const getProfile = async (userId) => {
     phone: user.phone,
     profileImage: user.profileImage,
     status: user.status,
+    driverStatus: user.driverStatus ?? null,
     isVerified: user.isVerified,
     role: user.role.name,
     addresses: user.addresses,
@@ -200,11 +204,62 @@ const updateProfile = async (userId, data) => {
     phone: user.phone,
     profileImage: user.profileImage,
     status: user.status,
+    driverStatus: user.driverStatus ?? null,
     isVerified: user.isVerified,
     role: user.role.name,
     addresses: user.addresses,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+  };
+};
+
+// A rejected driver can re-submit their application back into the admin review
+// queue (mirrors the restaurant REJECTED → PENDING flow). PENDING/APPROVED
+// applications are left untouched.
+const reapplyAsDriver = async (userId) => {
+  const user = await authRepository.findUserById(userId);
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  if (user.role.name !== "DRIVER") {
+    throw new Error("Only drivers can re-apply.");
+  }
+
+  if (user.driverStatus !== "REJECTED") {
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      profileImage: user.profileImage,
+      status: user.status,
+      driverStatus: user.driverStatus,
+      isVerified: user.isVerified,
+      role: user.role.name,
+      addresses: user.addresses,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  const updated = await authRepository.updateDriverStatus(userId, "PENDING");
+
+  return {
+    id: updated.id,
+    firstName: updated.firstName,
+    lastName: updated.lastName,
+    email: updated.email,
+    phone: updated.phone,
+    profileImage: updated.profileImage,
+    status: updated.status,
+    driverStatus: updated.driverStatus,
+    isVerified: updated.isVerified,
+    role: updated.role.name,
+    createdAt: updated.createdAt,
+    updatedAt: updated.updatedAt,
   };
 };
 
@@ -263,4 +318,5 @@ module.exports = {
   deleteAddress,
   updateAddress,
   updateProfile,
+  reapplyAsDriver,
 };

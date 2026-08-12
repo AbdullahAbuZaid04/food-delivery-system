@@ -147,6 +147,15 @@ export default function RegisterForm({ next }) {
           سجّل حساب صاحب مطعم
         </Link>
       </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
+        بدّك تشتغل سائق توصيل؟{" "}
+        <Link
+          href="/register/driver"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل حساب سائق
+        </Link>
+      </p>
     </>
   );
 }

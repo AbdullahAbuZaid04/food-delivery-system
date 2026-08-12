@@ -3,7 +3,7 @@ const authController = require("./auth.controller");
 const validate = require("../../middlewares/validate");
 const { registerSchema, loginSchema, refreshTokenSchema, addAddressSchema, updateAddressSchema, updateProfileSchema } = require("./auth.schemas");
 const rateLimiter = require("../../middlewares/rateLimiter");
-const { authenticate } = require("../../middlewares/auth.middleware");
+const { authenticate, authorize } = require("../../middlewares/auth.middleware");
 
 const router = express.Router();
 
@@ -53,6 +53,15 @@ router.put(
   authenticate,
   validate(updateAddressSchema),
   authController.updateAddress
+);
+
+// Driver re-application: only DRIVER users, rejected applications go back into
+// the admin review queue (PENDING).
+router.patch(
+  "/driver/reapply",
+  authenticate,
+  authorize("DRIVER"),
+  authController.reapplyAsDriver
 );
 
 module.exports = router;

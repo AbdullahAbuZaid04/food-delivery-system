@@ -34,6 +34,7 @@ const createUser = async (data) => {
       email: true,
       phone: true,
       status: true,
+      driverStatus: true,
       isVerified: true,
       createdAt: true,
       updatedAt: true,
@@ -71,6 +72,7 @@ const findUserById = async (id) => {
       phone: true,
       profileImage: true,
       status: true,
+      driverStatus: true,
       isVerified: true,
       createdAt: true,
       updatedAt: true,
@@ -94,6 +96,7 @@ const updateUserProfile = async (id, data) => {
       phone: true,
       profileImage: true,
       status: true,
+      driverStatus: true,
       isVerified: true,
       createdAt: true,
       updatedAt: true,
@@ -202,6 +205,27 @@ const updateAddress = async (id, userId, data) => {
   return updated;
 };
 
+const updateDriverStatus = async (id, driverStatus) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { driverStatus },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      profileImage: true,
+      status: true,
+      driverStatus: true,
+      isVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      role: { select: { id: true, name: true } },
+    },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   findUserByPhone,
@@ -215,4 +239,5 @@ module.exports = {
   findAddressById,
   deleteAddress,
   updateAddress,
+  updateDriverStatus,
 };
