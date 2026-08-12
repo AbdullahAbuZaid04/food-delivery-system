@@ -18,6 +18,10 @@ export async function updateUserStatus(userId, status) {
   return api.patch(`/admin/users/${userId}/status`, { status });
 }
 
+export async function updateDriverStatus(driverId, status) {
+  return api.patch(`/admin/drivers/${driverId}/status`, { status });
+}
+
 export async function getRestaurants({ page = 1, limit = 100, status } = {}) {
   return api.get("/admin/restaurants", { params: { page, limit, status } });
 }

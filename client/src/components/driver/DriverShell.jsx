@@ -5,6 +5,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import BrandMark from "@components/ui/BrandMark";
+import DriverApprovalView from "@components/driver/DriverApprovalView";
 import { useAuth } from "@context/AuthContext";
 
 // DriverApp — the (driver) route group's client root. It guards the driver
@@ -151,8 +152,24 @@ export default function DriverApp({ children }) {
       </header>
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-6 sm:px-6 xl:max-w-[1280px]">
-        {children}
+        <DriverMain>{children}</DriverMain>
       </main>
     </div>
   );
+}
+
+// While the driver's membership awaits admin approval (PENDING) or was
+// rejected, the dashboard pages are hidden behind a single status screen —
+// there's nothing to deliver until the application is live. APPROVED keeps the
+// normal dashboard.
+function DriverMain({ children }) {
+  const { user } = useAuth();
+  const driverStatus = user?.driverStatus;
+  if (
+    driverStatus &&
+    (driverStatus === "PENDING" || driverStatus === "REJECTED")
+  ) {
+    return <DriverApprovalView status={driverStatus} />;
+  }
+  return children;
 }

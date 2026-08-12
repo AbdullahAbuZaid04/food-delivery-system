@@ -2,25 +2,32 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Search, Users } from "lucide-react";
+import { ChevronLeft, Clock, Search, Users } from "lucide-react";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
 import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
 import RefreshButton from "@components/owner/RefreshButton";
-import { getUsers, updateUserStatus } from "@lib/api/admin";
+import { getUsers, updateDriverStatus, updateUserStatus } from "@lib/api/admin";
 import {
+  adminDriverStatusLabel,
+  adminDriverStatusOptions,
   adminUserStatusLabel,
   adminUserToCard,
 } from "@lib/api/presenters";
 
 const USER_STATUSES = ["ACTIVE", "INACTIVE", "BLOCKED"];
+// "PENDING" is a virtual tab (value clashes with nothing — it is not a role):
+// it shows the driver join requests awaiting admin review (role DRIVER +
+// driverStatus PENDING), mirroring the old /admin/drivers queue merged into
+// the users page.
 const ROLE_FILTERS = [
   { value: null, label: "الكل" },
   { value: "CUSTOMER", label: "الزبائن" },
   { value: "OWNER", label: "المالكون" },
   { value: "DRIVER", label: "السائقون" },
   { value: "ADMIN", label: "الأدمن" },
+  { value: "PENDING", label: "قيد المراجعة" },
 ];
 
 const ROLE_LABELS = {
@@ -37,6 +44,16 @@ const ROLE_BADGE_CLASSES = {
   ADMIN: "bg-error/15 text-error",
 };
 
+const DRIVER_STATUS_BADGE_CLASSES = {
+  PENDING: "bg-warning/15 text-warning",
+  APPROVED: "bg-success/15 text-success",
+  REJECTED: "bg-error/15 text-error",
+};
+
+// A user matches the review tab when they are a driver awaiting admin approval.
+const isPendingReview = (user) =>
+  user.role === "DRIVER" && user.driverStatus === "PENDING";
+
 function UsersScreen() {
   const searchParams = useSearchParams();
   const [users, setUsers] = useState([]);
@@ -45,7 +62,7 @@ function UsersScreen() {
   const [roleFilter, setRoleFilter] = useState(searchParams.get("role") || null);
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState(null);
-  const [pending, setPending] = useState(null); // { user, status }
+  const [pending, setPending] = useState(null); // { user, status, type }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,7 +82,7 @@ function UsersScreen() {
     load();
   }, [load]);
 
-  const applyStatus = useCallback(
+  const applyUserStatus = useCallback(
     async (user, status) => {
       setBusyId(user.id);
       setPending(null);
@@ -82,18 +99,60 @@ function UsersScreen() {
     [load],
   );
 
+  const applyDriverStatus = useCallback(
+    async (user, status) => {
+      setBusyId(user.id);
+      setPending(null);
+      try {
+        await updateDriverStatus(user.id, status);
+        toast.success(`تم تحديث حالة ${user.name}`);
+        await load();
+      } catch (err) {
+        toast.error(err.message || "صارت مشكلة في تحديث الحالة.");
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  // Drivers pick from the membership statuses (review queue); everyone else
+  // picks from the account statuses. Destructive moves (BLOCKED / REJECTED)
+  // go through the confirm modal.
   const handleRequestChange = (user, status) => {
-    if (status === user.status) return;
-    if (status === "BLOCKED") {
-      setPending({ user, status });
+    if (user.role === "DRIVER") {
+      if (status === user.driverStatus) return;
+      if (status === "REJECTED") {
+        setPending({ user, status, type: "driver" });
+        return;
+      }
+      applyDriverStatus(user, status);
       return;
     }
-    applyStatus(user, status);
+    if (status === user.status) return;
+    if (status === "BLOCKED") {
+      setPending({ user, status, type: "user" });
+      return;
+    }
+    applyUserStatus(user, status);
+  };
+
+  const handleConfirm = () => {
+    if (!pending) return;
+    if (pending.type === "driver") {
+      applyDriverStatus(pending.user, pending.status);
+    } else {
+      applyUserStatus(pending.user, pending.status);
+    }
   };
 
   const query = search.trim().toLowerCase();
   const visibleUsers = users.filter((user) => {
-    if (roleFilter && user.role !== roleFilter) return false;
+    if (roleFilter === "PENDING") {
+      if (!isPendingReview(user)) return false;
+    } else if (roleFilter && user.role !== roleFilter) {
+      return false;
+    }
     if (!query) return true;
     return [user.name, user.email, user.phone]
       .join(" ")
@@ -101,8 +160,12 @@ function UsersScreen() {
       .includes(query);
   });
 
-  const countFor = (role) =>
-    role ? users.filter((user) => user.role === role).length : users.length;
+  const pendingCount = users.filter(isPendingReview).length;
+
+  const countFor = (filter) => {
+    if (filter === "PENDING") return pendingCount;
+    return filter ? users.filter((user) => user.role === filter).length : users.length;
+  };
 
   return (
     <div>
@@ -167,6 +230,20 @@ function UsersScreen() {
         </div>
       </div>
 
+      {pendingCount > 0 && roleFilter !== "PENDING" ? (
+        <button
+          type="button"
+          onClick={() => setRoleFilter("PENDING")}
+          className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3.5 text-start transition-colors hover:bg-warning/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <span className="flex items-center gap-2 text-[14px] font-bold text-warning">
+            <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />
+            عندك {pendingCount} {pendingCount === 1 ? "سائق" : "سائقين"} قيد المراجعة — افحصهم هلق
+          </span>
+          <ChevronLeft className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
+        </button>
+      ) : null}
+
       {error ? (
         <div className="mt-6 rounded-2xl border border-border bg-surface p-8 text-center">
           <p className="font-display font-bold text-foreground">
@@ -201,7 +278,9 @@ function UsersScreen() {
             <Users className="h-7 w-7 text-primary" aria-hidden="true" />
           </span>
           <p className="mt-4 font-display font-bold text-foreground">
-            ما في مستخدمين بهالتصفية
+            {roleFilter === "PENDING"
+              ? "ما في طلبات سائقين قيد المراجعة"
+              : "ما في مستخدمين بهالتصفية"}
           </p>
         </div>
       ) : null}
@@ -209,72 +288,103 @@ function UsersScreen() {
       {!error && !loading && visibleUsers.length > 0 ? (
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <ul>
-            {visibleUsers.map((user) => (
-              <li
-                key={user.id}
-                className="flex flex-col gap-3 p-4 odd:bg-white/40 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
-              >
-                <Link
-                  href={`/admin/users/${user.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            {visibleUsers.map((user) => {
+              const isDriver = user.role === "DRIVER";
+              return (
+                <li
+                  key={user.id}
+                  className="flex flex-col gap-3 p-4 odd:bg-white/40 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary-dark">
-                    {user.name.charAt(0)}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[14.5px] font-bold text-foreground">
-                      {user.name}
-                    </span>
-                    <span className="block truncate text-[12.5px] text-muted">
-                      {user.email}
-                      {user.phone ? ` · ${user.phone}` : ""}
-                    </span>
-                    <span className="mt-0.5 inline-flex items-center gap-1.5">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                          ROLE_BADGE_CLASSES[user.role] ??
-                          "bg-muted/15 text-muted"
-                        }`}
-                      >
-                        {ROLE_LABELS[user.role] ?? user.role}
-                      </span>
-                    </span>
-                  </span>
-                </Link>
-
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                  <AdminStatusSelect
-                    value={user.status}
-                    statuses={USER_STATUSES}
-                    labelFor={adminUserStatusLabel}
-                    onRequestChange={(status) => handleRequestChange(user, status)}
-                    disabled={busyId === user.id}
-                  />
                   <Link
                     href={`/admin/users/${user.id}`}
-                    aria-label={`تفاصيل ${user.name}`}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
-                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary-dark">
+                      {user.name.charAt(0)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[14.5px] font-bold text-foreground">
+                        {user.name}
+                      </span>
+                      <span className="block truncate text-[12.5px] text-muted">
+                        {user.email}
+                        {user.phone ? ` · ${user.phone}` : ""}
+                      </span>
+                      <span className="mt-0.5 inline-flex items-center gap-1.5">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                            ROLE_BADGE_CLASSES[user.role] ??
+                            "bg-muted/15 text-muted"
+                          }`}
+                        >
+                          {ROLE_LABELS[user.role] ?? user.role}
+                        </span>
+                        {isDriver ? (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                              DRIVER_STATUS_BADGE_CLASSES[user.driverStatus] ??
+                              "bg-muted/15 text-muted"
+                            }`}
+                          >
+                            {adminDriverStatusLabel(user.driverStatus)}
+                          </span>
+                        ) : null}
+                      </span>
+                    </span>
                   </Link>
-                </div>
-              </li>
-            ))}
+
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                    {isDriver ? (
+                      <AdminStatusSelect
+                        value={user.driverStatus}
+                        statuses={adminDriverStatusOptions(user.driverStatus)}
+                        labelFor={adminDriverStatusLabel}
+                        onRequestChange={(status) =>
+                          handleRequestChange(user, status)
+                        }
+                        disabled={busyId === user.id}
+                      />
+                    ) : (
+                      <AdminStatusSelect
+                        value={user.status}
+                        statuses={USER_STATUSES}
+                        labelFor={adminUserStatusLabel}
+                        onRequestChange={(status) =>
+                          handleRequestChange(user, status)
+                        }
+                        disabled={busyId === user.id}
+                      />
+                    )}
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      aria-label={`تفاصيل ${user.name}`}
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    >
+                      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
 
       <ConfirmStatusModal
         open={Boolean(pending)}
-        title="حظر المستخدم"
+        title={pending?.type === "driver" ? "رفض طلب السائق" : "حظر المستخدم"}
         message={
           pending
-            ? `هل أنت متأكد من حظر ${pending.user.name}؟ بعد الحظر ما رح يقدر يسجل دخول ولا يطلب من المنصة.`
+            ? pending.type === "driver"
+              ? `هل أنت متأكد من رفض طلب انضمام ${pending.user.name}؟ رح يظهر له إنه مرفوض، وما رح يقدر يستلم توصيلات.`
+              : `هل أنت متأكد من حظر ${pending.user.name}؟ بعد الحظر ما رح يقدر يسجل دخول ولا يطلب من المنصة.`
             : ""
         }
-        confirmLabel="احظر المستخدم"
+        confirmLabel={
+          pending?.type === "driver" ? "ارفض الطلب" : "احظر المستخدم"
+        }
         busy={Boolean(pending && busyId === pending.user.id)}
-        onConfirm={() => pending && applyStatus(pending.user, "BLOCKED")}
+        onConfirm={handleConfirm}
         onClose={() => setPending(null)}
       />
     </div>

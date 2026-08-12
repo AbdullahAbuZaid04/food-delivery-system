@@ -93,6 +93,15 @@ export function AuthProvider({ children }) {
     return updated;
   }, []);
 
+  // Re-fetch the profile from the server (e.g. after a driver re-applies and
+  // the admin queue picks the application back up). Keeps the session user in
+  // sync with server-side state like driverStatus.
+  const refreshProfile = useCallback(async () => {
+    const profile = await authApi.getProfile();
+    setUser(profile);
+    return profile;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -104,8 +113,9 @@ export function AuthProvider({ children }) {
       register,
       logout,
       updateUser,
+      refreshProfile,
     }),
-    [user, status, login, register, logout, updateUser],
+    [user, status, login, register, logout, updateUser, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
