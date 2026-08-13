@@ -5,15 +5,14 @@ import {
   ChevronDown,
   History,
   LogOut,
-  Search,
   ShoppingCart,
   UserRound,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import BrandMark from "@components/ui/BrandMark";
+import SearchField from "@components/customer/SearchField";
 import { useCart } from "@context/CartContext";
 import { useAuth } from "@context/AuthContext";
 import { formatArabicCount, toArabicDigits } from "@lib/format";
@@ -86,40 +85,17 @@ function AppHeader({
           className="flex items-center gap-2.5 text-terra shrink-0"
         >
           <BrandMark />
-          <span className="hidden sm:inline font-display font-black text-2xl text-cocoa">
+          <span className="font-display font-black text-2xl text-cocoa">
             وجبة
           </span>
         </Link>
 
         {showSearch ? (
-          <div role="search" className="flex-1 min-w-0 max-w-md mx-auto w-full">
-            <div className="relative w-full">
-              <Search
-                aria-hidden="true"
-                className="w-5 h-5 text-cocoa-soft absolute start-4 top-1/2 -translate-y-1/2 pointer-events-none"
-              />
-              <input
-                type="text"
-                inputMode="search"
-                autoComplete="off"
-                spellCheck={false}
-                value={searchQuery}
-                onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="بدّك تطلب من مين؟"
-                aria-label="ابحث عن مطعم"
-                className="w-full rounded-full border-2 border-clay/20 bg-white/80 ps-11 pe-14 py-3 text-[14px] text-cocoa placeholder:text-cocoa-soft/70 transition-colors focus:border-terra focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange("")}
-                  aria-label="امسح البحث"
-                  className="absolute end-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-cocoa-soft hover:text-terra hover:bg-terra/10 transition-colors"
-                >
-                  <X className="w-4 h-4" aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
+          <div
+            role="search"
+            className="hidden md:block flex-1 min-w-0 max-w-md mx-auto w-full"
+          >
+            <SearchField value={searchQuery} onChange={onSearchChange} />
           </div>
         ) : null}
 
@@ -141,20 +117,13 @@ function AppHeader({
           </Link>
 
           {isGuest ? (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/register"
-                className="hidden sm:inline-flex h-12 items-center justify-center px-5 rounded-full border-2 border-clay/20 text-cocoa font-bold text-[14px] hover:border-terra hover:text-terra transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-              >
-                إنشاء حساب
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex h-12 items-center justify-center px-6 rounded-full bg-terra text-cream font-bold text-[14px] shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
-              >
-                تسجيل الدخول
-              </Link>
-            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 border-2 border-terra text-terra font-bold text-[13.5px] sm:text-sm px-4 sm:px-5 py-3 rounded-full hover:bg-terra/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
+            >
+              <UserRound className="w-4 h-4" aria-hidden="true" />
+              سجّل الدخول
+            </Link>
           ) : isAuthLoading ? (
             <span
               aria-hidden="true"

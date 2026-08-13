@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "@components/customer/AppHeader";
+import SearchField from "@components/customer/SearchField";
 import GreetingBanner from "@components/customer/GreetingBanner";
 import CategoryFilterBar from "@components/customer/CategoryFilterBar";
 import RestaurantGrid from "@components/customer/RestaurantGrid";
 import EmptyState from "@components/customer/EmptyState";
 import BottomNav from "@components/customer/BottomNav";
+import { MoveHorizontal } from "lucide-react";
 import { getRestaurants } from "@lib/api/restaurants";
 import { restaurantToCard } from "@lib/api/presenters";
 import { useAuth } from "@context/AuthContext";
@@ -136,6 +138,10 @@ function CustomerHomePage() {
       />
 
       <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 md:pt-8 pb-20 md:pb-0">
+        <div className="md:hidden mb-4" role="search">
+          <SearchField value={searchQuery} onChange={setSearchQuery} />
+        </div>
+
         <GreetingBanner userName={userName} />
 
         <CategoryFilterBar
@@ -143,6 +149,11 @@ function CustomerHomePage() {
           activeCategory={activeCategory}
           onSelect={setActiveCategory}
         />
+
+        <p className="md:hidden mt-3 flex items-center gap-1.5 text-[12px] leading-none text-cocoa-soft">
+          <MoveHorizontal className="w-4 h-4 shrink-0 text-terra" aria-hidden="true" />
+          اسحب يمين ويسار لشوف باقي الفئات
+        </p>
 
         {isLoading ? (
           <HomeLoadingGrid />
