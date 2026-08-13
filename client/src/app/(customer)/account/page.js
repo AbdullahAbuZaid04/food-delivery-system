@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import BottomNav from "@components/customer/BottomNav";
@@ -22,6 +22,7 @@ function AccountLoading() {
 function AccountPage() {
   const { user, status, updateUser } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,8 +54,10 @@ function AccountPage() {
   }, [status, fetchProfile]);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/login");
-  }, [status, router]);
+    if (status === "unauthenticated") {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [status, router, pathname]);
 
   if (status === "loading") {
     return (

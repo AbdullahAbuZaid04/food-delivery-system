@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, usePathname, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
@@ -63,6 +63,7 @@ export default function OrderTrackingPage({ params }) {
   const { id } = use(params);
   const { user, status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -100,8 +101,10 @@ export default function OrderTrackingPage({ params }) {
   }, [status, loadOrder]);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/login");
-  }, [status, router]);
+    if (status === "unauthenticated") {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [status, router, pathname]);
 
   // Live updates for this order: refetch when an event names it, so the
   // timeline advances without a manual refresh.

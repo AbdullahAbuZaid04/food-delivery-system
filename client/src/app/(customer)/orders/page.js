@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import BottomNav from "@components/customer/BottomNav";
@@ -40,6 +40,7 @@ function OrdersLoading() {
 function OrdersPage() {
   const { user, status } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState("الكل");
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,8 +65,10 @@ function OrdersPage() {
   }, [status, fetchOrders]);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace("/login");
-  }, [status, router]);
+    if (status === "unauthenticated") {
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [status, router, pathname]);
 
   // Live updates: refresh the history silently when one of the customer's
   // orders changes (status advance, driver assigned, cancellation).
