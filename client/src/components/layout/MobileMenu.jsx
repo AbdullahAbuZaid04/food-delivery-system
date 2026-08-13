@@ -128,17 +128,9 @@ function MobileMenu({ open, onClose }) {
           {isGuest ? (
             <>
               <Link
-                href="/register"
-                onClick={onClose}
-                className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
-              >
-                <UserRound className="w-5 h-5" />
-                إنشاء حساب
-              </Link>
-              <Link
                 href="/login"
                 onClick={onClose}
-                className="flex items-center justify-center gap-2 rounded-full bg-terra text-cream font-bold text-base py-3.5 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors"
+                className="flex items-center justify-center gap-2 rounded-full border-2 border-terra text-terra font-bold text-base py-3.5 hover:bg-terra/5 transition-colors"
               >
                 <UserRound className="w-5 h-5" />
                 تسجيل الدخول
@@ -172,13 +164,6 @@ function MobileMenu({ open, onClose }) {
               </button>
             </>
           )}
-          <a
-            href="#restaurants"
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 rounded-full bg-terra text-cream font-bold text-base py-3.5 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors"
-          >
-            اطلب الآن
-          </a>
         </div>
       </div>
     </div>

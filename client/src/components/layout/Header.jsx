@@ -20,8 +20,10 @@ import { formatArabicCount, toArabicDigits } from "@lib/format";
 
 /**
  * Header — fixed marketing header: brand, desktop nav, cart (live count, links
- * to /cart), an auth-aware sign-in/avatar area and the "اطلب الآن" CTA. Owns
- * the mobile-menu open state and renders <MobileMenu />.
+ * to /cart) and an auth-aware sign-in/avatar area. Owns the mobile-menu open
+ * state and renders <MobileMenu />. The "اطلب الآن" CTA was removed by product
+ * decision — the "المطاعم" nav link (and hero "شوف المطاعم") already anchor to
+ * the same #restaurants section.
  *
  * Auth state comes from AuthContext (the marketing page is public — signed-in
  * users are allowed to visit it), so the header shows the avatar menu when
@@ -229,13 +231,6 @@ function Header() {
                 ) : null}
               </div>
             )}
-
-            <a
-              href="#restaurants"
-              className="hidden sm:inline-flex bg-terra text-cream font-bold text-sm px-5 sm:px-6 py-3 rounded-full shadow-[0_8px_20px_-8px_rgba(184,74,38,0.7)] hover:bg-terra-dark transition-colors"
-            >
-              اطلب الآن
-            </a>
 
             {/* Hamburger menu button for mobile (visible below md) */}
             <button
