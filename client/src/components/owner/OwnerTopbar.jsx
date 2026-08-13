@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import BrandMark from "@components/ui/BrandMark";
 import { useAuth } from "@context/AuthContext";
 import { useOwner } from "@context/OwnerContext";
 import { RESTAURANT_STATUS_LABELS } from "@lib/api/presenters";
@@ -61,6 +62,16 @@ export default function OwnerTopbar({ onOpenDrawer }) {
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
+        {/* Brand — shown below lg (the sidebar carries it on lg+). */}
+        <div className="flex min-w-0 shrink-0 items-center gap-2.5 lg:hidden">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+            <BrandMark />
+          </div>
+          <span className="font-display text-[17px] font-black leading-none text-foreground">
+            وجبة
+          </span>
+        </div>
+
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           {restaurant ? (
             <>
@@ -82,7 +93,7 @@ export default function OwnerTopbar({ onOpenDrawer }) {
                 {restaurant.name}
               </span>
               <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                className={`hidden sm:inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${
                   isOpen ? "bg-success/15 text-success" : "bg-muted/15 text-muted"
                 }`}
               >
