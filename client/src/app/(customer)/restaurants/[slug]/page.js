@@ -5,19 +5,18 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 import AppHeader from "@components/customer/AppHeader";
 import RestaurantHeader from "@components/customer/RestaurantHeader";
-import MenuCategoryTabs, {
-  MENU_STICKY_OFFSET,
-} from "@components/customer/MenuCategoryTabs";
 import MenuItemCard from "@components/customer/MenuItemCard";
 import RestaurantConflictModal from "@components/customer/RestaurantConflictModal";
 import { useCart } from "@context/CartContext";
 import { useAuth } from "@context/AuthContext";
+import { toArabicDigits } from "@lib/format";
 import { getRestaurantBySlug } from "@lib/api/restaurants";
 import { getCategoriesByRestaurant } from "@lib/api/categories";
 import { getMealsByRestaurant } from "@lib/api/meals";
 import {
   DEFAULT_COVER_IMAGE,
   mealToCard,
+  normalizeCoverImage,
   restaurantToCard,
 } from "@lib/api/presenters";
 
@@ -193,8 +192,9 @@ function RestaurantDetailPage({ params }) {
   }
 
   const headerRestaurant = restaurant ? restaurantToCard(restaurant) : null;
-  const coverImage =
-    restaurant?.coverImageUrl || restaurant?.coverImage || DEFAULT_COVER_IMAGE;
+  const coverImage = normalizeCoverImage(
+    restaurant?.coverImageUrl || restaurant?.coverImage || DEFAULT_COVER_IMAGE
+  );
   const reviewCount = restaurant?._count?.reviews ?? 0;
 
   return (
@@ -211,25 +211,34 @@ function RestaurantDetailPage({ params }) {
             restaurant={headerRestaurant}
             coverImage={coverImage}
             reviewCount={reviewCount}
+            deliveryFee={restaurant.deliveryFee ?? 0}
           />
 
-          <MenuCategoryTabs categories={menuCategories} />
-
-          <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pb-16 pt-4 md:pt-6">
+          <main className="max-w-[1180px] xl:max-w-[1280px] mx-auto px-4 sm:px-6 pb-16 pt-8 md:pt-10">
             <h2 className="sr-only">منيو {restaurant.name}</h2>
             {menuCategories.length > 0 ? (
               menuCategories.map((category) => (
                 <section
                   key={category.id}
-                  id={category.id}
-                  aria-labelledby={`tab-${category.id}`}
-                  style={{ scrollMarginTop: MENU_STICKY_OFFSET }}
-                  className="pt-8 md:pt-10"
+                  aria-labelledby={`section-${category.id}`}
+                  className={category !== menuCategories[0] ? "mt-10 md:mt-14" : ""}
                 >
-                  <h3 className="font-display font-bold text-[22px] md:text-[24px] text-cocoa">
-                    {category.name}
-                  </h3>
-                  <div className="mt-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="w-1.5 h-7 rounded-full bg-terra"
+                      aria-hidden="true"
+                    />
+                    <h3
+                      id={`section-${category.id}`}
+                      className="font-display font-bold text-[22px] md:text-[24px] text-cocoa"
+                    >
+                      {category.name}
+                    </h3>
+                    <span className="h-7 inline-flex items-center rounded-full border border-clay/15 bg-cream-deep px-3 text-[12px] font-bold text-cocoa-soft">
+                      {toArabicDigits(category.items.length)} أصناف
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {category.items.map((item) => (
                       <MenuItemCard
                         key={item.id}
@@ -244,8 +253,11 @@ function RestaurantDetailPage({ params }) {
               ))
             ) : (
               <div className="py-16 text-center">
-                <p className="text-cocoa-soft text-[15px]">
-                  لسا ما في منيو منشور لهالمطعم.
+                <h3 className="font-display font-bold text-lg text-cocoa">
+                  المنيو لسا شغال عليه
+                </h3>
+                <p className="mt-2 text-cocoa-soft text-[15px]">
+                  رجّع بعد شوية، ورح تلاقي أطباق المطعم هون.
                 </p>
               </div>
             )}
