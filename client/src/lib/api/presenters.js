@@ -20,6 +20,27 @@ export const DEFAULT_MEAL_IMAGE =
 export const DEFAULT_COVER_IMAGE =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80&auto=format&fit=crop";
 
+// Unsplash cover URLs are seeded with only `w` (no `h`), so every photo keeps
+// its native aspect ratio and the hero's object-cover crop varies wildly
+// between restaurants. Rewrite the URL to request a fixed 3:1 crop at the
+// source (the desktop hero ratio) so all covers look consistent; any existing
+// DB row benefits because the rewrite happens at render time. Non-Unsplash
+// URLs (owner-provided) pass through untouched.
+export function normalizeCoverImage(url) {
+  if (!url) return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "images.unsplash.com") return url;
+    if (parsed.searchParams.has("h")) return url;
+    const width = Number(parsed.searchParams.get("w")) || 1600;
+    parsed.searchParams.set("h", String(Math.round(width / 3)));
+    parsed.searchParams.set("fit", "crop");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 const CUISINE_VISUALS = [
   {
     test: /مشاوي|فحم|شاورما/,
