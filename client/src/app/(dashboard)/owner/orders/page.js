@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ClipboardList, MoveHorizontal, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import DriverAssignModal from "@components/owner/DriverAssignModal";
 import OwnerEmptyState from "@components/owner/OwnerEmptyState";
@@ -13,6 +13,7 @@ import { OwnerListSkeleton } from "@components/owner/OwnerSkeleton";
 import { useOwner } from "@context/OwnerContext";
 import { useOrderEvents } from "@hooks/useOrderEvents";
 import { orderApi } from "@lib/api";
+import { formatTime } from "@lib/format";
 import {
   OWNER_STATUS_LABELS,
   orderToOwnerCard,
@@ -34,6 +35,23 @@ export default function OwnerOrdersPage() {
   const [filter, setFilter] = useState("ALL");
   const [busyId, setBusyId] = useState(null);
   const [assignOrder, setAssignOrder] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const tabsRef = useRef(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
+
+  // The status tabs scroll horizontally on any screen where they overflow;
+  // show the swipe hint whenever that's actually the case. Runs again once the
+  // restaurant loads, because the tablist isn't in the DOM during the skeleton.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const check = () => {
+      setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [restaurant]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,6 +59,7 @@ export default function OwnerOrdersPage() {
     try {
       const data = await orderApi.getRestaurantOrders({ page: 1, limit: 50 });
       setOrders((data.orders ?? []).map(orderToOwnerCard));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل الطلبات، حاول مرة تانية.");
     } finally {
@@ -55,7 +74,23 @@ export default function OwnerOrdersPage() {
 
   // Live refresh: whenever an order event arrives (new order, status change,
   // driver assigned/cancelled) re-fetch instead of waiting for manual refresh.
-  useOrderEvents(load);
+  // A brand-new order also surfaces a toast so the owner can't miss it.
+  const handleOrderEvent = useCallback(
+    (event) => {
+      if (event?.type === "ORDER_CREATED") {
+        toast.success("في طلب جديد واصل — روح شيك عليه");
+      }
+      load();
+    },
+    [load],
+  );
+
+  useOrderEvents(handleOrderEvent);
+
+  const pendingCount = useMemo(
+    () => orders.filter((order) => order.status === "PENDING").length,
+    [orders],
+  );
 
   const visibleOrders = useMemo(
     () =>
@@ -119,10 +154,20 @@ export default function OwnerOrdersPage() {
       <OwnerPageHeader
         title="الطلبات"
         subtitle="قدّم، اقبل، جهّز، وعيّن سائق — كل شي من هون"
-        action={<RefreshButton loading={loading} onClick={load} label="حدّث" />}
+        action={
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {lastUpdated ? (
+              <span className="text-[12px] text-muted">
+                آخر تحديث {formatTime(lastUpdated.toISOString(), true)}
+              </span>
+            ) : null}
+            <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          </div>
+        }
       />
 
       <div
+        ref={tabsRef}
         role="tablist"
         aria-label="تصفية الطلبات حسب الحالة"
         className="scrollbar-hide mb-5 flex gap-2 overflow-x-auto pb-1"
@@ -158,6 +203,33 @@ export default function OwnerOrdersPage() {
           );
         })}
       </div>
+
+      {tabsOverflow ? (
+        <p className="mb-4 flex items-center gap-1.5 text-[12px] leading-none text-muted">
+          <MoveHorizontal
+            className="h-4 w-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+          اسحب يمين ويسار لشوف باقي الحالات
+        </p>
+      ) : null}
+
+      {pendingCount > 0 && filter !== "PENDING" ? (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning/40 bg-warning/5 px-4 py-3">
+          <p className="text-[13.5px] font-bold text-foreground">
+            في {pendingCount}{" "}
+            {pendingCount === 1 ? "طلب" : pendingCount === 2 ? "طلبين" : "طلبات"}{" "}
+            بانتظار قبولك
+          </p>
+          <button
+            type="button"
+            onClick={() => setFilter("PENDING")}
+            className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-[13px] font-bold text-white transition-colors hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            روح عليهم
+          </button>
+        </div>
+      ) : null}
 
       {error ? (
         <OwnerEmptyState

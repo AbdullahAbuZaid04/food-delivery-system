@@ -737,9 +737,20 @@ export function adminRestaurantToDetail(restaurant) {
     phone: restaurant.phone ?? "",
     email: restaurant.email ?? "",
     estimatedDeliveryTime: restaurant.estimatedDeliveryTime ?? null,
-    addressLine: [address.label, address.street, address.building, address.city, address.details]
+    addressLine: [
+      address.label,
+      address.street,
+      address.building,
+      address.city,
+      address.details,
+    ]
       .filter(Boolean)
       .join("، "),
-    counts: restaurant._count ?? { categories: 0, meals: 0, orders: 0, reviews: 0 },
+    counts: restaurant._count ?? {
+      categories: 0,
+      meals: 0,
+      orders: 0,
+      reviews: 0,
+    },
   };
 }
