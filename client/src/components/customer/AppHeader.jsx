@@ -160,7 +160,7 @@ function AppHeader({
               <div
                 role="menu"
                 aria-label="قائمة الحساب"
-                className="absolute start-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
+                className="absolute end-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
               >
                 <Link
                   href="/account"
