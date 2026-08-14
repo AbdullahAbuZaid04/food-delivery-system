@@ -14,6 +14,7 @@ export default function RestaurantSettingsForm({ restaurant }) {
   const [statusBusy, setStatusBusy] = useState(false);
 
   const isOpen = restaurant.status === "OPEN";
+  const isSuspended = restaurant.status === "SUSPENDED";
 
   const handleSave = async (payload) => {
     setSubmitting(true);
@@ -49,29 +50,39 @@ export default function RestaurantSettingsForm({ restaurant }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className={`flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between ${
+          isSuspended
+            ? "border-warning/40 bg-warning/5"
+            : "border-border bg-surface"
+        }`}
+      >
         <div>
           <p className="font-display text-[16px] font-bold text-foreground">
             حالة المطعم
           </p>
           <p className="mt-0.5 text-[13px] text-muted">
-            {isOpen
-              ? "مطعمك مفتوح والزبائن يقدروا يطلبوا منو"
-              : "مطعمك مغلق حالياً — الزبائن ما رح يقدروا يطلبوا"}
+            {isSuspended
+              ? "مطعمك معلّق من إدارة وجبة — الزبائن ما بيقدروا يطلبوا منو لحتى ترجع الحالة عادية."
+              : isOpen
+                ? "مطعمك مفتوح والزبائن يقدروا يطلبوا منو"
+                : "مطعمك مغلق حالياً — الزبائن ما رح يقدروا يطلبوا"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={toggleStatus}
-          disabled={statusBusy}
-          className={isOpen ? secondaryButtonClass : primaryButtonClass}
-        >
-          {statusBusy
-            ? "بالتغيير…"
-            : isOpen
-              ? "أغلق المطعم"
-              : "افتح المطعم"}
-        </button>
+        {!isSuspended ? (
+          <button
+            type="button"
+            onClick={toggleStatus}
+            disabled={statusBusy}
+            className={isOpen ? secondaryButtonClass : primaryButtonClass}
+          >
+            {statusBusy
+              ? "بالتغيير…"
+              : isOpen
+                ? "أغلق المطعم"
+                : "افتح المطعم"}
+          </button>
+        ) : null}
       </div>
 
       <RestaurantForm

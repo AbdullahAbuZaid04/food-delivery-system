@@ -3,7 +3,7 @@
 export const inputClass =
   "w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted transition-colors focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
-export function Field({ label, required, hint, children, htmlFor }) {
+export function Field({ label, required, hint, error, children, htmlFor }) {
   return (
     <div>
       <label
@@ -20,6 +20,14 @@ export function Field({ label, required, hint, children, htmlFor }) {
       </label>
       {children}
       {hint ? <p className="mt-1 text-[12px] text-muted">{hint}</p> : null}
+      {error ? (
+        <p
+          role="alert"
+          className="mt-1 text-[12px] font-semibold text-error"
+        >
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
