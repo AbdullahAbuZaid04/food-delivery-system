@@ -130,7 +130,7 @@ export default function CategoryManagerModal({
                         type="button"
                         onClick={handleRename}
                         disabled={busyAction === "rename" && busy}
-                        className={`${primaryButtonClass} h-10 shrink-0 px-3`}
+                        className={`${primaryButtonClass} h-11 shrink-0 px-3`}
                       >
                         {busy ? "…" : "حفظ"}
                       </button>
@@ -139,7 +139,7 @@ export default function CategoryManagerModal({
                         onClick={() => setEditingId(null)}
                         disabled={busy}
                         aria-label="إلغاء التعديل"
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground"
                       >
                         <X className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -157,7 +157,7 @@ export default function CategoryManagerModal({
                         }}
                         disabled={busy}
                         aria-label={`تعديل ${category.name}`}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                       >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -166,7 +166,7 @@ export default function CategoryManagerModal({
                         onClick={() => onDelete(category.id)}
                         disabled={busy}
                         aria-label={`حذف ${category.name}`}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl text-error transition-colors hover:bg-error/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-error transition-colors hover:bg-error/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   FolderOpen,
+  MoveHorizontal,
   Plus,
   Pencil,
   RefreshCw,
@@ -10,12 +11,13 @@ import {
   Trash2,
   UtensilsCrossed,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import CategoryManagerModal from "./CategoryManagerModal";
 import MealFormModal from "./MealFormModal";
 import OwnerEmptyState from "./OwnerEmptyState";
 import OwnerModal from "./OwnerModal";
+import OwnerPageHeader from "./OwnerPageHeader";
 import RefreshButton from "./RefreshButton";
 import { OwnerListSkeleton } from "./OwnerSkeleton";
 import {
@@ -27,7 +29,7 @@ import {
 import { useOwner } from "@context/OwnerContext";
 import { categoryApi, mealApi } from "@lib/api";
 import { DEFAULT_MEAL_IMAGE } from "@lib/api/presenters";
-import { formatPrice } from "@lib/format";
+import { formatPrice, formatTime } from "@lib/format";
 
 function MealStatusDot({ status }) {
   const config = {
@@ -49,38 +51,40 @@ function MealStatusDot({ status }) {
 function MealRow({ meal, busy, onEdit, onDelete, onToggleFeature, onAvailability }) {
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
-        <Image
-          src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
-          alt={meal.name}
-          fill
-          sizes="80px"
-          className="object-cover"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-display text-[15px] font-bold text-foreground">
-            {meal.name}
-          </h3>
-          {meal.isFeatured ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-clay">
-              <Star className="h-3 w-3" fill="currentColor" aria-hidden="true" />
-              مميز
-            </span>
-          ) : null}
+      <div className="flex min-w-0 flex-1 items-start gap-4">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
+          <Image
+            src={meal.imageUrl || DEFAULT_MEAL_IMAGE}
+            alt={meal.name}
+            fill
+            sizes="80px"
+            className="object-cover"
+          />
         </div>
-        <p className="mt-1 line-clamp-1 text-[13px] text-muted">
-          {meal.description || "بدون وصف"}
-        </p>
-        <p className="mt-1.5 font-display text-[15px] font-black text-primary">
-          {formatPrice(meal.price, true)}
-        </p>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-display text-[15px] font-bold text-foreground">
+              {meal.name}
+            </h3>
+            {meal.isFeatured ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-clay">
+                <Star className="h-3 w-3" fill="currentColor" aria-hidden="true" />
+                مميز
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-[13px] text-muted">
+            {meal.description || "بدون وصف"}
+          </p>
+          <p className="mt-1.5 font-display text-[15px] font-black text-primary">
+            {formatPrice(meal.price, true)}
+          </p>
+        </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border pt-3 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
+        <div className="flex items-center gap-2">
           <MealStatusDot status={meal.status} />
           <label className="sr-only" htmlFor={`availability-${meal.id}`}>
             حالة توفر {meal.name}
@@ -94,20 +98,20 @@ function MealRow({ meal, busy, onEdit, onDelete, onToggleFeature, onAvailability
               { value: "OUT_OF_STOCK", label: "نفذ" },
               { value: "HIDDEN", label: "مخفي" },
             ]}
-            className="h-10 w-32 py-1"
+            className="h-10 w-28 py-1 sm:w-32"
             disabled={busy}
             aria-label={`حالة توفر ${meal.name}`}
           />
         </div>
 
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => onToggleFeature(meal.id)}
             disabled={busy}
             aria-label={meal.isFeatured ? "شيله من المميزين" : "خليه صنف مميز"}
             aria-pressed={meal.isFeatured}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
               meal.isFeatured
                 ? "bg-gold/20 text-clay"
                 : "text-muted hover:bg-muted/10 hover:text-foreground"
@@ -120,7 +124,7 @@ function MealRow({ meal, busy, onEdit, onDelete, onToggleFeature, onAvailability
             onClick={() => onEdit(meal)}
             disabled={busy}
             aria-label={`تعديل ${meal.name}`}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted transition-colors hover:bg-muted/10 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -129,7 +133,7 @@ function MealRow({ meal, busy, onEdit, onDelete, onToggleFeature, onAvailability
             onClick={() => onDelete(meal)}
             disabled={busy}
             aria-label={`حذف ${meal.name}`}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-error transition-colors hover:bg-error/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-error transition-colors hover:bg-error/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -150,6 +154,11 @@ export default function MenuManager() {
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [mealModal, setMealModal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [categoryBusyId, setCategoryBusyId] = useState(null);
+  const [categoryBusyAction, setCategoryBusyAction] = useState(null);
+  const tabsRef = useRef(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -161,6 +170,7 @@ export default function MenuManager() {
       ]);
       setCategories(categoryData ?? []);
       setMeals(mealData ?? []);
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل المنيو، حاول مرة تانية.");
     } finally {
@@ -172,6 +182,20 @@ export default function MenuManager() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  // The category tabs scroll horizontally on any screen where they overflow;
+  // show the swipe hint whenever that's actually the case. Runs again once the
+  // data loads, because the tablist isn't in the DOM during the skeleton.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const check = () => {
+      setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [loading, categories, meals]);
 
   const visibleMeals = useMemo(
     () =>
@@ -267,26 +291,38 @@ export default function MenuManager() {
   };
 
   const handleAddCategory = async (name) => {
+    setCategoryBusyId(null);
+    setCategoryBusyAction("add");
     try {
       await categoryApi.createCategory({ name });
       toast.success("ضفنا الفئة");
       await load();
     } catch (err) {
       toast.error(err.message || "تعذر إضافة الفئة.");
+    } finally {
+      setCategoryBusyId(null);
+      setCategoryBusyAction(null);
     }
   };
 
   const handleRenameCategory = async (id, name) => {
+    setCategoryBusyId(id);
+    setCategoryBusyAction("rename");
     try {
       await categoryApi.updateCategory(id, { name });
       toast.success("تم تعديل اسم الفئة");
       await load();
     } catch (err) {
       toast.error(err.message || "تعذر تعديل الفئة.");
+    } finally {
+      setCategoryBusyId(null);
+      setCategoryBusyAction(null);
     }
   };
 
   const handleDeleteCategory = async (id) => {
+    setCategoryBusyId(id);
+    setCategoryBusyAction("delete");
     try {
       await categoryApi.deleteCategory(id);
       toast.success("اتحذفت الفئة");
@@ -294,31 +330,46 @@ export default function MenuManager() {
       await load();
     } catch (err) {
       toast.error(err.message || "تعذر حذف الفئة.");
+    } finally {
+      setCategoryBusyId(null);
+      setCategoryBusyAction(null);
     }
   };
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setMealModal({ meal: null })}
-            className={primaryButtonClass}
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            إضافة صنف
-          </button>
-          <button
-            type="button"
-            onClick={() => setCategoryManagerOpen(true)}
-            className={secondaryButtonClass}
-          >
-            <FolderOpen className="h-4 w-4" aria-hidden="true" />
-            إدارة الفئات
-          </button>
-        </div>
-        <RefreshButton loading={loading} onClick={load} label="حدّث" />
+      <OwnerPageHeader
+        title="المنيو"
+        subtitle="أصنافك وفئاتك — زيّنها عشان الزبائن يطلبو منك أكتر"
+        action={
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {lastUpdated ? (
+              <span className="text-[12px] text-muted">
+                آخر تحديث {formatTime(lastUpdated.toISOString(), true)}
+              </span>
+            ) : null}
+            <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          </div>
+        }
+      />
+
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setMealModal({ meal: null })}
+          className={primaryButtonClass}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          إضافة صنف
+        </button>
+        <button
+          type="button"
+          onClick={() => setCategoryManagerOpen(true)}
+          className={secondaryButtonClass}
+        >
+          <FolderOpen className="h-4 w-4" aria-hidden="true" />
+          إدارة الفئات
+        </button>
       </div>
 
       {error ? (
@@ -337,13 +388,14 @@ export default function MenuManager() {
         </OwnerEmptyState>
       ) : null}
 
-      {!error && loading ? (
+      {!error && loading && meals.length === 0 ? (
         <OwnerListSkeleton rows={3} />
       ) : null}
 
-      {!error && !loading ? (
+      {!error && !(loading && meals.length === 0) ? (
         <>
           <div
+            ref={tabsRef}
             role="tablist"
             aria-label="تصفية الأصناف حسب الفئة"
             className="scrollbar-hide mb-5 flex gap-2 overflow-x-auto pb-1"
@@ -387,6 +439,16 @@ export default function MenuManager() {
               );
             })}
           </div>
+
+          {tabsOverflow ? (
+            <p className="mb-4 flex items-center gap-1.5 text-[12px] leading-none text-muted">
+              <MoveHorizontal
+                className="h-4 w-4 shrink-0 text-primary"
+                aria-hidden="true"
+              />
+              اسحب يمين ويسار لشوف باقي الفئات
+            </p>
+          ) : null}
 
           {visibleMeals.length === 0 ? (
             <OwnerEmptyState
@@ -445,8 +507,8 @@ export default function MenuManager() {
         onAdd={handleAddCategory}
         onRename={handleRenameCategory}
         onDelete={handleDeleteCategory}
-        busyId={null}
-        busyAction={null}
+        busyId={categoryBusyId}
+        busyAction={categoryBusyAction}
       />
 
       <OwnerModal
