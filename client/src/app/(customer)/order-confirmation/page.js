@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, MapPin, PackageSearch } from "lucide-react";
+import { Loader2, MapPin, PackageSearch, Phone } from "lucide-react";
 import AppHeader from "@components/customer/AppHeader";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import OrderSuccessHeader from "@components/checkout/OrderSuccessHeader";
@@ -106,20 +106,45 @@ function OrderConfirmationContent() {
                 <MapPin className="w-5 h-5 text-terra shrink-0" aria-hidden="true" />
                 عنوان التوصيل
               </h2>
-              <p className="mt-3 text-[15px] font-semibold text-cocoa">
-                {addressLine}
-              </p>
-              {order.address?.landmark ? (
-                <p className="mt-1 text-[13.5px] text-cocoa-soft">
-                  أقرب معلم: {order.address.landmark}
-                </p>
-              ) : null}
-              <p
-                dir="ltr"
-                className="mt-2 text-left text-[14px] font-medium text-cocoa-soft"
-              >
-                {order.phone}
-              </p>
+
+              <div className="mt-4 space-y-3">
+                <div className="flex items-start gap-3 rounded-[20px] border border-clay/10 bg-white p-4">
+                  <span className="w-11 h-11 shrink-0 rounded-full bg-terra/12 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-terra" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] text-cocoa-soft">المنطقة والشارع</p>
+                    <p className="mt-0.5 text-[15px] font-bold text-cocoa">
+                      {addressLine}
+                    </p>
+                    {order.address?.landmark ? (
+                      <p className="mt-0.5 text-[13px] text-cocoa-soft">
+                        أقرب معلم: {order.address.landmark}
+                      </p>
+                    ) : null}
+                    {order.address?.details ? (
+                      <p className="mt-0.5 text-[13px] text-cocoa-soft">
+                        {order.address.details}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-[20px] border border-clay/10 bg-white p-4">
+                  <span className="w-11 h-11 shrink-0 rounded-full bg-gold/15 flex items-center justify-center">
+                    <Phone className="w-5 h-5 text-gold" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] text-cocoa-soft">رقم الهاتف للتواصل</p>
+                    <p
+                      dir="ltr"
+                      className="mt-0.5 text-right text-[15px] font-bold text-cocoa"
+                    >
+                      {order.phone}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
 
@@ -134,7 +159,7 @@ function OrderConfirmationContent() {
           </aside>
         </div>
 
-        <section className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
+        <section className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
           <Link
             href={order.id ? `/orders/${order.id}` : "/orders"}
             className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-terra text-cream font-bold text-[15px] px-8 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
