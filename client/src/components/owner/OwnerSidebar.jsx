@@ -12,7 +12,7 @@ export default function OwnerSidebar() {
 
   return (
     <aside className="hidden lg:flex fixed inset-y-0 start-0 w-64 flex-col border-e border-border bg-surface">
-      <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5">
+      <div className="flex h-[72px] shrink-0 items-center gap-2.5 border-b border-border px-5">
         <BrandMark />
         <span className="font-display font-black text-xl text-foreground">
           وجبة

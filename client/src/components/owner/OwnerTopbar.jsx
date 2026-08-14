@@ -72,9 +72,10 @@ export default function OwnerTopbar({ onOpenDrawer }) {
           </span>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          {restaurant ? (
-            <>
+        {restaurant ? (
+          <>
+            {/* lg+: centered name + status. */}
+            <div className="hidden lg:flex min-w-0 flex-1 items-center justify-center gap-2.5">
               <span className="relative flex h-2.5 w-2.5 shrink-0">
                 <span
                   aria-hidden="true"
@@ -99,11 +100,20 @@ export default function OwnerTopbar({ onOpenDrawer }) {
               >
                 {RESTAURANT_STATUS_LABELS[restaurant.status] ?? restaurant.status}
               </span>
-            </>
-          ) : (
+            </div>
+
+            {/* <lg+: spacer, then the name pinned to the far end (left) of the
+                header, right before the account menu. */}
+            <div className="min-w-0 flex-1 lg:hidden" />
+            <span className="min-w-0 max-w-[40vw] truncate text-sm font-bold text-foreground lg:hidden">
+              {restaurant.name}
+            </span>
+          </>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <span className="text-sm text-muted">مش فاعل بعد — أكمّل إعداد المطعم</span>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="relative shrink-0" ref={menuRef}>
           <button

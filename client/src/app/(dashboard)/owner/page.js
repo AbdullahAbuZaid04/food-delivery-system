@@ -13,13 +13,14 @@ import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import { useOwner } from "@context/OwnerContext";
 import { dashboardApi } from "@lib/api";
 import { dashboardToView, formatRating } from "@lib/api/presenters";
-import { formatPrice } from "@lib/format";
+import { formatPrice, formatRelativeTime, formatTime } from "@lib/format";
 
 export default function OwnerDashboardPage() {
   const { restaurant, restaurantLoading } = useOwner();
   const [view, setView] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,6 +28,7 @@ export default function OwnerDashboardPage() {
     try {
       const stats = await dashboardApi.getDashboardStats();
       setView(dashboardToView(stats));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل الإحصائيات، حاول مرة تانية.");
     } finally {
@@ -61,9 +63,16 @@ export default function OwnerDashboardPage() {
     <div>
       <OwnerPageHeader
         title="نظرة عامة"
-        subtitle={`أهلاً بيك في لوحة ${restaurant.name} — هدول أرقامك لهلق`}
+        subtitle="أهلاً بيك — هدول أرقامك لهلق"
         action={
-          <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {lastUpdated ? (
+              <span className="text-[12px] text-muted">
+                آخر تحديث {formatTime(lastUpdated.toISOString(), true)}
+              </span>
+            ) : null}
+            <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          </div>
         }
       />
 
@@ -100,6 +109,7 @@ export default function OwnerDashboardPage() {
               label="إجمالي الطلبات"
               value={formatStatNumber(view.orders.total)}
               hint={`اليوم ${formatStatNumber(view.orders.today)} · هذا الأسبوع ${formatStatNumber(view.orders.thisWeek)}`}
+              href="/owner/orders"
             />
             <OwnerStatCard
               icon={<Wallet className="h-5 w-5" aria-hidden="true" />}
@@ -114,6 +124,7 @@ export default function OwnerDashboardPage() {
               label="متوسط التقييم"
               value={view.reviews.averageRating ? formatRating(view.reviews.averageRating, true) : "—"}
               hint={`${formatStatNumber(view.reviews.total)} تقييم`}
+              href="/owner/reviews"
             />
             <OwnerStatCard
               icon={<Clock className="h-5 w-5" aria-hidden="true" />}
@@ -121,6 +132,9 @@ export default function OwnerDashboardPage() {
               label="قيد الانتظار"
               value={formatStatNumber(pendingCount)}
               hint="طلبات تنتظر القبول"
+              href="/owner/orders"
+              highlight={pendingCount > 0}
+              cta={pendingCount > 0 ? "روح على الطلبات" : undefined}
             />
           </div>
 
@@ -144,22 +158,27 @@ export default function OwnerDashboardPage() {
                   لسا ما في طلبات — أول طلب رح يظهر هون
                 </p>
               ) : (
-                <ul className="divide-y divide-border">
-                  {view.recentOrders.map((order) => (
+                <ul className="space-y-2">
+                  {view.recentOrders.map((order, index) => (
                     <li key={order.id}>
                       <Link
                         href="/owner/orders"
-                        className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-muted/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        className={`flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:bg-muted/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                          index % 2 === 1 ? "bg-background" : "bg-white"
+                        }`}
                       >
                         <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-display text-[14px] font-bold text-foreground">
+                          <div className="flex items-center gap-2">
+                            <span className="min-w-0 truncate font-display text-[14px] font-bold text-foreground">
                               {order.orderNumber}
                             </span>
                             <OrderStatusBadge status={order.statusLabel} />
                           </div>
                           <p className="mt-1 truncate text-[13px] text-muted">
                             {order.customerName} · {order.itemCount} أصناف
+                            {order.createdAt ? (
+                              <span> · {formatRelativeTime(order.createdAt)}</span>
+                            ) : null}
                           </p>
                         </div>
                         <ChevronLeft

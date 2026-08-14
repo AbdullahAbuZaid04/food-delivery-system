@@ -46,7 +46,7 @@ function OrderStatusBadge({ status }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold ${style}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-bold ${style}`}
     >
       <Icon className="w-3.5 h-3.5" aria-hidden="true" />
       {status}
