@@ -111,11 +111,14 @@ function ClearCartDialog({ open, restaurantName, itemCount, onClose, onConfirm }
           امسح كل السلة؟
         </h2>
         <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
-          رح نمسح {formatArabicCount(itemCount)} من {restaurantName}. هالإجراء
-          ما رح يترجع.
+          رح نمسح {formatArabicCount(itemCount)} من{" "}
+          <span className="font-bold text-cocoa">{restaurantName}</span>.
+        </p>
+        <p className="mt-1.5 text-cocoa-soft text-[13px] leading-relaxed">
+          هالإجراء ما رح يترجع.
         </p>
 
-        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+        <div className="mt-6 flex flex-row gap-3">
           <button
             type="button"
             onClick={onConfirm}
