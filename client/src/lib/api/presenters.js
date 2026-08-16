@@ -7,7 +7,7 @@ import {
   Store,
   UtensilsCrossed,
 } from "lucide-react";
-import { formatDateTime, formatPrice, toArabicDigits } from "@lib/format";
+import { formatDateTime, formatPrice, formatTime, toArabicDigits } from "@lib/format";
 
 // Presenters — convert API payloads (src/lib/api) into the presentation shapes
 // the existing UI components expect (RestaurantCard, RestaurantHeader,
@@ -547,6 +547,16 @@ export function restaurantFormToPayload(form) {
 // `latin` mode here.
 export function formatOwnerDateTime(iso) {
   return formatDateTime(iso, true);
+}
+
+// Split "date · time" (Latin digits, AGENTS.md §5 dashboard exception) into
+// separate date / time strings for the admin detail rows.
+export function formatOwnerDate(iso) {
+  return formatDateTime(iso, true).split(" · ")[0];
+}
+
+export function formatOwnerTime(iso) {
+  return formatTime(iso, true);
 }
 
 // ========================

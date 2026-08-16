@@ -58,8 +58,10 @@ export default function AdminTopbar({ onOpenDrawer }) {
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        {/* Brand — mobile (lg:hidden); the sidebar carries it on lg+. */}
-        <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+        {/* Brand — mobile (lg:hidden); the sidebar carries it on lg+.
+            flex-1 keeps the brand group to the right and pushes the
+            account circle to the far left on small screens. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 lg:hidden">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center">
             <BrandMark />
           </div>

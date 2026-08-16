@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import {
   BadgeCheck,
   ChevronRight,
+  Clock,
   Loader2,
   MapPin,
   RefreshCw,
@@ -20,7 +21,9 @@ import {
   adminDriverStatusOptions,
   adminUserStatusLabel,
   adminUserToDetail,
+  formatOwnerDate,
   formatOwnerDateTime,
+  formatOwnerTime,
 } from "@lib/api/presenters";
 
 const USER_STATUSES = ["ACTIVE", "INACTIVE", "BLOCKED"];
@@ -161,28 +164,18 @@ export default function AdminUserDetailPage({ params }) {
         كل المستخدمين
       </Link>
 
-      <header className="mt-2 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-lg font-bold text-primary-dark">
-            {user.name.charAt(0)}
-          </span>
-          <div className="min-w-0">
-            <h1 className="flex flex-wrap items-center gap-2 font-display text-[22px] font-black text-foreground">
-              {user.name}
-              {user.isVerified ? (
-                <span className="inline-flex items-center gap-1 text-[12.5px] font-bold text-success">
-                  <BadgeCheck className="h-4 w-4" aria-hidden="true" />
-                  موثّق
-                </span>
-              ) : null}
-            </h1>
-            <p className="mt-0.5 text-[13.5px] text-muted">
-              {user.email}
-              {user.phone ? ` · ${user.phone}` : ""}
-              {" · "}
-              {ROLE_LABELS[user.role] ?? user.role}
-            </p>
-          </div>
+      <header className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="flex flex-wrap items-center gap-2 font-display text-[22px] font-black text-foreground">
+            {user.name}
+            {user.isVerified ? (
+              <span className="inline-flex items-center gap-1 text-[12.5px] font-bold text-success">
+                <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                موثّق
+              </span>
+            ) : null}
+          </h1>
+          <p className="mt-0.5 truncate text-[13.5px] text-muted">{user.email}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -215,42 +208,42 @@ export default function AdminUserDetailPage({ params }) {
           </h2>
           <dl className="mt-3 space-y-2.5 text-[13.5px]">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted">الدور</dt>
-              <dd className="font-semibold text-foreground">
-                {ROLE_LABELS[user.role] ?? user.role}
-              </dd>
+              <dt className="shrink-0 font-bold text-foreground">الدور</dt>
+              <dd className="text-muted">{ROLE_LABELS[user.role] ?? user.role}</dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted">الحالة</dt>
-              <dd className="font-semibold text-foreground">{user.statusLabel}</dd>
+              <dt className="shrink-0 font-bold text-foreground">الحالة</dt>
+              <dd className="text-muted">{user.statusLabel}</dd>
             </div>
             {user.role === "DRIVER" ? (
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted">حالة الانضمام</dt>
-                <dd className="font-semibold text-foreground">
+                <dt className="shrink-0 font-bold text-foreground">حالة الانضمام</dt>
+                <dd className="text-muted">
                   {adminDriverStatusLabel(user.driverStatus)}
                 </dd>
               </div>
             ) : null}
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted">توثيق الحساب</dt>
-              <dd className="font-semibold text-foreground">
+              <dt className="shrink-0 font-bold text-foreground">توثيق الحساب</dt>
+              <dd className="text-muted">
                 {user.isVerified ? "موثّق" : "غير موثّق"}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted">آخر تسجيل دخول</dt>
-              <dd className="font-semibold text-foreground">
+              <dt className="shrink-0 font-bold text-foreground">آخر تسجيل دخول</dt>
+              <dd className="text-muted">
                 {user.lastLoginAt
                   ? formatOwnerDateTime(user.lastLoginAt)
                   : "ما سجل دخول بعد"}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted">تاريخ الانضمام</dt>
-              <dd className="font-semibold text-foreground">
-                {formatOwnerDateTime(user.createdAt)}
-              </dd>
+              <dt className="shrink-0 font-bold text-foreground">تاريخ الانضمام</dt>
+              <dd className="text-muted">{formatOwnerDate(user.createdAt)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="shrink-0 font-bold text-foreground">وقت الانضمام</dt>
+              <dd className="text-muted">{formatOwnerTime(user.createdAt)}</dd>
             </div>
           </dl>
         </section>
@@ -272,7 +265,7 @@ export default function AdminUserDetailPage({ params }) {
               {user.addresses.map((address, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-2 rounded-xl bg-muted/10 px-3 py-2.5 text-[13.5px] text-foreground"
+                  className="flex items-start gap-2 rounded-xl bg-white px-3 py-2.5 text-[13.5px] text-foreground"
                 >
                   <MapPin
                     className="mt-0.5 h-4 w-4 shrink-0 text-primary"
