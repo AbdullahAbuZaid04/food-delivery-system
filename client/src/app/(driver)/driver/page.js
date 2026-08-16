@@ -225,7 +225,7 @@ export default function DriverOrdersPage() {
         </div>
       ) : null}
 
-      {!error && !loading && visibleOrders.length > 0 ? (
+      {!error && visibleOrders.length > 0 ? (
         <div className="mt-6 space-y-3">
           {visibleOrders.map((order) => (
             <DriverCard key={order.id} order={order} />
