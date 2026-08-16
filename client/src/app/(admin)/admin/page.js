@@ -3,7 +3,9 @@
 import Link from "next/link";
 import {
   AlertTriangle,
+  Ban,
   ChevronLeft,
+  CircleCheck,
   ShieldCheck,
   Store,
   Truck,
@@ -11,32 +13,27 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import AdminStatCard from "@components/admin/AdminStatCard";
+import {
+  driverStatusBadge,
+  restaurantStatusBadge,
+  userRoleBadge,
+} from "@components/admin/AdminBadges";
 import RefreshButton from "@components/owner/RefreshButton";
 import { getRestaurants, getUsers } from "@lib/api/admin";
 import {
+  adminDriverStatusLabel,
   adminRestaurantToCard,
   adminUserToCard,
+  formatOwnerTime,
 } from "@lib/api/presenters";
 
-function StatCard({ icon: Icon, label, value }) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-      {Icon ? (
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      ) : null}
-      <div className="min-w-0">
-        <p className="font-display text-xl font-black text-foreground">
-          {value}
-        </p>
-        <p className="mt-0.5 truncate text-[12.5px] font-semibold text-muted">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
-}
+const ROLE_LABELS = {
+  CUSTOMER: "زبون",
+  OWNER: "مالك",
+  DRIVER: "سائق",
+  ADMIN: "أدمن",
+};
 
 const ROLE_DISTRIBUTION = [
   { role: "CUSTOMER", label: "زبون", icon: UserRound },
@@ -50,6 +47,7 @@ export default function AdminOverviewPage() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +59,7 @@ export default function AdminOverviewPage() {
       ]);
       setUsers(userData.map(adminUserToCard));
       setRestaurants(restaurantData.map(adminRestaurantToCard));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل البيانات، حاول مرة تانية.");
     } finally {
@@ -83,7 +82,7 @@ export default function AdminOverviewPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div>
           <h1 className="font-display text-[22px] font-black text-foreground">
             نظرة عامة
@@ -92,7 +91,14 @@ export default function AdminOverviewPage() {
             خلاصة حالة المنصة
           </p>
         </div>
-        <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        <div className="flex items-center gap-3">
+          {lastUpdated ? (
+            <span className="text-[12px] text-muted">
+              آخر تحديث {formatOwnerTime(lastUpdated.toISOString())}
+            </span>
+          ) : null}
+          <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        </div>
       </div>
 
       {error ? (
@@ -111,8 +117,8 @@ export default function AdminOverviewPage() {
         </div>
       ) : null}
 
-      {!error && loading ? (
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" role="status">
+      {!error && loading && !lastUpdated ? (
+        <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4" role="status">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
@@ -123,17 +129,21 @@ export default function AdminOverviewPage() {
         </div>
       ) : null}
 
-      {!error && !loading ? (
+      {!error && lastUpdated ? (
         <>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard
+          <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <AdminStatCard
               icon={Users}
               label="مستخدمين مسجلين"
               value={users.length}
             />
-            <StatCard icon={Store} label="مطاعم على المنصة" value={restaurants.length} />
-            <StatCard label="مطاعم مفتوحة" value={openRestaurants} />
-            <StatCard label="مستخدمين محظورين" value={blockedUsers} />
+            <AdminStatCard icon={Store} label="مطاعم على المنصة" value={restaurants.length} />
+            <AdminStatCard
+              icon={CircleCheck}
+              label="مطاعم مفتوحة"
+              value={openRestaurants}
+            />
+            <AdminStatCard icon={Ban} label="مستخدمين محظورين" value={blockedUsers} />
           </div>
 
           {blockedUsers + suspendedRestaurants > 0 ? (
@@ -153,7 +163,7 @@ export default function AdminOverviewPage() {
                 {blockedUsers > 0 ? (
                   <Link
                     href="/admin/users"
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full border border-error/30 bg-white px-3.5 text-[12.5px] font-bold text-error transition-colors hover:border-error focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-full border border-error/30 bg-white px-3.5 text-[12.5px] font-bold text-error transition-colors hover:border-error focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
                   >
                     {blockedUsers} محظور
                     <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -162,7 +172,7 @@ export default function AdminOverviewPage() {
                 {suspendedRestaurants > 0 ? (
                   <Link
                     href="/admin/restaurants?status=SUSPENDED"
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full border border-error/30 bg-white px-3.5 text-[12.5px] font-bold text-error transition-colors hover:border-error focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                    className="inline-flex h-11 items-center gap-1.5 rounded-full border border-error/30 bg-white px-3.5 text-[12.5px] font-bold text-error transition-colors hover:border-error focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
                   >
                     {suspendedRestaurants} مطعم معلّق
                     <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -175,7 +185,7 @@ export default function AdminOverviewPage() {
           <h2 className="mt-6 font-display font-bold text-foreground">
             توزيع الأدوار
           </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
             {ROLE_DISTRIBUTION.map(({ role, label, icon: Icon }) => {
               const count = users.filter((user) => user.role === role).length;
               return (
@@ -231,7 +241,7 @@ export default function AdminOverviewPage() {
                   <li key={user.id}>
                     <Link
                       href={`/admin/users/${user.id}`}
-                      className="flex items-center justify-between gap-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="flex items-center justify-between gap-3 rounded-lg px-1.5 py-2.5 transition-colors hover:bg-muted/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-[14px] font-semibold text-foreground">
@@ -241,8 +251,19 @@ export default function AdminOverviewPage() {
                           {user.email}
                         </span>
                       </span>
-                      <span className="shrink-0 rounded-full bg-muted/15 px-2.5 py-1 text-[11.5px] font-bold text-muted">
-                        {user.role}
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span
+                          className={`shrink-0 rounded-full border px-2.5 py-1 text-[11.5px] font-bold ${userRoleBadge(user.role)}`}
+                        >
+                          {ROLE_LABELS[user.role] ?? user.role}
+                        </span>
+                        {user.role === "DRIVER" ? (
+                          <span
+                            className={`shrink-0 rounded-full border px-2.5 py-1 text-[11.5px] font-bold ${driverStatusBadge(user.driverStatus)}`}
+                          >
+                            {adminDriverStatusLabel(user.driverStatus)}
+                          </span>
+                        ) : null}
                       </span>
                     </Link>
                   </li>
@@ -274,7 +295,7 @@ export default function AdminOverviewPage() {
                   <li key={restaurant.id}>
                     <Link
                       href={`/admin/restaurants/${restaurant.id}`}
-                      className="flex items-center justify-between gap-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="flex items-center justify-between gap-3 rounded-lg px-1.5 py-2.5 transition-colors hover:bg-muted/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <span className="min-w-0">
                         <span className="block truncate text-[14px] font-semibold text-foreground">
@@ -285,13 +306,7 @@ export default function AdminOverviewPage() {
                         </span>
                       </span>
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-[11.5px] font-bold ${
-                          restaurant.status === "OPEN"
-                            ? "bg-success/15 text-success"
-                            : restaurant.status === "SUSPENDED"
-                              ? "bg-error/15 text-error"
-                              : "bg-muted/15 text-muted"
-                        }`}
+                        className={`shrink-0 rounded-full border px-2.5 py-1 text-[11.5px] font-bold ${restaurantStatusBadge(restaurant.status)}`}
                       >
                         {restaurant.statusLabel}
                       </span>

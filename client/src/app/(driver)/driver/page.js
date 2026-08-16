@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, MapPin, PackageOpen, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { ChevronLeft, MapPin, MoveHorizontal, PackageOpen, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import RefreshButton from "@components/owner/RefreshButton";
 import { useOrderEvents } from "@hooks/useOrderEvents";
 import { getMyDriverOrders } from "@lib/api/orders";
 import { formatOwnerDateTime, orderToDriverCard } from "@lib/api/presenters";
-import { formatPrice } from "@lib/format";
+import { formatPrice, formatTime } from "@lib/format";
 
 const ACTIVE_STATUSES = new Set(["ASSIGNED", "PICKED_UP", "ON_THE_WAY"]);
+
+const DRIVER_TABS = [
+  { key: "active", label: "جارية" },
+  { key: "completed", label: "مكتملة" },
+];
 
 function DriverCard({ order }) {
   const isActive = ACTIVE_STATUSES.has(order.status);
@@ -65,6 +70,22 @@ export default function DriverOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("active");
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const tabsRef = useRef(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
+
+  // The pill tabs scroll horizontally if they ever overflow; show the swipe
+  // hint only when that's actually the case.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const check = () => {
+      setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -72,6 +93,7 @@ export default function DriverOrdersPage() {
     try {
       const data = await getMyDriverOrders({ limit: 100 });
       setOrders((data?.orders ?? []).map(orderToDriverCard));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل الطلبات، حاول مرة تانية.");
     } finally {
@@ -93,50 +115,70 @@ export default function DriverOrdersPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <h1 className="font-display text-[22px] font-black text-foreground">
             طلباتي
           </h1>
-          <p className="mt-1 text-[13.5px] text-muted">
-            {activeOrders.length} جارية · {completedOrders.length} مكتملة
-          </p>
+          <div className="flex items-center gap-3">
+            {lastUpdated ? (
+              <span className="text-[12px] text-muted">
+                آخر تحديث {formatTime(lastUpdated.toISOString(), true)}
+              </span>
+            ) : null}
+            <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          </div>
         </div>
-        <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        <p className="mt-1 text-[13.5px] text-muted">
+          تابع توصيلاتك الجارية وبلّغ وصول كل طلبية.
+        </p>
       </div>
 
       <div
+        ref={tabsRef}
         role="tablist"
         aria-label="تصفية الطلبات"
-        className="mt-5 flex gap-2 border-b border-border"
+        className="scrollbar-hide mt-5 flex gap-2 overflow-x-auto pb-1"
       >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "active"}
-          onClick={() => setTab("active")}
-          className={`-mb-px h-11 px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-            tab === "active"
-              ? "border-b-2 border-primary text-foreground"
-              : "border-b-2 border-transparent text-muted hover:text-foreground"
-          }`}
-        >
-          جارية
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "completed"}
-          onClick={() => setTab("completed")}
-          className={`-mb-px h-11 px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-            tab === "completed"
-              ? "border-b-2 border-primary text-foreground"
-              : "border-b-2 border-transparent text-muted hover:text-foreground"
-          }`}
-        >
-          مكتملة
-        </button>
+        {DRIVER_TABS.map((t) => {
+          const active = tab === t.key;
+          const count =
+            t.key === "active" ? activeOrders.length : completedOrders.length;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setTab(t.key)}
+              className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[13.5px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                active
+                  ? "bg-primary text-white"
+                  : "border border-border bg-surface text-muted hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[11px] font-black ${
+                  active ? "bg-white/20 text-white" : "bg-muted/10 text-muted"
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
+
+      {tabsOverflow ? (
+        <p className="mt-3 flex items-center gap-1.5 text-[12px] leading-none text-muted">
+          <MoveHorizontal
+            className="h-4 w-4 shrink-0 text-primary"
+            aria-hidden="true"
+          />
+          اسحب يمين ويسار لشوف باقي التبويبات
+        </p>
+      ) : null}
 
       {error ? (
         <div className="mt-6 rounded-2xl border border-border bg-surface p-8 text-center">
@@ -155,7 +197,7 @@ export default function DriverOrdersPage() {
         </div>
       ) : null}
 
-      {!error && loading ? (
+      {!error && loading && orders.length === 0 ? (
         <div className="mt-6 space-y-3" role="status">
           {[0, 1, 2].map((i) => (
             <div
@@ -183,7 +225,7 @@ export default function DriverOrdersPage() {
         </div>
       ) : null}
 
-      {!error && !loading && visibleOrders.length > 0 ? (
+      {!error && visibleOrders.length > 0 ? (
         <div className="mt-6 space-y-3">
           {visibleOrders.map((order) => (
             <DriverCard key={order.id} order={order} />

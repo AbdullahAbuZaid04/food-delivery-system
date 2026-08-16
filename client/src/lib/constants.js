@@ -2,10 +2,6 @@
 // Keep this file free of hooks — it is imported by both Server and Client components.
 // When a backend/API exists, replace these arrays with fetches instead of mixing static and live data.
 import {
-  ChefHat,
-  FishSymbol,
-  Sandwich,
-  IceCreamBowl,
   Store,
   Bike,
   ShieldCheck,
@@ -44,53 +40,6 @@ export const marqueeItems = [
   "عصائر طازجة",
   "فلافل",
   "آيس كريم",
-];
-
-export const restaurants = [
-  {
-    id: "baladna",
-    icon: <ChefHat className="w-6 h-6" strokeWidth={1.7} />,
-    tone: "bg-terra/12 text-terra",
-    name: "مطعم بلدنا",
-    cuisine: "مأكولات شعبية",
-    rating: "٤٫٩",
-    time: "٢٠ د",
-    delivery: "مجاني فوق ٥٠ ₪",
-    dishes: ["مسخّن دجاج", "فته حمص", "منسف"],
-  },
-  {
-    id: "al-buhhar",
-    icon: <FishSymbol className="w-6 h-6" strokeWidth={1.7} />,
-    tone: "bg-olive/14 text-olive",
-    name: "مطعم ومسمكة البحّار",
-    cuisine: "مأكولات بحرية",
-    rating: "٤٫٨",
-    time: "٣٠ د",
-    delivery: "مجاني فوق ٨٠ ₪",
-    dishes: ["صيادية", "سمك مشوي", "جمبري"],
-  },
-  {
-    id: "al-taj",
-    icon: <Sandwich className="w-6 h-6" strokeWidth={1.7} />,
-    tone: "bg-gold/18 text-clay",
-    name: "مطعم التاج",
-    cuisine: "شاورما وسندويشات",
-    rating: "٤٫٩",
-    time: "٢٥ د",
-    delivery: "مجاني فوق ٤٠ ₪",
-    dishes: ["شاورما خروف", "شاورما دجاج", "سندويش لحم"],
-  },
-  {
-    id: "abu-saud",
-    icon: <IceCreamBowl className="w-6 h-6" strokeWidth={1.7} />,
-    tone: "bg-gold/18 text-terra-dark",
-    name: "حلويات أبو السعود",
-    cuisine: "حلويات شرقية",
-    rating: "٤٫٨",
-    time: "٢٥ د",
-    delivery: "توصيل ٥ ₪",
-    dishes: ["كنافة نابلسية", "كنافة إسطنبولية", "بسبوسة"],
-  },
 ];
 
 export const steps = [

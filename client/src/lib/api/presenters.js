@@ -7,7 +7,7 @@ import {
   Store,
   UtensilsCrossed,
 } from "lucide-react";
-import { formatDateTime, formatPrice, toArabicDigits } from "@lib/format";
+import { formatDateTime, formatPrice, formatTime, toArabicDigits } from "@lib/format";
 
 // Presenters — convert API payloads (src/lib/api) into the presentation shapes
 // the existing UI components expect (RestaurantCard, RestaurantHeader,
@@ -19,6 +19,27 @@ export const DEFAULT_MEAL_IMAGE =
 
 export const DEFAULT_COVER_IMAGE =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80&auto=format&fit=crop";
+
+// Unsplash cover URLs are seeded with only `w` (no `h`), so every photo keeps
+// its native aspect ratio and the hero's object-cover crop varies wildly
+// between restaurants. Rewrite the URL to request a fixed 3:1 crop at the
+// source (the desktop hero ratio) so all covers look consistent; any existing
+// DB row benefits because the rewrite happens at render time. Non-Unsplash
+// URLs (owner-provided) pass through untouched.
+export function normalizeCoverImage(url) {
+  if (!url) return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "images.unsplash.com") return url;
+    if (parsed.searchParams.has("h")) return url;
+    const width = Number(parsed.searchParams.get("w")) || 1600;
+    parsed.searchParams.set("h", String(Math.round(width / 3)));
+    parsed.searchParams.set("fit", "crop");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 
 const CUISINE_VISUALS = [
   {
@@ -528,6 +549,16 @@ export function formatOwnerDateTime(iso) {
   return formatDateTime(iso, true);
 }
 
+// Split "date · time" (Latin digits, AGENTS.md §5 dashboard exception) into
+// separate date / time strings for the admin detail rows.
+export function formatOwnerDate(iso) {
+  return formatDateTime(iso, true).split(" · ")[0];
+}
+
+export function formatOwnerTime(iso) {
+  return formatTime(iso, true);
+}
+
 // ========================
 // DRIVER DASHBOARD PRESENTERS
 // ========================
@@ -716,9 +747,20 @@ export function adminRestaurantToDetail(restaurant) {
     phone: restaurant.phone ?? "",
     email: restaurant.email ?? "",
     estimatedDeliveryTime: restaurant.estimatedDeliveryTime ?? null,
-    addressLine: [address.label, address.street, address.building, address.city, address.details]
+    addressLine: [
+      address.label,
+      address.street,
+      address.building,
+      address.city,
+      address.details,
+    ]
       .filter(Boolean)
       .join("، "),
-    counts: restaurant._count ?? { categories: 0, meals: 0, orders: 0, reviews: 0 },
+    counts: restaurant._count ?? {
+      categories: 0,
+      meals: 0,
+      orders: 0,
+      reviews: 0,
+    },
   };
 }

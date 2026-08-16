@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, Menu, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import BrandMark from "@components/ui/BrandMark";
 import { useAuth } from "@context/AuthContext";
 
 export default function AdminTopbar({ onOpenDrawer }) {
@@ -57,7 +58,24 @@ export default function AdminTopbar({ onOpenDrawer }) {
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        {/* Brand — mobile (lg:hidden); the sidebar carries it on lg+.
+            flex-1 keeps the brand group to the right and pushes the
+            account circle to the far left on small screens. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 lg:hidden">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+            <BrandMark />
+          </div>
+          <div className="min-w-0">
+            <p className="font-display text-[17px] font-black leading-none text-foreground">
+              وجبة
+            </p>
+            <p className="mt-1 truncate text-[12px] font-semibold text-muted">
+              لوحة الإدارة
+            </p>
+          </div>
+        </div>
+
+        <div className="hidden min-w-0 flex-1 items-center gap-2.5 lg:flex">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>

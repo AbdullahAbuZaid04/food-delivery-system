@@ -80,14 +80,17 @@ function RestaurantConflictModal({
         </span>
 
         <h2 className="mt-5 font-display font-black text-[20px] sm:text-[22px] text-cocoa leading-snug">
-          طلبك الحالي من {currentRestaurantName}
+          إضافة من مطعم تاني؟
         </h2>
         <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
-          إذا أضفت من {incomingRestaurantName} بتضيع طلبيتك الحالية. متأكد بدك
-          تكمل؟
+          سلتك الحالية من{" "}
+          <span className="font-bold text-cocoa">{currentRestaurantName}</span>.
+        </p>
+        <p className="mt-1.5 text-cocoa-soft text-[13px] leading-relaxed">
+          إذا أضفت من {incomingRestaurantName} رح تضيع طلبيتك الحالية.
         </p>
 
-        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+        <div className="mt-6 flex flex-row gap-3">
           <button
             type="button"
             onClick={onConfirm}

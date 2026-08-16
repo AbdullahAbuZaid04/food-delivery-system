@@ -334,8 +334,8 @@ export default function RestaurantSignupForm() {
             />
 
             <AuthSubmitButton>
-              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
               التالي
+              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
             </AuthSubmitButton>
           </div>
         ) : (
@@ -562,6 +562,15 @@ export default function RestaurantSignupForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-cocoa-soft">
+        عندك حساب؟{" "}
+        <Link
+          href="/login"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل دخولك
+        </Link>
+      </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
         بدّك تسجّل كزبون؟{" "}
         <Link
           href="/register"

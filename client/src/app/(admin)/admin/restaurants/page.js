@@ -2,17 +2,26 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Clock, Search, Store } from "lucide-react";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  Clock,
+  MoveHorizontal,
+  Search,
+  Store,
+  User,
+} from "lucide-react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
 import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
+import { restaurantStatusBadge } from "@components/admin/AdminBadges";
 import RefreshButton from "@components/owner/RefreshButton";
 import { getRestaurants, updateRestaurantStatus } from "@lib/api/admin";
 import {
   adminRestaurantStatusLabel,
   adminRestaurantStatusOptions,
   adminRestaurantToCard,
+  formatOwnerTime,
 } from "@lib/api/presenters";
 
 const STATUS_FILTERS = [
@@ -35,6 +44,30 @@ function RestaurantsScreen() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [pending, setPending] = useState(null); // { restaurant, status }
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const tabsRef = useRef(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
+
+  // The status pills scroll horizontally on any screen where they overflow;
+  // show the swipe hint only when that's actually the case.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const check = () => {
+      setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [loading]);
+
+  // Keep the selected tab in view when it changes (banner shortcut, URL param,
+  // manual tap on a scrolled-out pill).
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [statusFilter]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,6 +75,7 @@ function RestaurantsScreen() {
     try {
       const data = await getRestaurants({ limit: 100 });
       setRestaurants(data.map(adminRestaurantToCard));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل المطاعم، حاول مرة تانية.");
     } finally {
@@ -101,7 +135,7 @@ function RestaurantsScreen() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div>
           <h1 className="font-display text-[22px] font-black text-foreground">
             المطاعم
@@ -110,7 +144,14 @@ function RestaurantsScreen() {
             {restaurants.length} مطعم على المنصة
           </p>
         </div>
-        <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        <div className="flex items-center gap-3">
+          {lastUpdated ? (
+            <span className="text-[12px] text-muted">
+              آخر تحديث {formatOwnerTime(lastUpdated.toISOString())}
+            </span>
+          ) : null}
+          <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-3">
@@ -130,36 +171,50 @@ function RestaurantsScreen() {
         </div>
 
         <div
+          ref={tabsRef}
           role="tablist"
           aria-label="تصفية المطاعم حسب الحالة"
-          className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-surface p-1.5"
+          className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-1"
         >
-          {STATUS_FILTERS.map((filter) => (
-            <button
-              key={filter.value ?? "all"}
-              type="button"
-              role="tab"
-              aria-selected={statusFilter === filter.value}
-              onClick={() => setStatusFilter(filter.value)}
-              className={`flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                statusFilter === filter.value
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-muted hover:bg-muted/10 hover:text-foreground"
-              }`}
-            >
-              {filter.label}
-              <span
-                className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
-                  statusFilter === filter.value
-                    ? "bg-white/20 text-white"
-                    : "bg-muted/15 text-muted"
+          {STATUS_FILTERS.map((filter) => {
+            const active = statusFilter === filter.value;
+            return (
+              <button
+                key={filter.value ?? "all"}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setStatusFilter(filter.value)}
+                className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13.5px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                  active
+                    ? "border border-primary bg-primary text-white shadow-sm"
+                    : "border border-border bg-surface text-muted hover:bg-muted/10 hover:text-foreground"
                 }`}
               >
-                {countFor(filter.value)}
-              </span>
-            </button>
-          ))}
+                {filter.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[11px] font-black ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-muted/10 text-muted"
+                  }`}
+                >
+                  {countFor(filter.value)}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        {tabsOverflow ? (
+          <p className="mt-3 flex items-center gap-1.5 text-[12px] leading-none text-muted">
+            <MoveHorizontal
+              className="h-4 w-4 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            اسحب يمين ويسار لشوف باقي التبويبات
+          </p>
+        ) : null}
       </div>
 
       {pendingCount > 0 && statusFilter !== "PENDING" ? (
@@ -221,33 +276,41 @@ function RestaurantsScreen() {
             {visibleRestaurants.map((restaurant) => (
               <li
                 key={restaurant.id}
-                className="flex flex-col gap-3 p-4 odd:bg-white/40 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+                className="flex flex-col gap-3 p-4 odd:bg-white/40 transition-colors hover:bg-muted/5 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
               >
                 <Link
                   href={`/admin/restaurants/${restaurant.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="group flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Store className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark text-white shadow-sm ring-1 ring-primary/10">
+                    <Store className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[14.5px] font-bold text-foreground">
-                      {restaurant.name}
-                    </span>
-                    <span className="mt-0.5 flex items-center gap-1.5">
-                      {restaurant.cuisine ? (
-                        <span className="rounded-full bg-muted/15 px-2 py-0.5 text-[11px] font-bold text-muted">
-                          {restaurant.cuisine}
-                        </span>
-                      ) : null}
-                      <span className="truncate text-[12.5px] text-muted">
-                        {restaurant.ownerName}
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate text-[15px] font-bold text-foreground transition-colors group-hover:text-primary">
+                        {restaurant.name}
                       </span>
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        {restaurant.cuisine ? (
+                          <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary-dark">
+                            {restaurant.cuisine}
+                          </span>
+                        ) : null}
+                        <span
+                          className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${restaurantStatusBadge(restaurant.status)}`}
+                        >
+                          {restaurant.statusLabel}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
+                      <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{restaurant.ownerName}</span>
                     </span>
                   </span>
                 </Link>
 
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <div className="flex items-center justify-end gap-3">
                   <AdminStatusSelect
                     value={restaurant.status}
                     statuses={adminRestaurantStatusOptions(restaurant.status)}

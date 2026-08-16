@@ -112,22 +112,21 @@ export default function DriverOrderDetailPage({ params }) {
         كل الطلبات
       </Link>
 
-      <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="font-display text-[22px] font-black text-foreground">
-            {console.log(order)}
+      <header className="mt-2">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="min-w-0 flex-1 font-display text-[22px] font-black text-foreground">
             {order.restaurantName}
           </h1>
-          <p className="mt-1 text-[13px] text-muted">
-            رقم الطلب{" "}
-            <span dir="ltr" className="inline-block font-semibold">
-              {order.orderNumber}
-            </span>
-            {" · "}
-            {formatOwnerDateTime(order.createdAt)}
-          </p>
+          <OrderStatusBadge status={order.statusLabel} />
         </div>
-        <OrderStatusBadge status={order.statusLabel} />
+        <p className="mt-1 text-[13px] text-muted">
+          رقم الطلب{" "}
+          <span dir="ltr" className="inline-block font-semibold">
+            {order.orderNumber}
+          </span>
+          {" · "}
+          {formatOwnerDateTime(order.createdAt)}
+        </p>
       </header>
 
       <div className="mt-6 space-y-4">
@@ -136,13 +135,23 @@ export default function DriverOrderDetailPage({ params }) {
           className="rounded-2xl border border-border bg-surface p-4 sm:p-5"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2
-                id="delivery-title"
-                className="font-display font-bold text-foreground"
-              >
-                {order.customerName}
-              </h2>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2
+                  id="delivery-title"
+                  className="min-w-0 flex-1 font-display font-bold text-foreground"
+                >
+                  {order.customerName}
+                </h2>
+                <a
+                  href={`tel:${order.customerPhone}`}
+                  className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white transition-colors hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  aria-label={`اتصال بالزبون ${order.customerName}`}
+                >
+                  <Phone className="h-4 w-4" aria-hidden="true" />
+                  اتصل بالزبون
+                </a>
+              </div>
               <p className="mt-1.5 flex items-start gap-1.5 text-[13.5px] text-muted">
                 <MapPin
                   className="mt-0.5 h-4 w-4 shrink-0 text-primary"
@@ -154,15 +163,6 @@ export default function DriverOrderDetailPage({ params }) {
                 الدفع: {order.paymentLabel}
               </p>
             </div>
-
-            <a
-              href={`tel:${order.customerPhone}`}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-white transition-colors hover:bg-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              aria-label={`اتصال بالزبون ${order.customerName}`}
-            >
-              <Phone className="h-4 w-4" aria-hidden="true" />
-              اتصل بالزبون
-            </a>
           </div>
         </section>
 

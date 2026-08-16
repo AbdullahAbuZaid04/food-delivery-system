@@ -114,10 +114,16 @@ function CancelOrderModal({
         </h2>
         <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
           متأكد تريد إلغاء طلبك رقم{" "}
-          <span dir="ltr" className="inline-block">
+          <span
+            dir="ltr"
+            className="inline-block font-bold text-cocoa"
+          >
             #{orderNumber}
           </span>
-          ؟ هالإجراء ما رح يترجع.
+          ؟
+        </p>
+        <p className="mt-1.5 text-cocoa-soft text-[13px] leading-relaxed">
+          هالإجراء ما رح يترجع.
         </p>
 
         {error ? (
@@ -129,7 +135,7 @@ function CancelOrderModal({
           </p>
         ) : null}
 
-        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+        <div className="mt-6 flex flex-row gap-3">
           <button
             type="button"
             onClick={onConfirm}
@@ -228,25 +234,27 @@ export default function OrderTrackingView({ order, userName = "", onCancel, onRe
           كل الطلبات
         </Link>
 
-        <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-display font-black text-[clamp(24px,3vw,32px)] text-cocoa">
+        <header className="mt-6">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="min-w-0 flex-1 font-display font-black text-[clamp(24px,3vw,32px)] text-cocoa">
               {order.restaurantName}
             </h1>
-            <p className="mt-1 text-[14px] text-cocoa-soft">
+            <OrderStatusBadge status={order.status} />
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <p className="text-[14px] text-cocoa-soft">
               رقم الطلب{" "}
               <span dir="ltr" className="inline-block">
                 #{orderNumber}
               </span>
             </p>
             {showEta ? (
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-3 py-1.5 text-[13px] font-bold text-olive-deep">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-3 py-1.5 text-[13px] font-bold text-olive-deep">
                 <Clock className="w-4 h-4 shrink-0" aria-hidden="true" />
                 الوصول المتوقع: {formatTime(order.estimatedDeliveryAt)}
               </p>
             ) : null}
           </div>
-          <OrderStatusBadge status={order.status} />
         </header>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_400px] lg:items-start">
@@ -289,26 +297,26 @@ export default function OrderTrackingView({ order, userName = "", onCancel, onRe
 
               <dl className="mt-4 space-y-2.5">
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[13.5px] text-cocoa-soft">المنطقة</dt>
-                  <dd className="text-[14px] font-bold text-cocoa">
+                  <dt className="text-[13.5px] font-bold text-cocoa">المنطقة</dt>
+                  <dd className="text-[14px] text-cocoa-soft">
                     {order.deliveryAddress.area}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[13.5px] text-cocoa-soft">
+                  <dt className="text-[13.5px] font-bold text-cocoa">
                     الحي / الشارع
                   </dt>
-                  <dd className="text-end text-[14px] font-bold text-cocoa">
+                  <dd className="text-end text-[14px] text-cocoa-soft">
                     {order.deliveryAddress.street}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[13.5px] text-cocoa-soft">
+                  <dt className="text-[13.5px] font-bold text-cocoa">
                     رقم الهاتف للتواصل
                   </dt>
                   <dd
                     dir="ltr"
-                    className="text-left text-[14px] font-bold text-cocoa"
+                    className="text-left text-[14px] text-cocoa-soft"
                   >
                     {order.deliveryAddress.phone}
                   </dd>
@@ -317,22 +325,22 @@ export default function OrderTrackingView({ order, userName = "", onCancel, onRe
                 {showPayment ? (
                   <>
                     <div className="flex items-center justify-between gap-3">
-                      <dt className="text-[13.5px] text-cocoa-soft">
+                      <dt className="text-[13.5px] font-bold text-cocoa">
                         طريقة الدفع
                       </dt>
-                      <dd className="text-[14px] font-bold text-cocoa">
+                      <dd className="text-[14px] text-cocoa-soft">
                         {paymentMethodLabel}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-3">
-                      <dt className="text-[13.5px] text-cocoa-soft">
+                      <dt className="text-[13.5px] font-bold text-cocoa">
                         حالة الدفع
                       </dt>
                       <dd
-                        className={`text-[14px] font-bold ${
+                        className={`text-[14px] ${
                           order.paymentStatus === "PAID"
                             ? "text-success"
-                            : "text-cocoa"
+                            : "text-cocoa-soft"
                         }`}
                       >
                         {paymentStatusLabel}
@@ -345,7 +353,7 @@ export default function OrderTrackingView({ order, userName = "", onCancel, onRe
 
             {(order.statusCode === "PENDING" || order.statusCode === "ACCEPTED") &&
             onCancel ? (
-              <div className="flex justify-center pt-1">
+              <div className="hidden lg:flex justify-center">
                 <CancelOrderControl
                   onCancel={onCancel}
                   orderNumber={orderNumber}
@@ -364,6 +372,16 @@ export default function OrderTrackingView({ order, userName = "", onCancel, onRe
             />
           </aside>
         </div>
+
+        {(order.statusCode === "PENDING" || order.statusCode === "ACCEPTED") &&
+        onCancel ? (
+          <div className="mt-6 flex lg:hidden justify-center">
+            <CancelOrderControl
+              onCancel={onCancel}
+              orderNumber={orderNumber}
+            />
+          </div>
+        ) : null}
       </main>
     </div>
   );

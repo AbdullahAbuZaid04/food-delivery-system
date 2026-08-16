@@ -80,7 +80,7 @@ export default function AdminDrawer({ open, onClose }) {
         tabIndex={-1}
         className="absolute inset-y-0 start-0 flex w-72 max-w-[85%] flex-col bg-surface shadow-2xl outline-none animate-menu-in"
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
+        <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-border px-5">
           <div className="flex items-center gap-2.5">
             <BrandMark />
             <span className="font-display font-black text-xl text-foreground">

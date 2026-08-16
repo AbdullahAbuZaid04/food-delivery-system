@@ -5,6 +5,7 @@ import { use } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {
+  CalendarDays,
   ChefHat,
   ChevronRight,
   CircleDot,
@@ -20,6 +21,7 @@ import {
   Store,
   User,
 } from "lucide-react";
+import AdminStatCard from "@components/admin/AdminStatCard";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
 import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
 import { getRestaurantById, updateRestaurantStatus } from "@lib/api/admin";
@@ -27,7 +29,8 @@ import {
   adminRestaurantStatusLabel,
   adminRestaurantStatusOptions,
   adminRestaurantToDetail,
-  formatOwnerDateTime,
+  formatOwnerDate,
+  formatOwnerTime,
 } from "@lib/api/presenters";
 
 export default function AdminRestaurantDetailPage({ params }) {
@@ -138,22 +141,16 @@ export default function AdminRestaurantDetailPage({ params }) {
         كل المطاعم
       </Link>
 
-      <header className="mt-2 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Store className="h-7 w-7 text-primary" aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <h1 className="font-display text-[22px] font-black text-foreground">
-              {restaurant.name}
-            </h1>
-            <p className="mt-0.5 text-[13.5px] text-muted">
-              {restaurant.cuisine
-                ? `${restaurant.cuisine} · `
-                : ""}
-              انضم {formatOwnerDateTime(restaurant.createdAt)}
+      <header className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-[22px] font-black text-foreground">
+            {restaurant.name}
+          </h1>
+          {restaurant.cuisine ? (
+            <p className="mt-0.5 truncate text-[13.5px] text-muted">
+              {restaurant.cuisine}
             </p>
-          </div>
+          ) : null}
         </div>
 
         <AdminStatusSelect
@@ -165,24 +162,14 @@ export default function AdminRestaurantDetailPage({ params }) {
         />
       </header>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {countItems.map((item) => (
-          <div
+          <AdminStatCard
             key={item.label}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <item.icon className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="font-display text-xl font-black text-foreground">
-                {item.value}
-              </p>
-              <p className="mt-0.5 text-[12.5px] font-semibold text-muted">
-                {item.label}
-              </p>
-            </div>
-          </div>
+            icon={item.icon}
+            label={item.label}
+            value={item.value}
+          />
         ))}
       </div>
 
@@ -199,58 +186,73 @@ export default function AdminRestaurantDetailPage({ params }) {
           </h2>
           <dl className="mt-3 space-y-2.5 text-[13.5px]">
             <div className="flex items-center justify-between gap-3">
-              <dt className="flex shrink-0 items-center gap-1.5 text-muted">
+              <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
                 <CircleDot className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 الحالة
               </dt>
-              <dd className="font-semibold text-foreground">
-                {restaurant.statusLabel}
-              </dd>
+              <dd className="text-muted">{restaurant.statusLabel}</dd>
             </div>
             {restaurant.addressLine ? (
               <div className="flex items-start justify-between gap-3">
-                <dt className="flex shrink-0 items-center gap-1.5 text-muted">
+                <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
                   <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   العنوان
                 </dt>
-                <dd className="font-semibold text-foreground">
+                <dd className="text-muted">
                   <span dir="rtl">{restaurant.addressLine}</span>
                 </dd>
               </div>
             ) : null}
             {restaurant.phone ? (
               <div className="flex items-center justify-between gap-3">
-                <dt className="flex shrink-0 items-center gap-1.5 text-muted">
+                <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
                   <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   الهاتف
                 </dt>
-                <dd className="font-semibold text-foreground">
+                <dd className="text-muted">
                   <span dir="ltr">{restaurant.phone}</span>
                 </dd>
               </div>
             ) : null}
             {restaurant.email ? (
               <div className="flex items-center justify-between gap-3">
-                <dt className="flex shrink-0 items-center gap-1.5 text-muted">
+                <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
                   <Mail className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   البريد
                 </dt>
-                <dd className="font-semibold text-foreground">
+                <dd className="text-muted">
                   <span dir="ltr">{restaurant.email}</span>
                 </dd>
               </div>
             ) : null}
             {restaurant.estimatedDeliveryTime ? (
               <div className="flex items-center justify-between gap-3">
-                <dt className="flex shrink-0 items-center gap-1.5 text-muted">
+                <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
                   <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                   وقت التوصيل التقديري
                 </dt>
-                <dd className="font-semibold text-foreground">
+                <dd className="text-muted">
                   {restaurant.estimatedDeliveryTime} دقيقة
                 </dd>
               </div>
             ) : null}
+            <div className="flex items-center justify-between gap-3">
+              <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
+                <CalendarDays
+                  className="h-4 w-4 shrink-0 text-primary"
+                  aria-hidden="true"
+                />
+                تاريخ الانضمام
+              </dt>
+              <dd className="text-muted">{formatOwnerDate(restaurant.createdAt)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="flex shrink-0 items-center gap-1.5 font-bold text-foreground">
+                <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                وقت الانضمام
+              </dt>
+              <dd className="text-muted">{formatOwnerTime(restaurant.createdAt)}</dd>
+            </div>
           </dl>
         </section>
 
@@ -264,8 +266,8 @@ export default function AdminRestaurantDetailPage({ params }) {
           >
             المالك
           </h2>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="mt-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex min-w-0 items-center gap-2 sm:flex-1 sm:gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
                 <User className="h-5 w-5 text-primary" aria-hidden="true" />
               </span>
@@ -283,9 +285,9 @@ export default function AdminRestaurantDetailPage({ params }) {
             {restaurant.ownerId ? (
               <Link
                 href={`/admin/users/${restaurant.ownerId}`}
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:w-auto sm:px-4"
               >
-                <User className="h-4 w-4" aria-hidden="true" />
+                <User className="hidden h-4 w-4 sm:block" aria-hidden="true" />
                 عرض حساب المالك
               </Link>
             ) : null}

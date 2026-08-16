@@ -189,6 +189,15 @@ export default function DriverSignupForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-cocoa-soft">
+        عندك حساب؟{" "}
+        <Link
+          href="/login"
+          className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
+        >
+          سجّل دخولك
+        </Link>
+      </p>
+      <p className="mt-3 text-center text-sm text-cocoa-soft">
         بدّك تسجّل كزبون؟{" "}
         <Link
           href="/register"
@@ -198,12 +207,12 @@ export default function DriverSignupForm() {
         </Link>
       </p>
       <p className="mt-3 text-center text-sm text-cocoa-soft">
-        صاحب مطعم؟{" "}
+        بدّك تسجّل كصاحب مطعم؟{" "}
         <Link
           href="/register/restaurant"
           className="font-bold text-terra hover:text-terra-dark hover:underline underline-offset-4 transition-colors"
         >
-          سجّل مطعمك وابدأ بيع
+          سجّل حساب صاحب مطعم
         </Link>
       </p>
     </>

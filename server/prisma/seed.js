@@ -23,7 +23,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const IMG = (id) =>
   `https://images.unsplash.com/photo-${id}?w=600&q=80&auto=format&fit=crop`;
 const COVER = (id) =>
-  `https://images.unsplash.com/photo-${id}?w=1600&q=80&auto=format&fit=crop`;
+  `https://images.unsplash.com/photo-${id}?w=1600&h=533&q=80&auto=format&fit=crop`;
 
 // ========================
 // FIXTURES

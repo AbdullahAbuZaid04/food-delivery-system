@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star, StarHalf } from "lucide-react";
 import { formatOwnerDateTime } from "@lib/api/presenters";
 
 export default function ReviewCard({ review }) {
@@ -30,17 +30,20 @@ export default function ReviewCard({ review }) {
             aria-label={`تقييم ${review.rating} من 5`}
             className="flex items-center gap-0.5"
           >
-            {[1, 2, 3, 4, 5].map((value) => (
-              <Star
-                key={value}
-                aria-hidden="true"
-                className={`h-4 w-4 ${
-                  value <= review.rating
-                    ? "fill-gold text-gold"
-                    : "text-muted/40"
-                }`}
-              />
-            ))}
+            {[1, 2, 3, 4, 5].map((value) => {
+              const full = review.rating >= value;
+              const half = !full && review.rating >= value - 0.5;
+              const Icon = half ? StarHalf : Star;
+              return (
+                <Icon
+                  key={value}
+                  aria-hidden="true"
+                  className={`h-4 w-4 ${half ? "-scale-x-100" : ""} ${
+                    full || half ? "fill-gold text-gold" : "text-muted/40"
+                  }`}
+                />
+              );
+            })}
           </div>
           <span className="text-[12px] font-bold text-muted">
             {review.rating} / 5

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Leaf, Route } from "lucide-react";
 import { HERO_IMAGE } from "@lib/constants";
 
@@ -59,19 +60,19 @@ function Hero() {
           </h1>
           <div className="h-1.5 w-44 mt-3 rounded-full bg-gradient-to-r from-terra via-gold to-terra" />
 
-          <p className="text-[17px] text-cocoa-soft max-w-[470px] mt-6 leading-relaxed">
+          <p className="text-[17px] text-cocoa-soft max-w-[500px] mt-6 leading-relaxed">
             اختار من أكتر من ١٢٠ مطعم معتمد بغزة، اطلب من مطعمك المفضّل، وتابع
             طلبك من عالفرن لحد ما بيوصلك عالباب — بدون انتظار أعمى، وبسعر واضح.
           </p>
 
           <div className="flex items-center gap-2 sm:gap-4 mt-8">
-            <a
-              href="#restaurants"
+            <Link
+              href="/home"
               className="inline-flex flex-1 justify-center whitespace-nowrap bg-terra text-cream px-3 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-[14px] sm:text-base items-center gap-1.5 sm:gap-2 shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors"
             >
               شوف المطاعم
               <span aria-hidden="true">←</span>
-            </a>
+            </Link>
             <a
               href="#how"
               className="inline-flex flex-1 justify-center whitespace-nowrap items-center gap-1.5 sm:gap-2.5 border-2 border-terra/70 text-terra font-bold text-[14px] sm:text-base px-2 sm:px-6 py-3 sm:py-3.5 rounded-full hover:bg-terra/5 hover:border-terra transition-colors"

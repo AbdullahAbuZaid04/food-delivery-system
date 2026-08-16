@@ -11,6 +11,7 @@ import { OwnerListSkeleton } from "@components/owner/OwnerSkeleton";
 import { useOwner } from "@context/OwnerContext";
 import { dashboardApi, reviewApi } from "@lib/api";
 import { formatRating, reviewToOwnerCard } from "@lib/api/presenters";
+import { formatTime } from "@lib/format";
 
 export default function OwnerReviewsPage() {
   const { restaurant, restaurantLoading } = useOwner();
@@ -19,6 +20,7 @@ export default function OwnerReviewsPage() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const load = useCallback(
     async () => {
@@ -35,6 +37,7 @@ export default function OwnerReviewsPage() {
           total: stats.reviews?.total ?? 0,
           averageRating: stats.reviews?.averageRating ?? null,
         });
+        setLastUpdated(new Date());
       } catch (err) {
         setError(err.message || "تعذر تحميل التقييمات، حاول مرة تانية.");
       } finally {
@@ -77,7 +80,16 @@ export default function OwnerReviewsPage() {
             ? `${summary.total} تقييم — متوسط ${summary.averageRating ? formatRating(summary.averageRating, true) : "—"} من 5`
             : "شو بيحكوا الزبائن عن مطعمك"
         }
-        action={<RefreshButton loading={loading} onClick={load} label="حدّث" />}
+        action={
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {lastUpdated ? (
+              <span className="text-[12px] text-muted">
+                آخر تحديث {formatTime(lastUpdated.toISOString(), true)}
+              </span>
+            ) : null}
+            <RefreshButton loading={loading} onClick={load} label="حدّث" />
+          </div>
+        }
       />
 
       {error ? (
@@ -96,7 +108,7 @@ export default function OwnerReviewsPage() {
         </OwnerEmptyState>
       ) : null}
 
-      {!error && loading ? (
+      {!error && loading && reviews.length === 0 ? (
         <OwnerListSkeleton rows={3} />
       ) : null}
 
@@ -108,7 +120,7 @@ export default function OwnerReviewsPage() {
         />
       ) : null}
 
-      {!error && !loading && reviews.length > 0 ? (
+      {!error && reviews.length > 0 ? (
         <div className="space-y-3">
           {reviews.map((review) => (
             <ReviewCard key={review.id} review={review} />

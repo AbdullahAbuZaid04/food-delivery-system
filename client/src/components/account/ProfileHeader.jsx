@@ -201,6 +201,11 @@ function ProfileHeader({ user, onSaved }) {
             <p dir="ltr" className="mt-1 text-[13.5px] text-cocoa-soft">
               {user.email}
             </p>
+            {user.phone ? (
+              <p dir="ltr" className="mt-1 text-[13.5px] text-cocoa-soft">
+                {user.phone}
+              </p>
+            ) : null}
             {joinedYear ? (
               <p className="mt-1 text-[13.5px] text-cocoa-soft">
                 عضو من {joinedYear}

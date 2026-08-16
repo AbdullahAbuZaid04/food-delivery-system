@@ -111,11 +111,14 @@ function ClearCartDialog({ open, restaurantName, itemCount, onClose, onConfirm }
           امسح كل السلة؟
         </h2>
         <p className="mt-2 text-cocoa-soft text-[14.5px] leading-relaxed">
-          رح نمسح {formatArabicCount(itemCount)} من {restaurantName}. هالإجراء
-          ما رح يترجع.
+          رح نمسح {formatArabicCount(itemCount)} من{" "}
+          <span className="font-bold text-cocoa">{restaurantName}</span>.
+        </p>
+        <p className="mt-1.5 text-cocoa-soft text-[13px] leading-relaxed">
+          هالإجراء ما رح يترجع.
         </p>
 
-        <div className="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+        <div className="mt-6 flex flex-row gap-3">
           <button
             type="button"
             onClick={onConfirm}
@@ -315,7 +318,7 @@ function CartPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-col sm:flex-row-reverse gap-3">
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/login?next=/cart"
                     className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-terra text-cream font-bold text-[15px] shadow-[0_12px_28px_-10px_rgba(184,74,38,0.8)] hover:bg-terra-dark transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"

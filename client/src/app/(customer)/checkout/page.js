@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import PaymentMethodSelector from "@components/checkout/PaymentMethodSelector";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import { useCart } from "@context/CartContext";
 import { useAuth } from "@context/AuthContext";
-import { addAddress, getProfile } from "@lib/api/auth";
+import { getProfile } from "@lib/api/auth";
 import { addToCart, clearCart as clearServerCart } from "@lib/api/cart";
 import { createOrder } from "@lib/api/orders";
 import { formatPrice } from "@lib/format";
@@ -90,8 +90,6 @@ function CheckoutPage() {
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingAddress, setIsSavingAddress] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -121,36 +119,11 @@ function CheckoutPage() {
               ""),
         );
       })
-      .catch(() => {})
-      .finally(() => {
-        if (active) setProfileLoaded(true);
-      });
+      .catch(() => {});
     return () => {
       active = false;
     };
   }, [status]);
-
-  const handleAddAddress = useCallback(
-    async (payload) => {
-      setIsSavingAddress(true);
-      try {
-        const created = await addAddress(payload);
-        setAddresses((current) =>
-          created.isDefault
-            ? [...current.map((address) => ({ ...address, isDefault: false })), created]
-            : [...current, created],
-        );
-        setSelectedAddressId(created.id);
-        toast.success("ضيفنا عنوانك الجديد");
-      } catch (err) {
-        toast.error(err?.message || "صارت مشكلة في حفظ العنوان");
-        throw err;
-      } finally {
-        setIsSavingAddress(false);
-      }
-    },
-    [],
-  );
 
   const phoneIsValid = /^05\d{8}$/.test(phone.trim());
   const canSubmit =
@@ -211,10 +184,6 @@ function CheckoutPage() {
                 selectedId={selectedAddressId}
                 onSelect={setSelectedAddressId}
                 phone={phone}
-                onPhoneChange={setPhone}
-                onAddAddress={handleAddAddress}
-                isAdding={isSavingAddress}
-                autoOpenForm={profileLoaded && addresses.length === 0}
               />
 
               <PaymentMethodSelector

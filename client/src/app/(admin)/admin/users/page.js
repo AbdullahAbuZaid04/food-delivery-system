@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronLeft, Clock, Search, Users } from "lucide-react";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  Clock,
+  Mail,
+  MoveHorizontal,
+  Search,
+  Users,
+} from "lucide-react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import AdminStatusSelect from "@components/admin/AdminStatusSelect";
 import ConfirmStatusModal from "@components/admin/ConfirmStatusModal";
+import { driverStatusBadge, userRoleBadge } from "@components/admin/AdminBadges";
 import RefreshButton from "@components/owner/RefreshButton";
 import { getUsers, updateDriverStatus, updateUserStatus } from "@lib/api/admin";
 import {
@@ -14,6 +22,7 @@ import {
   adminDriverStatusOptions,
   adminUserStatusLabel,
   adminUserToCard,
+  formatOwnerTime,
 } from "@lib/api/presenters";
 
 const USER_STATUSES = ["ACTIVE", "INACTIVE", "BLOCKED"];
@@ -37,19 +46,6 @@ const ROLE_LABELS = {
   ADMIN: "أدمن",
 };
 
-const ROLE_BADGE_CLASSES = {
-  CUSTOMER: "bg-primary/10 text-primary-dark",
-  OWNER: "bg-warning/15 text-warning",
-  DRIVER: "bg-success/15 text-success",
-  ADMIN: "bg-error/15 text-error",
-};
-
-const DRIVER_STATUS_BADGE_CLASSES = {
-  PENDING: "bg-warning/15 text-warning",
-  APPROVED: "bg-success/15 text-success",
-  REJECTED: "bg-error/15 text-error",
-};
-
 // A user matches the review tab when they are a driver awaiting admin approval.
 const isPendingReview = (user) =>
   user.role === "DRIVER" && user.driverStatus === "PENDING";
@@ -63,6 +59,30 @@ function UsersScreen() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState(null);
   const [pending, setPending] = useState(null); // { user, status, type }
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const tabsRef = useRef(null);
+  const [tabsOverflow, setTabsOverflow] = useState(false);
+
+  // The role pills scroll horizontally on any screen where they overflow;
+  // show the swipe hint only when that's actually the case.
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const check = () => {
+      setTabsOverflow(el.scrollWidth > el.clientWidth + 4);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, [loading]);
+
+  // Keep the selected tab in view when it changes (banner shortcut, URL param,
+  // manual tap on a scrolled-out pill).
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [roleFilter]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +90,7 @@ function UsersScreen() {
     try {
       const data = await getUsers({ limit: 100 });
       setUsers(data.map(adminUserToCard));
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err.message || "تعذر تحميل المستخدمين، حاول مرة تانية.");
     } finally {
@@ -169,7 +190,7 @@ function UsersScreen() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div>
           <h1 className="font-display text-[22px] font-black text-foreground">
             المستخدمين
@@ -178,7 +199,14 @@ function UsersScreen() {
             {users.length} مستخدم على المنصة
           </p>
         </div>
-        <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        <div className="flex items-center gap-3">
+          {lastUpdated ? (
+            <span className="text-[12px] text-muted">
+              آخر تحديث {formatOwnerTime(lastUpdated.toISOString())}
+            </span>
+          ) : null}
+          <RefreshButton loading={loading} onClick={load} label="حدّث" />
+        </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-3">
@@ -198,36 +226,50 @@ function UsersScreen() {
         </div>
 
         <div
+          ref={tabsRef}
           role="tablist"
           aria-label="تصفية المستخدمين حسب الدور"
-          className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-border bg-surface p-1.5"
+          className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-1"
         >
-          {ROLE_FILTERS.map((filter) => (
-            <button
-              key={filter.value ?? "all"}
-              type="button"
-              role="tab"
-              aria-selected={roleFilter === filter.value}
-              onClick={() => setRoleFilter(filter.value)}
-              className={`flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                roleFilter === filter.value
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-muted hover:bg-muted/10 hover:text-foreground"
-              }`}
-            >
-              {filter.label}
-              <span
-                className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
-                  roleFilter === filter.value
-                    ? "bg-white/20 text-white"
-                    : "bg-muted/15 text-muted"
+          {ROLE_FILTERS.map((filter) => {
+            const active = roleFilter === filter.value;
+            return (
+              <button
+                key={filter.value ?? "all"}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setRoleFilter(filter.value)}
+                className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13.5px] font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                  active
+                    ? "border border-primary bg-primary text-white shadow-sm"
+                    : "border border-border bg-surface text-muted hover:bg-muted/10 hover:text-foreground"
                 }`}
               >
-                {countFor(filter.value)}
-              </span>
-            </button>
-          ))}
+                {filter.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[11px] font-black ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-muted/10 text-muted"
+                  }`}
+                >
+                  {countFor(filter.value)}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        {tabsOverflow ? (
+          <p className="mt-3 flex items-center gap-1.5 text-[12px] leading-none text-muted">
+            <MoveHorizontal
+              className="h-4 w-4 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            اسحب يمين ويسار لشوف باقي التبويبات
+          </p>
+        ) : null}
       </div>
 
       {pendingCount > 0 && roleFilter !== "PENDING" ? (
@@ -288,52 +330,47 @@ function UsersScreen() {
       {!error && !loading && visibleUsers.length > 0 ? (
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
           <ul>
-            {visibleUsers.map((user) => {
-              const isDriver = user.role === "DRIVER";
+            {visibleUsers.map((user) => {              const isDriver = user.role === "DRIVER";
               return (
                 <li
                   key={user.id}
-                  className="flex flex-col gap-3 p-4 odd:bg-white/40 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
+                  className="flex flex-col gap-3 p-4 odd:bg-white/40 transition-colors hover:bg-muted/5 sm:flex-row sm:items-center sm:gap-4 sm:p-5"
                 >
                   <Link
                     href={`/admin/users/${user.id}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="group flex min-w-0 flex-1 items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary-dark">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark font-display text-[15px] font-black text-white shadow-sm ring-1 ring-primary/10">
                       {user.name.charAt(0)}
                     </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[14.5px] font-bold text-foreground">
-                        {user.name}
-                      </span>
-                      <span className="block truncate text-[12.5px] text-muted">
-                        {user.email}
-                        {user.phone ? ` · ${user.phone}` : ""}
-                      </span>
-                      <span className="mt-0.5 inline-flex items-center gap-1.5">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                            ROLE_BADGE_CLASSES[user.role] ??
-                            "bg-muted/15 text-muted"
-                          }`}
-                        >
-                          {ROLE_LABELS[user.role] ?? user.role}
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-2 sm:justify-start">
+                        <span className="truncate text-[15px] font-bold text-foreground transition-colors group-hover:text-primary">
+                          {user.name}
                         </span>
-                        {isDriver ? (
+                        <span className="flex shrink-0 items-center gap-1.5">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                              DRIVER_STATUS_BADGE_CLASSES[user.driverStatus] ??
-                              "bg-muted/15 text-muted"
-                            }`}
+                            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${userRoleBadge(user.role)}`}
                           >
-                            {adminDriverStatusLabel(user.driverStatus)}
+                            {ROLE_LABELS[user.role] ?? user.role}
                           </span>
-                        ) : null}
+                          {isDriver ? (
+                            <span
+                              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${driverStatusBadge(user.driverStatus)}`}
+                            >
+                              {adminDriverStatusLabel(user.driverStatus)}
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                      <span className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
+                        <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{user.email}</span>
                       </span>
                     </span>
                   </Link>
 
-                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <div className="flex items-center justify-end gap-3">
                     {isDriver ? (
                       <AdminStatusSelect
                         value={user.driverStatus}
@@ -358,7 +395,7 @@ function UsersScreen() {
                     <Link
                       href={`/admin/users/${user.id}`}
                       aria-label={`تفاصيل ${user.name}`}
-                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground transition-colors hover:border-primary/40 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                     </Link>

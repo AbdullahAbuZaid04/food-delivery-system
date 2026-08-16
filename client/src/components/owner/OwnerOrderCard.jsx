@@ -1,7 +1,7 @@
 "use client";
 
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
-import { formatPrice } from "@lib/format";
+import { formatPrice, formatRelativeTime } from "@lib/format";
 import {
   STATUS_ACTION_LABELS,
   formatOwnerDateTime,
@@ -39,16 +39,19 @@ export default function OwnerOrderCard({ order, onAction, onAssignDriver, busy }
 
   return (
     <article className="rounded-2xl border border-border bg-surface p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-display text-[15px] font-bold text-foreground">
+      <header className="min-w-0">
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 truncate font-display text-[15px] font-bold text-foreground">
             {orderNumber}
           </p>
-          <p className="mt-0.5 text-[12.5px] text-muted">
-            {formatOwnerDateTime(createdAt)}
-          </p>
+          <OrderStatusBadge status={statusLabel} />
         </div>
-        <OrderStatusBadge status={statusLabel} />
+        <p className="mt-0.5 text-[12.5px] text-muted">
+          {formatOwnerDateTime(createdAt)}
+          {createdAt ? (
+            <span> · {formatRelativeTime(createdAt)}</span>
+          ) : null}
+        </p>
       </header>
 
       <dl className="mt-4 grid gap-x-6 gap-y-2 text-[13px] sm:grid-cols-2">
@@ -99,10 +102,11 @@ export default function OwnerOrderCard({ order, onAction, onAssignDriver, busy }
       <div className="mt-4 flex flex-col gap-1 text-[13px] sm:flex-row sm:items-end sm:justify-between">
         <p className="text-muted">
           {itemCount} أصناف · {formatPrice(subtotal, true)} قبل التوصيل
+          <span className="mx-1.5">·</span>
+          التوصيل {formatPrice(deliveryFee, true)}
         </p>
         <div className="sm:text-end">
-          <p className="text-muted">التوصيل {formatPrice(deliveryFee, true)}</p>
-          <p className="mt-1 font-display text-[16px] font-black text-foreground">
+          <p className="font-display text-[16px] font-black text-foreground">
             الإجمالي {formatPrice(total, true)}
           </p>
         </div>

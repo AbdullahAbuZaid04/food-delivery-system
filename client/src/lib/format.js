@@ -65,3 +65,46 @@ export function formatDateTime(iso, latin = false) {
   const digits = (value) => (latin ? String(value) : toArabicDigits(value));
   return `${digits(date.getDate())} ${ARABIC_MONTHS[date.getMonth()]} ${digits(date.getFullYear())} · ${formatTime(iso, latin)}`;
 }
+
+// "منذ 5 دقائق" — human-friendly relative time. Owner/driver dashboards pass
+// `latin: true` (Latin digits, AGENTS.md §5); the customer app stays Arabic.
+export function formatRelativeTime(iso, latin = true) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const elapsed = Math.max(0, Date.now() - date.getTime());
+  const digits = (value) => (latin ? String(value) : toArabicDigits(value));
+
+  const pluralize = (count, one, two, few, many) => {
+    if (count === 1) return one;
+    if (count === 2) return two;
+    if (count <= 10) return few.replace("X", digits(count));
+    return many.replace("X", digits(count));
+  };
+
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 1) return "الحين";
+
+  if (minutes < 60) {
+    return pluralize(
+      minutes,
+      "منذ دقيقة",
+      "منذ دقيقتين",
+      "منذ X دقائق",
+      "منذ X دقيقة",
+    );
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return pluralize(
+      hours,
+      "منذ ساعة",
+      "منذ ساعتين",
+      "منذ X ساعات",
+      "منذ X ساعة",
+    );
+  }
+
+  const days = Math.floor(hours / 24);
+  return pluralize(days, "منذ يوم", "منذ يومين", "منذ X أيام", "منذ X يوم");
+}
