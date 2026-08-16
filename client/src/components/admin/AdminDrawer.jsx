@@ -131,7 +131,7 @@ export default function AdminDrawer({ open, onClose }) {
 
         <div className="shrink-0 border-t border-border p-3">
           <div className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terra font-display text-sm font-bold text-cream">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark font-display text-sm font-bold text-white shadow-sm ring-1 ring-primary/10">
               {user?.firstName?.trim().charAt(0) ?? "أ"}
             </span>
             <span className="truncate text-[14.5px] font-bold text-foreground">

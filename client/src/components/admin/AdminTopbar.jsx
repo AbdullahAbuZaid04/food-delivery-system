@@ -94,7 +94,7 @@ export default function AdminTopbar({ onOpenDrawer }) {
             aria-label="قائمة الحساب"
             className="flex items-center gap-2 ps-1.5 pe-2.5 py-1 rounded-full border-2 border-clay/20 text-cocoa hover:border-terra hover:text-terra transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-terra/40"
           >
-            <span className="w-9 h-9 rounded-full bg-terra text-cream font-display font-bold text-sm flex items-center justify-center">
+            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-dark font-display font-bold text-sm text-white shadow-sm ring-1 ring-primary/10 flex items-center justify-center">
               {initial}
             </span>
             <span className="hidden lg:block text-[14px] font-bold">
@@ -115,7 +115,7 @@ export default function AdminTopbar({ onOpenDrawer }) {
               className="absolute end-0 top-full mt-2 w-52 rounded-2xl border border-clay/10 bg-white shadow-[0_24px_48px_-24px_rgba(42,36,28,0.45)] p-2 animate-rise"
             >
               <div className="flex items-center gap-3 rounded-xl px-3 py-3">
-                <span className="w-10 h-10 shrink-0 rounded-full bg-terra text-cream font-display font-bold text-sm flex items-center justify-center">
+                <span className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary-dark font-display font-bold text-sm text-white shadow-sm ring-1 ring-primary/10 flex items-center justify-center">
                   {initial}
                 </span>
                 <div className="min-w-0">
