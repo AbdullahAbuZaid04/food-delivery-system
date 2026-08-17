@@ -81,7 +81,7 @@ const getProfile = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    await authService.logout(req.body?.refreshToken);
+    await authService.logout(req.validatedData?.refreshToken);
 
     return res.status(200).json({
       success: true,
