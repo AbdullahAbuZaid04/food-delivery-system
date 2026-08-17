@@ -3,7 +3,9 @@ const {
   generateToken,
   generateRefreshToken,
   verifyRefreshToken,
+  getRefreshExpiresMs,
 } = require("../../utils/jwt");
+const { blacklistToken, isBlacklisted } = require("../../utils/tokenBlacklist");
 
 const authRepository = require("./auth.repository");
 
@@ -115,6 +117,10 @@ const login = async (loginData) => {
 };
 
 const refresh = async (refreshToken) => {
+  if (isBlacklisted(refreshToken)) {
+    throw new Error("Refresh token has been revoked.");
+  }
+
   let decoded;
   try {
     decoded = verifyRefreshToken(refreshToken);
@@ -131,6 +137,8 @@ const refresh = async (refreshToken) => {
   if (user.status !== "ACTIVE") {
     throw new Error("Account is not active.");
   }
+
+  blacklistToken(refreshToken, Date.now() + getRefreshExpiresMs());
 
   const tokenPayload = {
     id: user.id,
@@ -154,6 +162,17 @@ const refresh = async (refreshToken) => {
     token,
     refreshToken: newRefreshToken,
   };
+};
+
+const logout = async (refreshToken) => {
+  if (refreshToken) {
+    try {
+      const decoded = verifyRefreshToken(refreshToken);
+      blacklistToken(refreshToken, Date.now() + getRefreshExpiresMs());
+    } catch {
+      // Token already invalid — nothing to blacklist
+    }
+  }
 };
 
 const getProfile = async (userId) => {
@@ -313,6 +332,7 @@ module.exports = {
   register,
   login,
   refresh,
+  logout,
   getProfile,
   addAddress,
   deleteAddress,

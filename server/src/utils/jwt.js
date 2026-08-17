@@ -25,9 +25,17 @@ const verifyRefreshToken = (token) => {
   return jwt.verify(token, REFRESH_SECRET);
 };
 
+const getRefreshExpiresMs = () => {
+  const val = REFRESH_EXPIRES;
+  if (val.endsWith("d")) return parseInt(val) * 24 * 60 * 60 * 1000;
+  if (val.endsWith("h")) return parseInt(val) * 60 * 60 * 1000;
+  return 7 * 24 * 60 * 60 * 1000;
+};
+
 module.exports = {
   generateToken,
   generateRefreshToken,
   verifyToken,
   verifyRefreshToken,
+  getRefreshExpiresMs,
 };

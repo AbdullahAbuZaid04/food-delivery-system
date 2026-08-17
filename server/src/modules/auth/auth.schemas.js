@@ -77,10 +77,15 @@ const updateProfileSchema = z
     { message: "At least one field is required." },
   );
 
+const logoutSchema = z.object({
+  refreshToken: z.string().optional(),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
+  logoutSchema,
   addAddressSchema,
   updateAddressSchema,
   updateProfileSchema,
