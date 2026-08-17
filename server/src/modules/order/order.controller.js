@@ -3,6 +3,7 @@ const restaurantRepository = require("../restaurant/restaurant.repository");
 const { verifyToken } = require("../../utils/jwt");
 const eventBus = require("../../utils/eventBus");
 const prisma = require("../../config/prisma");
+const { parsePagination } = require("../../utils/pagination");
 
 // SSE stream for order events (GET /api/orders/events). Declared BEFORE the
 // `authenticate` router middleware because EventSource cannot send headers —
@@ -121,8 +122,7 @@ const getOrderById = async (req, res) => {
 
 const getMyOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await orderService.getMyOrders(req.user.id, page, limit);
 
@@ -140,8 +140,7 @@ const getMyOrders = async (req, res) => {
 
 const getRestaurantOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await orderService.getRestaurantOrders(
       req.user.id,
@@ -163,8 +162,7 @@ const getRestaurantOrders = async (req, res) => {
 
 const getDriverOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await orderService.getDriverOrders(
       req.user.id,
