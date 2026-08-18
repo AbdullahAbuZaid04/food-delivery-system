@@ -1,4 +1,5 @@
 const reviewService = require("./review.service");
+const { parsePagination } = require("../../utils/pagination");
 
 const createReview = async (req, res, next) => {
   try {
@@ -41,8 +42,7 @@ const getReviewsByRestaurant = async (req, res, next) => {
   try {
     const { restaurantId } = req.params;
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await reviewService.getReviewsByRestaurantId(
       restaurantId,
@@ -63,8 +63,7 @@ const getReviewsByRestaurant = async (req, res, next) => {
 
 const getMyReviews = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await reviewService.getMyReviews(req.user.id, page, limit);
 

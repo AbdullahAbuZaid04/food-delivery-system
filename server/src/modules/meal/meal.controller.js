@@ -1,4 +1,5 @@
 const mealService = require("./meal.service");
+const { parsePagination } = require("../../utils/pagination");
 
 const createMeal = async (req, res) => {
   try {
@@ -119,8 +120,7 @@ const searchMeals = async (req, res) => {
       });
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
 
     const result = await mealService.searchMeals(q.trim(), restaurantId, page, limit);
 

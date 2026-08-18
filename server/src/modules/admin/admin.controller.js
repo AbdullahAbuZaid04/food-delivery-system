@@ -1,9 +1,9 @@
 const adminService = require("./admin.service");
+const { parsePagination } = require("../../utils/pagination");
 
 const getUsers = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
     const role = req.query.role || null;
 
     const result = await adminService.getUsers(page, limit, role);
@@ -56,8 +56,7 @@ const updateUserStatus = async (req, res, next) => {
 
 const getDrivers = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
     const driverStatus = req.query.status || null;
 
     const result = await adminService.getDrivers(page, limit, driverStatus);
@@ -96,8 +95,7 @@ const updateDriverStatus = async (req, res, next) => {
 
 const getRestaurants = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
     const status = req.query.status || null;
 
     const result = await adminService.getRestaurants(page, limit, status);

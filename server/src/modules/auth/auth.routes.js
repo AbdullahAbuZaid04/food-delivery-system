@@ -1,7 +1,7 @@
 const express = require("express");
 const authController = require("./auth.controller");
 const validate = require("../../middlewares/validate");
-const { registerSchema, loginSchema, refreshTokenSchema, addAddressSchema, updateAddressSchema, updateProfileSchema } = require("./auth.schemas");
+const { registerSchema, loginSchema, refreshTokenSchema, logoutSchema, addAddressSchema, updateAddressSchema, updateProfileSchema } = require("./auth.schemas");
 const rateLimiter = require("../../middlewares/rateLimiter");
 const { authenticate, authorize } = require("../../middlewares/auth.middleware");
 
@@ -37,7 +37,7 @@ router.put(
   authController.updateProfile
 );
 
-router.post("/logout", authenticate, authController.logout);
+router.post("/logout", authenticate, validate(logoutSchema), authController.logout);
 
 router.post(
   "/profile/address",

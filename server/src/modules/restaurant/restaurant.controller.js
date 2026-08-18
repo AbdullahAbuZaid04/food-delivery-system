@@ -1,4 +1,5 @@
 const restaurantService = require("./restaurant.service");
+const { parsePagination } = require("../../utils/pagination");
 
 const createRestaurant = async (req, res) => {
   try {
@@ -82,8 +83,7 @@ const updateStatus = async (req, res) => {
 
 const getAllRestaurants = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const { page, limit } = parsePagination(req.query);
     const search = req.query.search || "";
 
     const result = await restaurantService.getAllRestaurants(

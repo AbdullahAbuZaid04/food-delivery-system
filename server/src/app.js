@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const rateLimiter = require("./middlewares/rateLimiter");
 const authRouter = require("./modules/auth/auth.routes");
 const restaurantRouter = require("./modules/restaurant/restaurant.routes");
 const categoryRouter = require("./modules/category/category.routes");
@@ -17,9 +18,26 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+
+const allowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
+
+// Global rate limit: 100 requests per 15 minutes per IP
+app.use("/api", rateLimiter(15 * 60 * 1000, 100));
 
 // Routes
 app.use("/api/auth", authRouter);
