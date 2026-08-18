@@ -1,12 +1,9 @@
 "use client";
 
 import { AlertTriangle, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import useFocusTrap from "@hooks/useFocusTrap";
 
-// ConfirmStatusModal — confirmation dialog for destructive admin transitions
-// (blocking a user / suspending a restaurant). Same accessibility contract as
-// the other modals: role="alertdialog", body scroll lock, Escape-to-close and
-// a Tab focus trap (AGENTS.md §7).
 export default function ConfirmStatusModal({
   open,
   title,
@@ -17,41 +14,7 @@ export default function ConfirmStatusModal({
   onClose,
 }) {
   const panelRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (e.key !== "Tab") return;
-      const focusables = panelRef.current?.querySelectorAll(
-        "button:not([disabled])",
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  useFocusTrap(open, onClose, panelRef, { restoreFocus: false });
 
   if (!open) return null;
 

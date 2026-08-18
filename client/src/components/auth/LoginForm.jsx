@@ -8,14 +8,7 @@ import AuthField from "@components/auth/AuthField";
 import PasswordField from "@components/auth/PasswordField";
 import AuthSubmitButton from "@components/auth/AuthSubmitButton";
 import { useAuth } from "@context/AuthContext";
-
-function safeNextPath(value) {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : null;
-}
+import { safeNextPath } from "@lib/constants";
 
 export default function LoginForm({ next }) {
   const { login } = useAuth();

@@ -10,6 +10,7 @@ import { useCart } from "@context/CartContext";
 import { useAuth } from "@context/AuthContext";
 import { formatArabicCount, formatPrice, toArabicDigits } from "@lib/format";
 import { DEFAULT_MEAL_IMAGE } from "@lib/api/presenters";
+import useFocusTrap from "@hooks/useFocusTrap";
 
 function EmptyCart() {
   return (
@@ -39,42 +40,7 @@ function EmptyCart() {
 
 function ClearCartDialog({ open, restaurantName, itemCount, onClose, onConfirm }) {
   const dialogRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const previouslyFocused = document.activeElement;
-    document.body.style.overflow = "hidden";
-    dialogRef.current?.focus();
-
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusables = dialogRef.current?.querySelectorAll(
-        "button:not([disabled])",
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-      if (previouslyFocused?.focus) previouslyFocused.focus();
-    };
-  }, [open, onClose]);
+  useFocusTrap(open, onClose, dialogRef);
 
   if (!open) return null;
 

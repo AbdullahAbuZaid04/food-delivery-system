@@ -5,9 +5,8 @@ import toast from "react-hot-toast";
 import { Bike, Check, Loader2, X } from "lucide-react";
 import { restaurantApi } from "@lib/api";
 import { primaryButtonClass, secondaryButtonClass } from "./OwnerFields";
+import useFocusTrap from "@hooks/useFocusTrap";
 
-// DriverAssignModal — pick an active driver for a READY order. Loads the
-// driver list on open, traps focus and locks scroll while open (AGENTS.md §7).
 export default function DriverAssignModal({ order, onClose, onConfirm, busy }) {
   const panelRef = useRef(null);
   const [drivers, setDrivers] = useState([]);
@@ -15,11 +14,10 @@ export default function DriverAssignModal({ order, onClose, onConfirm, busy }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  useFocusTrap(Boolean(order), onClose, panelRef, { restoreFocus: false });
+
   useEffect(() => {
     if (!order) return;
-    document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
     setSelectedId(null);
@@ -33,36 +31,7 @@ export default function DriverAssignModal({ order, onClose, onConfirm, busy }) {
         setError(err.message || "تعذر تحميل قائمة السواقين، حاول مرة تانية."),
       )
       .finally(() => setLoading(false));
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [order]);
-
-  useEffect(() => {
-    if (!order) return;
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusables = panelRef.current?.querySelectorAll(
-        "button:not([disabled]), input:not([disabled])",
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [order, onClose]);
 
   if (!order) return null;
 

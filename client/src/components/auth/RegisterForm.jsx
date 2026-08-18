@@ -8,30 +8,13 @@ import AuthField from "@components/auth/AuthField";
 import PasswordField from "@components/auth/PasswordField";
 import AuthSubmitButton from "@components/auth/AuthSubmitButton";
 import { useAuth } from "@context/AuthContext";
-
-function safeNextPath(value) {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
-    ? value
-    : null;
-}
+import { safeNextPath, splitFullName } from "@lib/constants";
 
 export default function RegisterForm({ next }) {
   const { register } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-
-  function splitFullName(fullName) {
-    const parts = String(fullName || "").trim().split(/\s+/);
-    if (parts.length === 0) return { firstName: "", lastName: "" };
-    if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
-    return {
-      firstName: parts[0],
-      lastName: parts.slice(1).join(" "),
-    };
-  }
 
   async function handleSubmit(event) {
     event.preventDefault();

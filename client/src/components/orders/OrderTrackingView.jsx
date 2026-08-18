@@ -11,27 +11,12 @@ import CourierInfoCard from "@components/orders/CourierInfoCard";
 import OrderTimeline from "@components/orders/OrderTimeline";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import { formatTime } from "@lib/format";
-
-const PAYMENT_METHOD_LABELS = {
-  CASH: "كاش عند الاستلام",
-  CARD: "بطاقة ائتمان",
-};
-
-const PAYMENT_STATUS_LABELS = {
-  PAID: "مدفوع",
-  PENDING: "غير مدفوع",
-  CANCELLED: "أُلغي",
-};
-
-const ACTIVE_STATUS_CODES = new Set([
-  "PENDING",
-  "ACCEPTED",
-  "PREPARING",
-  "READY",
-  "ASSIGNED",
-  "PICKED_UP",
-  "ON_THE_WAY",
-]);
+import {
+  PAYMENT_METHOD_LABELS,
+  PAYMENT_STATUS_LABELS,
+  ACTIVE_STATUS_CODES,
+} from "@lib/constants";
+import useFocusTrap from "@hooks/useFocusTrap";
 
 function CancelOrderModal({
   open,
@@ -42,41 +27,7 @@ function CancelOrderModal({
   onConfirm,
 }) {
   const dialogRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement;
-    document.body.style.overflow = "hidden";
-    dialogRef.current?.focus();
-
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusables = dialogRef.current?.querySelectorAll(
-        "button:not([disabled])",
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-      if (previouslyFocused?.focus) previouslyFocused.focus();
-    };
-  }, [open, onClose]);
+  useFocusTrap(open, onClose, dialogRef);
 
   if (!open) return null;
 

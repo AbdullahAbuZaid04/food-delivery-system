@@ -109,6 +109,49 @@ export const testimonials = [
   },
 ];
 
+// ── Validation patterns ──────────────────────────────────────────────
+export const PHONE_PATTERN = /^05\d{8}$/;
+export const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+export const URL_PATTERN = /^https?:\/\/\S+\.\S+$/;
+
+// ── Auth helpers ─────────────────────────────────────────────────────
+export function splitFullName(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/);
+  if (parts.length === 0) return { firstName: "", lastName: "" };
+  if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
+export function safeNextPath(value) {
+  return typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
+    ? value
+    : null;
+}
+
+// ── Order labels ─────────────────────────────────────────────────────
+export const ACTIVE_STATUS_CODES = new Set([
+  "PENDING",
+  "ACCEPTED",
+  "PREPARING",
+  "READY",
+  "ASSIGNED",
+  "PICKED_UP",
+  "ON_THE_WAY",
+]);
+
+export const PAYMENT_METHOD_LABELS = {
+  CASH: "كاش عند الاستلام",
+  CARD: "بطاقة ائتمان",
+};
+
+export const PAYMENT_STATUS_LABELS = {
+  PAID: "مدفوع",
+  PENDING: "غير مدفوع",
+  CANCELLED: "أُلغي",
+};
+
 // mobile menu links with icons (rendered as tappable cards)
 export const mobileMenuLinks = [
   {

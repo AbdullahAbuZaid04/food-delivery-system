@@ -12,9 +12,7 @@ import { useAuth } from "@context/AuthContext";
 import { restaurantApi } from "@lib/api";
 import { restaurantFormToPayload } from "@lib/api/presenters";
 import { toArabicDigits } from "@lib/format";
-
-const PHONE_PATTERN = /^05\d{8}$/;
-const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+import { PHONE_PATTERN, EMAIL_PATTERN, splitFullName } from "@lib/constants";
 
 const EMPTY_RESTAURANT = {
   name: "",
@@ -31,18 +29,6 @@ const EMPTY_RESTAURANT = {
 };
 
 const STEP_LABELS = ["حساب المالك", "بيانات المطعم"];
-
-function splitFullName(fullName) {
-  const parts = String(fullName || "")
-    .trim()
-    .split(/\s+/);
-  if (parts.length === 0) return { firstName: "", lastName: "" };
-  if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(" "),
-  };
-}
 
 function StepSection({ title, children }) {
   return (

@@ -8,16 +8,7 @@ import { CalendarDays, ChevronLeft, Loader2, RotateCcw } from "lucide-react";
 import OrderStatusBadge from "@components/orders/OrderStatusBadge";
 import { useCart } from "@context/CartContext";
 import { formatOrderDate, formatPrice, toArabicDigits } from "@lib/format";
-
-const ACTIVE_STATUS_CODES = new Set([
-  "PENDING",
-  "ACCEPTED",
-  "PREPARING",
-  "READY",
-  "ASSIGNED",
-  "PICKED_UP",
-  "ON_THE_WAY",
-]);
+import { ACTIVE_STATUS_CODES } from "@lib/constants";
 
 function summarizeItems(items) {
   const names = items.map((item) => item.name);
