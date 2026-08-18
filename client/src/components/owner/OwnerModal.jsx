@@ -1,11 +1,9 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import useFocusTrap from "@hooks/useFocusTrap";
 
-// OwnerModal — accessible modal shell for the dashboard (focus trap, scroll
-// lock, Escape-to-close, AGENTS.md §7). `children` is the body; `footer` is
-// rendered in the bottom action bar.
 export default function OwnerModal({
   open,
   onClose,
@@ -15,41 +13,7 @@ export default function OwnerModal({
   footer,
 }) {
   const panelRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusables = panelRef.current?.querySelectorAll(
-        "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]",
-      );
-      if (!focusables || focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  useFocusTrap(open, onClose, panelRef, { restoreFocus: false });
 
   if (!open) return null;
 
