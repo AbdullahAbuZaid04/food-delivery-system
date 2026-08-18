@@ -11,27 +11,11 @@ import CourierInfoCard from "@components/orders/CourierInfoCard";
 import OrderTimeline from "@components/orders/OrderTimeline";
 import OrderSummaryCard from "@components/checkout/OrderSummaryCard";
 import { formatTime } from "@lib/format";
-
-const PAYMENT_METHOD_LABELS = {
-  CASH: "كاش عند الاستلام",
-  CARD: "بطاقة ائتمان",
-};
-
-const PAYMENT_STATUS_LABELS = {
-  PAID: "مدفوع",
-  PENDING: "غير مدفوع",
-  CANCELLED: "أُلغي",
-};
-
-const ACTIVE_STATUS_CODES = new Set([
-  "PENDING",
-  "ACCEPTED",
-  "PREPARING",
-  "READY",
-  "ASSIGNED",
-  "PICKED_UP",
-  "ON_THE_WAY",
-]);
+import {
+  PAYMENT_METHOD_LABELS,
+  PAYMENT_STATUS_LABELS,
+  ACTIVE_STATUS_CODES,
+} from "@lib/constants";
 
 function CancelOrderModal({
   open,

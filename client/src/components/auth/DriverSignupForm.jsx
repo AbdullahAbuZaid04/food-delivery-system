@@ -8,20 +8,7 @@ import AuthField from "@components/auth/AuthField";
 import PasswordField from "@components/auth/PasswordField";
 import AuthSubmitButton from "@components/auth/AuthSubmitButton";
 import { useAuth } from "@context/AuthContext";
-
-const PHONE_PATTERN = /^05\d{8}$/;
-
-function splitFullName(fullName) {
-  const parts = String(fullName || "")
-    .trim()
-    .split(/\s+/);
-  if (parts.length === 0) return { firstName: "", lastName: "" };
-  if (parts.length === 1) return { firstName: parts[0], lastName: parts[0] };
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(" "),
-  };
-}
+import { PHONE_PATTERN, splitFullName } from "@lib/constants";
 
 // Public one-step signup for a delivery driver: just the account (role DRIVER).
 // Register auto-logs the user in, then the user lands on /driver where the

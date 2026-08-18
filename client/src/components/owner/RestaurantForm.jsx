@@ -14,9 +14,7 @@ import {
   Textarea,
   primaryButtonClass,
 } from "./OwnerFields";
-
-const PHONE_PATTERN = /^05\d{8}$/;
-const URL_PATTERN = /^https?:\/\/\S+\.\S+$/;
+import { PHONE_PATTERN, URL_PATTERN } from "@lib/constants";
 
 const FIELD_TO_ID = {
   name: "rest-name",
