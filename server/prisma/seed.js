@@ -7,15 +7,15 @@ const bcrypt = require("bcrypt");
 // (node prisma/seed.js), not only via `npx prisma db seed`.
 require("dotenv/config");
 
-// ╪ح┘╪┤╪د╪ة ╪د┘╪د╪ز╪╡╪د┘
+// إنشاء الاتصال
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// ╪ح┘╪┤╪د╪ة Adapter
+// إنشاء Adapter
 const adapter = new PrismaPg(pool);
 
-// ╪ح┘╪┤╪د╪ة PrismaClient ┘à╪╣ Adapter
+// إنشاء PrismaClient مع Adapter
 const prisma = new PrismaClient({ adapter });
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -31,56 +31,56 @@ const COVER = (id) =>
 
 // Restaurants keyed by their public slug. Slugs stay ASCII and match the ids
 // the customer app used for its mock links (/restaurants/baladna, ...) so the
-// swap from mock ظْ real data keeps every existing link working.
+// swap from mock → real data keeps every existing link working.
 const RESTAURANT_FIXTURES = [
   {
     slug: "baladna",
-    name: "┘à╪╖╪╣┘à ╪ذ┘╪»┘╪د",
-    cuisine: "┘à╪ث┘â┘ê┘╪د╪ز ╪┤╪╣╪ذ┘è╪ر",
-    description: "╪د┘╪ث┘â┘ ╪د┘╪┤╪╣╪ذ┘è ╪د┘┘┘╪│╪╖┘è┘┘è ╪د┘╪ث╪╡┘è┘ ظ¤ ┘à╪│╪«┘ّ┘╪î ┘à┘╪│┘╪î ┘à┘é┘┘ê╪ذ╪ر ┘ê┘â╪ذ╪│╪ر.",
+    name: "مطعم بلدنا",
+    cuisine: "مأكولات شعبية",
+    description: "الأكل الشعبي الفلسطيني الأصيل — مسخّن، منسف، مقلوبة وكبسة.",
     phone: "0592000001",
-    ownerEmail: "baladna@wajba.com",
+    ownerEmail: "owner.baladna@wajba.ps",
     ownerPhone: "0593000001",
-    ownerFirstName: "┘è╪د╪│╪▒",
-    ownerLastName: "╪د┘╪ذ┘╪»╪د┘ê┘è",
+    ownerFirstName: "ياسر",
+    ownerLastName: "البلداوي",
     deliveryFee: 5,
     minimumOrder: 30,
     estimatedDeliveryTime: 40,
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪▒╪╣ ╪╣┘à╪▒ ╪د┘┘à╪«╪ز╪د╪▒ ظ¤ ┘ê╪│╪╖ ╪د┘╪ذ┘╪»",
+    city: "غزة",
+    street: "شارع عمر المختار — وسط البلد",
     cover: "1504674900247-0877df9cc836",
     categories: [
       {
-        name: "╪ث╪╖╪ذ╪د┘é ╪▒╪خ┘è╪│┘è╪ر",
+        name: "أطباق رئيسية",
         items: [
           {
-            name: "┘à╪│╪«┘ّ┘ ╪»╪ش╪د╪ش",
+            name: "مسخّن دجاج",
             description:
-              "╪»╪ش╪د╪ش ┘à┘é╪╖┘ّ╪╣ ╪╣┘┘ë ╪«╪ذ╪▓ ╪د┘╪╖╪د╪ذ┘ê┘ ┘à╪╣ ╪ذ╪╡┘ ┘à╪│┘â┘ّ╪▒ ┘ê╪╡┘┘ê╪ذ╪▒ ┘à┘é┘┘è ┘ê╪│┘à╪د┘é ظ¤ ╪ث┘â┘╪ر ╪د┘╪╣┘è┘╪ر ╪د┘╪┤╪╣╪ذ┘è╪ر ╪د┘╪ص┘é┘è┘é┘è╪ر.",
+              "دجاج مقطّع على خبز الطابون مع بصل مسكّر وصنوبر مقلي وسماق — أكلة العيلة الشعبية الحقيقية.",
             price: 38,
             image: "1532550907401-a500c9a57435",
             prep: 30,
           },
           {
-            name: "┘à┘╪│┘",
+            name: "منسف",
             description:
-              "╪ث╪▒╪▓ ┘à┘╪ز┘ّ┘ ╪ذ┘╪ذ┘ ╪د┘╪ش┘à┘è╪» ┘à╪╣ ┘╪ص┘à ╪║┘┘à ╪╖╪▒┘è ┘ê╪╡┘┘ê╪ذ╪▒ ┘ê╪│┘à╪د┘é ظ¤ ┘à┘╪د╪│┘ ╪د┘╪╢┘è╪د┘╪ر ╪ذ╪ح┘è╪» ╪ث┘à┘ç╪د╪ز┘╪د.",
+              "أرز مفتّل بلبن الجميد مع لحم غنم طري وصنوبر وسماق — مناسف الضيافة بإيد أمهاتنا.",
             price: 45,
             image: "1504674900247-0877df9cc836",
             prep: 45,
           },
           {
-            name: "┘à┘é┘┘ê╪ذ╪ر",
+            name: "مقلوبة",
             description:
-              "╪ث╪▒╪▓ ┘à╪╣ ╪»╪ش╪د╪ش ┘ê╪ذ╪ز┘╪ش╪د┘╪î ┘┘ê┘┘ç╪د ╪░┘ç╪ذ┘è ┘à┘ ╪د┘╪ز╪ص┘à╪▒╪ر ظ¤ ╪ذ╪ز╪ز┘┘é┘╪ذ ╪╣┘┘ë ╪╡╪ص┘┘â ┘ê┘ç┘è ╪╣╪د┘┘╪د╪▒.",
+              "أرز مع دجاج وبتنجان، لونها ذهبي من التحمرة — بتتنقلب على صحنك وهي عالنار.",
             price: 32,
             image: "1512058564366-18510be2db19",
             prep: 40,
           },
           {
-            name: "┘â╪ذ╪│╪ر ╪»╪ش╪د╪ش",
+            name: "كبسة دجاج",
             description:
-              "╪ث╪▒╪▓ ╪ذ╪│┘à╪ز┘è ┘à╪ز╪ذ┘ّ┘ ╪ذ╪د┘┘ç┘è┘ ┘ê╪د┘┘é╪▒┘╪ر ┘à╪╣ ╪»╪ش╪د╪ش ┘à╪┤┘ê┘è ┘ê┘à┘â╪│╪▒╪د╪ز ╪╣┘┘ë ╪د┘╪╖╪▒┘è┘é╪ر ╪د┘╪«┘┘è╪ش┘è╪ر.",
+              "أرز بسمتي متبّل بالهيل والقرفة مع دجاج مشوي ومكسرات على الطريقة الخليجية.",
             price: 30,
             image: "1547592180-85f173990554",
             prep: 35,
@@ -88,23 +88,36 @@ const RESTAURANT_FIXTURES = [
         ],
       },
       {
-        name: "╪│┘╪╖╪د╪ز ┘ê┘à┘é╪ذ┘╪د╪ز",
+        name: "سلطات ومقبلات",
         items: [
           {
-            name: "╪ص┘à╪╡ ╪ذ╪د┘╪╖╪ص┘è┘╪ر",
+            name: "حمص بالطحينة",
             description:
-              "╪ص┘à╪╡ ┘â╪▒┘è┘à┘è ╪ذ╪د┘╪╖╪ص┘è┘╪ر ┘ê╪▓┘è╪ز ╪▓┘è╪ز┘ê┘ ┘ê╪╡┘┘ê╪ذ╪▒ ظ¤ ╪ذ┘è┘╪ز╪ص ╪د┘┘┘╪│ ┘é╪ذ┘ ╪د┘╪ث┘â┘╪ر.",
+              "حمص كريمي بالطحينة وزيت زيتون وصنوبر — بيفتح النفس قبل الأكلة.",
             price: 9,
             image: "1546833999-b9f581a1996d",
             prep: 10,
           },
           {
-            name: "╪ز╪ذ┘ê┘╪ر",
+            name: "تبولة",
             description:
-              "╪ذ┘é╪»┘ê┘╪│ ╪╖╪د╪▓╪ش ┘ê╪ذ╪▒╪║┘ ┘╪د╪╣┘à ┘ê╪╖┘à╪د╪╖┘à ┘ê┘╪╣┘╪د╪╣ ╪ذ╪«┘╪╖╪ر ╪▓┘è╪ز ┘ê┘┘è┘à┘ê┘ ┘à┘╪╣╪┤╪ر.",
+              "بقدونس طازج وبرغل ناعم وطماطم ونعناع بخلطة زيت وليمون منعشة.",
             price: 10,
             image: "1540189549336-e6e99c3679fe",
             prep: 10,
+          },
+        ],
+      },
+      {
+        name: "حلويات",
+        items: [
+          {
+            name: "كنافة نابلسية",
+            description:
+              "كنافة عجناط بالجبنة الحلوم طرية مع قطر وفستق حلبي — من قلب نابلس.",
+            price: 16,
+            image: "1571115177098-24ec42ed204d",
+            prep: 15,
           },
         ],
       },
@@ -112,49 +125,49 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "al-buhhar",
-    name: "┘à╪╖╪╣┘à ┘ê┘à╪│┘à┘â╪ر ╪د┘╪ذ╪ص┘ّ╪د╪▒",
-    cuisine: "┘à╪╖╪ذ╪« ╪ذ╪ص╪▒┘è",
-    description: "╪ث╪╖┘è╪ذ ╪ث╪╡┘╪د┘ ╪د┘╪ذ╪ص╪▒ ╪د┘╪╖╪د╪▓╪ش ظ¤ ╪╡┘è╪د╪»┘è╪ر ┘ê╪▒┘é╪د╪» ┘à╪┤┘ê┘è ┘ê╪ش┘à╪ذ╪▒┘è.",
+    name: "مطعم ومسمكة البحّار",
+    cuisine: "مطبخ بحري",
+    description: "أطيب أصناف البحر الطازج — صيادية ورقاد مشوي وجمبري.",
     phone: "0592000002",
-    ownerEmail: "buhhar@wajba.com",
+    ownerEmail: "owner.buhhar@wajba.ps",
     ownerPhone: "0593000002",
-    ownerFirstName: "╪╣┘à┘ّ╪د╪▒",
-    ownerLastName: "╪د┘╪ذ╪ص┘ّ╪د╪▒",
+    ownerFirstName: "عمّار",
+    ownerLastName: "البحّار",
     deliveryFee: 8,
     minimumOrder: 40,
     estimatedDeliveryTime: 35,
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪▒╪╣ ╪د┘╪ذ╪ص╪▒ ظ¤ ╪ص┘è ╪د┘╪▒┘à╪د┘",
+    city: "غزة",
+    street: "شارع البحر — حي الرمال",
     cover: "1547496502-affa22d38842",
     categories: [
       {
-        name: "╪ث╪╖╪ذ╪د┘é ╪ذ╪ص╪▒┘è╪ر",
+        name: "أطباق بحرية",
         items: [
           {
-            name: "╪╡┘è╪د╪»┘è╪ر",
+            name: "صيادية",
             description:
-              "╪ث╪▒╪▓ ╪ث╪╡┘╪▒ ┘à╪╣ ╪│┘à┘â ┘ê╪ذ╪╡┘ ┘à┘â╪▒┘à┘ ظ¤ ╪ث┘â┘╪ر ╪د┘╪ذ╪ص╪▒ ╪د┘╪║╪▓╪د┘ê┘è╪ر ╪د┘╪ث╪╡┘┘è╪ر.",
+              "أرز أصفر مع سمك وبصل مكرمل — أكلة البحر الغزاوية الأصلية.",
             price: 36,
             image: "1559847844-5315695dadae",
             prep: 40,
           },
           {
-            name: "╪│┘à┘â ╪▒┘é╪د╪» ┘à╪┤┘ê┘è",
-            description: "╪▒┘é╪د╪» ╪╖╪د╪▓╪ش ┘à╪┤┘ê┘è ╪╣╪د┘┘╪ص┘à ┘à╪╣ ┘┘è┘à┘ê┘ ┘ê╪ذ╪╡┘ ┘ê╪«╪╢╪د╪▒.",
+            name: "سمك رقاد مشوي",
+            description: "رقاد طازج مشوي عالفحم مع ليمون وبصل وخضار.",
             price: 45,
             image: "1615141982883-c7ad0e69fd62",
             prep: 35,
           },
           {
-            name: "╪│┘à┘â ┘à┘é┘┘è",
-            description: "╪│┘à┘â ╪ذ┘╪╖┘è ┘à┘é┘┘è ╪░┘ç╪ذ┘è ┘à╪╣ ╪│┘╪╖╪ر ╪╖╪ص┘è┘╪ر ┘ê╪«╪ذ╪▓ ╪╖╪د╪▓╪ر.",
+            name: "سمك مقلي",
+            description: "سمك بلطي مقلي ذهبي مع سلطة طحينة وخبز طازة.",
             price: 40,
             image: "1547496502-affa22d38842",
             prep: 30,
           },
           {
-            name: "╪ش┘à╪ذ╪▒┘è ┘à┘é┘┘è",
-            description: "╪ش┘à╪ذ╪▒┘è ┘à┘é╪▒┘à╪┤ ┘à╪╣ ╪س┘ê┘à ┘ê┘┘è┘à┘ê┘ ظ¤ ╪ش╪▒╪ذ╪ز┘ê ┘ê╪د┘╪╖╪╣┘à ╪ذ┘è╪ص┘â┘è.",
+            name: "جمبري مقلي",
+            description: "جمبري مقرمش مع ثوم وليمون — جربتو والطعم بيحكي.",
             price: 55,
             image: "1534080564583-6be75777b70a",
             prep: 30,
@@ -166,48 +179,48 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "al-taj",
-    name: "┘à╪╖╪╣┘à ╪د┘╪ز╪د╪ش",
-    cuisine: "╪ذ┘è╪ز╪د ┘ê╪│┘╪»┘ê┘è╪┤╪د╪ز",
-    description: "╪┤╪د┘ê╪▒┘à╪د ┘ê╪│┘╪»┘ê┘è╪┤╪د╪ز ╪╣┘┘ë ╪ث╪╡┘ê┘┘ç╪د ظ¤ ╪«╪▒┘ê┘ ┘ê╪»╪ش╪د╪ش ┘ê┘â╪ذ╪»╪ر.",
+    name: "مطعم التاج",
+    cuisine: "بيتا وسندويشات",
+    description: "شاورما وسندويشات على أصولها — خروف ودجاج وكبدة.",
     phone: "0592000003",
-    ownerEmail: "taj@wajba.com",
+    ownerEmail: "owner.taj@wajba.ps",
     ownerPhone: "0593000003",
-    ownerFirstName: "╪▒╪د┘à┘è",
-    ownerLastName: "╪د┘╪ز┘ّ╪د╪ش┘è",
+    ownerFirstName: "رامي",
+    ownerLastName: "التّاجي",
     deliveryFee: 5,
     minimumOrder: 20,
     estimatedDeliveryTime: 30,
-    city: "╪║╪▓╪ر",
-    street: "╪ص┘è ╪د┘╪▒┘à╪د┘ ظ¤ ╪┤╪د╪▒╪╣ ╪د┘┘╪╡╪▒",
+    city: "غزة",
+    street: "حي الرمال — شارع النصر",
     cover: "1633321702518-7feccafb94d5",
     categories: [
       {
-        name: "╪┤╪د┘ê╪▒┘à╪د ┘ê╪│┘╪»┘ê┘è╪┤╪د╪ز",
+        name: "شاورما وسندويشات",
         items: [
           {
-            name: "╪┤╪د┘ê╪▒┘à╪د ╪»╪ش╪د╪ش",
-            description: "╪┤╪د┘ê╪▒┘à╪د ╪»╪ش╪د╪ش ┘à╪╣ ┘à╪«┘┘ ┘ê╪«╪╢╪د╪▒ ┘ê╪س┘ê┘à┘è╪ر ┘ê╪ذ╪╖╪د╪╖╪د.",
+            name: "شاورما دجاج",
+            description: "شاورما دجاج مع مخلل وخضار وثومية وبطاطا.",
             price: 14,
             image: "1525755662778-989d0524087e",
             prep: 15,
           },
           {
-            name: "╪│┘╪»┘ê┘è╪┤ ┘╪ص┘à",
-            description: "┘╪ص┘à ┘à┘╪▒┘ê┘à ┘à╪ز╪ذ┘ّ┘ ╪ذ╪د┘╪ذ┘ç╪د╪▒╪د╪ز ┘à╪╣ ╪ذ╪╡┘ ┘ê╪ذ┘é╪»┘ê┘╪│.",
+            name: "سندويش لحم",
+            description: "لحم مفروم متبّل بالبهارات مع بصل وبقدونس.",
             price: 18,
             image: "1608039755401-742074f0548d",
             prep: 15,
           },
           {
-            name: "╪│┘╪»┘ê┘è╪┤ ┘â╪ذ╪»╪ر",
-            description: "┘â╪ذ╪»╪ر ╪║┘┘à ┘à┘é┘┘è╪ر ╪ذ╪د┘╪س┘ê┘à ┘ê╪د┘┘┘è┘à┘ê┘ ┘à╪╣ ╪ذ┘é╪»┘ê┘╪│.",
+            name: "سندويش كبدة",
+            description: "كبدة غنم مقلية بالثوم والليمون مع بقدونس.",
             price: 15,
             image: "1565557623262-b51c2513a641",
             prep: 15,
           },
           {
-            name: "╪┤╪د┘ê╪▒┘à╪د ╪«╪▒┘ê┘",
-            description: "╪┤╪د┘ê╪▒┘à╪د ╪«╪▒┘ê┘ ╪ذ╪ز╪ز╪ذ┘è┘╪ر ╪│╪▒┘è╪ر ┘à╪╣ ╪«╪ذ╪▓ ╪╡╪د╪ش ┘ê╪س┘ê┘à┘è╪ر.",
+            name: "شاورما خروف",
+            description: "شاورما خروف بتتبيلة سرية مع خبز صاج وثومية.",
             price: 16,
             image: "1633321702518-7feccafb94d5",
             prep: 15,
@@ -219,41 +232,41 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "abu-saud",
-    name: "╪ص┘┘ê┘è╪د╪ز ╪ث╪ذ┘ê ╪د┘╪│╪╣┘ê╪»",
-    cuisine: "╪ص┘┘ê┘è╪د╪ز ╪┤╪▒┘é┘è╪ر",
-    description: "╪ص┘┘ê┘è╪د╪ز ╪ذ┘╪»┘è╪ر ╪╣┘┘ë ╪د┘╪ث╪╡┘ê┘ ظ¤ ┘â┘╪د┘╪ر ┘╪د╪ذ┘╪│┘è╪ر ┘ê╪ذ╪│╪ذ┘ê╪│╪ر ┘ê┘à╪╣┘à┘ê┘.",
+    name: "حلويات أبو السعود",
+    cuisine: "حلويات شرقية",
+    description: "حلويات بلدية على الأصول — كنافة نابلسية وبسبوسة ومعمول.",
     phone: "0592000004",
-    ownerEmail: "abusaad@wajba.com",
+    ownerEmail: "owner.abusaad@wajba.ps",
     ownerPhone: "0593000004",
-    ownerFirstName: "╪ث╪ذ┘ê ╪د┘╪│╪╣┘ê╪»",
-    ownerLastName: "╪د┘╪ص┘┘ê",
+    ownerFirstName: "أبو السعود",
+    ownerLastName: "الحلو",
     deliveryFee: 4,
     minimumOrder: 15,
     estimatedDeliveryTime: 25,
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪▒╪╣ ╪د┘┘ê╪ص╪»╪ر",
+    city: "غزة",
+    street: "شارع الوحدة",
     cover: "1571115177098-24ec42ed204d",
     categories: [
       {
-        name: "╪ص┘┘ê┘è╪د╪ز ╪┤╪▒┘é┘è╪ر",
+        name: "حلويات شرقية",
         items: [
           {
-            name: "┘â┘╪د┘╪ر ┘╪د╪ذ┘╪│┘è╪ر",
-            description: "┘â┘╪د┘╪ر ╪╣╪ش┘╪د╪╖ ╪ذ╪د┘╪ش╪ذ┘╪ر ╪د┘╪ص┘┘ê┘à ┘ê╪د┘┘é╪╖╪▒ ┘ê╪د┘┘╪│╪ز┘é.",
+            name: "كنافة نابلسية",
+            description: "كنافة عجناط بالجبنة الحلوم والقطر والفستق.",
             price: 18,
             image: "1571115177098-24ec42ed204d",
             prep: 15,
           },
           {
-            name: "╪ذ╪│╪ذ┘ê╪│╪ر",
-            description: "╪ذ╪│╪ذ┘ê╪│╪ر ╪│┘à┘┘è╪ر ╪ذ╪د┘┘┘ê╪▓ ┘ê╪د┘┘é╪╖╪▒.",
+            name: "بسبوسة",
+            description: "بسبوسة سملية باللوز والقطر.",
             price: 10,
             image: "1551024506-0bccd828d307",
             prep: 10,
           },
           {
-            name: "┘ê╪▒╪ذ╪د╪ز ┘à╪╣┘à┘ê┘",
-            description: "┘à╪╣┘à┘ê┘ ┘à╪ص╪┤┘è ╪╣╪ش┘ê╪ر ╪ث┘ê ┘╪│╪ز┘é ╪ذ╪د┘╪│┘à┘è╪».",
+            name: "وربات معمول",
+            description: "معمول محشي عجوة أو فستق بالسميد.",
             price: 12,
             image: "1558642452-9d2a7deb7f62",
             prep: 10,
@@ -264,48 +277,48 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "al-azli",
-    name: "┘à╪┤╪د┘ê┘è ╪د┘╪ث╪╡┘è┘",
-    cuisine: "┘à╪┤╪د┘ê┘è ┘ê┘╪ص┘à",
-    description: "┘à╪┤╪د┘ê┘è ╪╣┘┘ë ╪د┘┘╪ص┘à ظ¤ ┘â╪ذ╪د╪ذ ┘ê╪┤┘è╪┤ ╪╖╪د┘ê┘ê┘é ┘ê╪▒┘è╪┤ ╪║┘┘à.",
+    name: "مشاوي الأصيل",
+    cuisine: "مشاوي وفحم",
+    description: "مشاوي على الفحم — كباب وشيش طاووق وريش غنم.",
     phone: "0592000005",
-    ownerEmail: "azli@wajba.com",
+    ownerEmail: "owner.azli@wajba.ps",
     ownerPhone: "0593000005",
-    ownerFirstName: "╪ص╪│╪د┘à",
-    ownerLastName: "╪د┘╪ث╪╡┘è┘",
+    ownerFirstName: "حسام",
+    ownerLastName: "الأصيل",
     deliveryFee: 6,
     minimumOrder: 40,
     estimatedDeliveryTime: 35,
-    city: "╪║╪▓╪ر",
-    street: "╪ص┘è ╪د┘┘╪╡╪▒",
+    city: "غزة",
+    street: "حي النصر",
     cover: "1555939594-58d7cb561ad1",
     categories: [
       {
-        name: "┘à╪┤╪د┘ê┘è",
+        name: "مشاوي",
         items: [
           {
-            name: "┘â╪ذ╪د╪ذ ┘à╪┤┘ê┘è",
-            description: "┘â╪ذ╪د╪ذ ┘╪ص┘à ╪║┘┘à ╪ذ┘╪»┘è ┘à╪┤┘ê┘è ╪╣╪د┘┘╪ص┘à.",
+            name: "كباب مشوي",
+            description: "كباب لحم غنم بلدي مشوي عالفحم.",
             price: 30,
             image: "1598515214211-89d3c73ae83b",
             prep: 25,
           },
           {
-            name: "╪┤┘è╪┤ ╪╖╪د┘ê┘ê┘é",
-            description: "╪┤┘è╪┤ ╪╖╪د┘ê┘ê┘é ┘à╪ز╪ذ┘ّ┘ ╪ذ╪د┘╪س┘ê┘à ┘ê╪د┘┘┘è┘à┘ê┘ ┘à╪╣ ╪«╪╢╪د╪▒ ┘à╪┤┘ê┘è╪ر.",
+            name: "شيش طاووق",
+            description: "شيش طاووق متبّل بالثوم والليمون مع خضار مشوية.",
             price: 26,
             image: "1529193591184-b1d58069ecdd",
             prep: 25,
           },
           {
-            name: "╪▒┘è╪┤ ╪║┘┘à",
-            description: "╪▒┘è╪┤ ╪║┘┘à ╪╖╪▒┘è ┘à╪ز╪ذ┘ّ┘ ┘ê┘à╪┤┘ê┘è ╪╣╪د┘┘╪ص┘à.",
+            name: "ريش غنم",
+            description: "ريش غنم طري متبّل ومشوي عالفحم.",
             price: 35,
             image: "1600891964092-4316c288032e",
             prep: 30,
           },
           {
-            name: "┘à╪┤╪د┘ê┘è ┘à╪┤┘â┘╪ر",
-            description: "┘â╪ذ╪د╪ذ ┘ê╪┤┘è╪┤ ┘ê╪▒┘è╪┤ ┘ê┘â╪▒╪┤╪ر ظ¤ ╪╖╪ذ┘é ╪د┘╪╣┘è┘╪ر ╪د┘┘à╪┤╪ز╪▒┘â.",
+            name: "مشاوي مشكلة",
+            description: "كباب وشيش وريش وكرشة — طبق العيلة المشترك.",
             price: 45,
             image: "1555939594-58d7cb561ad1",
             prep: 30,
@@ -313,11 +326,11 @@ const RESTAURANT_FIXTURES = [
         ],
       },
       {
-        name: "╪│┘╪╖╪د╪ز",
+        name: "سلطات",
         items: [
           {
-            name: "╪│┘╪╖╪ر ╪╣╪▒╪ذ┘è╪ر",
-            description: "╪«┘è╪د╪▒ ┘ê╪╖┘à╪د╪╖┘à ┘ê╪ذ╪╡┘ ╪ذ╪«┘╪╖╪ر ╪د┘┘┘è┘à┘ê┘.",
+            name: "سلطة عربية",
+            description: "خيار وطماطم وبصل بخلطة الليمون.",
             price: 8,
             image: "1540189549336-e6e99c3679fe",
             prep: 5,
@@ -328,41 +341,41 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "roseeta-pizza",
-    name: "╪ذ┘è╪ز╪▓╪د ╪▒┘ê╪▓┘è╪ز╪د",
-    cuisine: "╪ذ┘è╪ز╪▓╪د ┘ê╪│┘╪»┘ê┘è╪┤╪د╪ز",
-    description: "╪ذ┘è╪ز╪▓╪د ╪ح┘è╪╖╪د┘┘è╪ر ╪ذ╪╣╪ش┘è┘╪ر ╪╖╪د╪▓╪ر ظ¤ ┘à╪د╪▒╪║╪▒┘è╪ز╪د ┘ê╪«╪╢╪د╪▒ ┘ê╪ش╪ذ┘.",
+    name: "بيتزا روزيتا",
+    cuisine: "بيتزا وسندويشات",
+    description: "بيتزا إيطالية بعجينة طازة — مارغريتا وخضار وجبن.",
     phone: "0592000006",
-    ownerEmail: "roseeta@wajba.com",
+    ownerEmail: "owner.roseeta@wajba.ps",
     ownerPhone: "0593000006",
-    ownerFirstName: "╪»╪د┘╪د",
-    ownerLastName: "╪▒┘ê╪▓┘è╪ز╪د",
+    ownerFirstName: "دانا",
+    ownerLastName: "روزيتا",
     deliveryFee: 5,
     minimumOrder: 25,
     estimatedDeliveryTime: 30,
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪▒╪╣ ╪د┘╪ش┘╪د╪ة",
+    city: "غزة",
+    street: "شارع الجلاء",
     cover: "1565299624946-b28f40a0ae38",
     categories: [
       {
-        name: "╪ذ┘è╪ز╪▓╪د",
+        name: "بيتزا",
         items: [
           {
-            name: "╪ذ┘è╪ز╪▓╪د ┘à╪د╪▒╪║╪▒┘è╪ز╪د",
-            description: "╪╡┘ê╪╡ ╪╖┘à╪د╪╖┘à ┘ê┘à┘ê╪▓╪د╪▒┘è┘╪د ┘ê╪▒┘è╪ص╪د┘ ╪╖╪د╪▓╪ش ╪╣┘┘ë ╪╣╪ش┘è┘╪ر ╪ح┘è╪╖╪د┘┘è╪ر.",
+            name: "بيتزا مارغريتا",
+            description: "صوص طماطم وموزاريلا وريحان طازج على عجينة إيطالية.",
             price: 24,
             image: "1565299624946-b28f40a0ae38",
             prep: 20,
           },
           {
-            name: "╪ذ┘è╪ز╪▓╪د ╪«╪╢╪د╪▒",
-            description: "┘┘┘┘ ┘ê╪▓┘è╪ز┘ê┘ ┘ê┘à╪┤╪▒┘ê┘à ┘ê╪ذ╪╡┘ ╪╣┘┘ë ╪╣╪ش┘è┘╪ر ╪╖╪د╪▓╪ر.",
+            name: "بيتزا خضار",
+            description: "فلفل وزيتون ومشروم وبصل على عجينة طازة.",
             price: 26,
             image: "1513104890138-7c749659a591",
             prep: 20,
           },
           {
-            name: "╪ذ┘è╪ز╪▓╪د ╪ش╪ذ┘",
-            description: "╪ث╪▒╪ذ╪╣ ╪ث┘┘ê╪د╪╣ ╪ش╪ذ┘ ╪░╪د┘è╪ذ┘è┘ ╪╣┘┘ë ╪╣╪ش┘è┘╪ر ┘ç╪┤╪ر.",
+            name: "بيتزا جبن",
+            description: "أربع أنواع جبن ذايبين على عجينة هشة.",
             price: 28,
             image: "1574071318508-1cdbab80d002",
             prep: 20,
@@ -370,11 +383,11 @@ const RESTAURANT_FIXTURES = [
         ],
       },
       {
-        name: "╪│┘╪»┘ê┘è╪┤╪د╪ز",
+        name: "سندويشات",
         items: [
           {
-            name: "╪│┘╪»┘ê┘è╪┤ ┘╪د┘ç┘è╪ز╪د",
-            description: "╪»╪ش╪د╪ش ┘╪د┘ç┘è╪ز╪د ┘à╪ز╪ذ┘ّ┘ ┘à╪╣ ╪«╪╢╪د╪▒ ┘à╪┤┘ê┘è╪ر ┘ê╪«╪ذ╪▓ ╪╖╪د╪▓╪ر.",
+            name: "سندويش فاهيتا",
+            description: "دجاج فاهيتا متبّل مع خضار مشوية وخبز طازة.",
             price: 18,
             image: "1525755662778-989d0524087e",
             prep: 15,
@@ -385,48 +398,48 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "ramal-falafel",
-    name: "┘┘╪د┘┘ ╪د┘╪▒┘à╪د┘",
-    cuisine: "┘┘╪د┘┘",
-    description: "┘┘╪د┘┘ ┘à┘é╪▒┘à╪┤╪ر ┘à┘ ╪ذ╪▒╪ر ╪╖╪▒┘è╪ر ┘à┘ ╪ش┘ê╪ر ظ¤ ┘ê┘╪ز╪ر ╪ص┘à╪╡ ╪╣┘┘ë ╪د┘╪ث╪╡┘ê┘.",
+    name: "فلافل الرمال",
+    cuisine: "فلافل",
+    description: "فلافل مقرمشة من برة طرية من جوة — وفتة حمص على الأصول.",
     phone: "0592000007",
-    ownerEmail: "ramal@wajba.com",
+    ownerEmail: "owner.ramal@wajba.ps",
     ownerPhone: "0593000007",
-    ownerFirstName: "┘à╪ص┘à┘ê╪»",
-    ownerLastName: "╪د┘╪▒┘à┘╪د┘ê┘è",
+    ownerFirstName: "محمود",
+    ownerLastName: "الرملاوي",
     deliveryFee: 3,
     minimumOrder: 10,
     estimatedDeliveryTime: 15,
-    city: "╪║╪▓╪ر",
-    street: "╪ص┘è ╪د┘╪▒┘à╪د┘",
+    city: "غزة",
+    street: "حي الرمال",
     cover: "1591814468924-caf88d1232e1",
     categories: [
       {
-        name: "┘┘╪د┘┘ ┘ê╪ص┘à╪╡",
+        name: "فلافل وحمص",
         items: [
           {
-            name: "┘┘╪د┘┘ ╪╣╪▒╪ذ┘è",
-            description: "╪ث┘é╪▒╪د╪╡ ┘┘╪د┘┘ ┘à┘é╪▒┘à╪┤╪ر ┘à┘ ╪ذ╪▒╪ر ┘ê╪╖╪▒┘è╪ر ┘à┘ ╪ش┘ê╪ر.",
+            name: "فلافل عربي",
+            description: "أقراص فلافل مقرمشة من برة وطرية من جوة.",
             price: 6,
             image: "1591814468924-caf88d1232e1",
             prep: 10,
           },
           {
-            name: "╪│╪د┘╪»┘ê┘è╪┤ ┘┘╪د┘┘",
-            description: "╪«╪ذ╪▓ ╪╖╪د╪ذ┘ê┘ ┘à╪╣ ┘┘╪د┘┘ ┘ê╪«╪╢╪د╪▒ ┘ê╪╖╪ص┘è┘╪ر.",
+            name: "ساندويش فلافل",
+            description: "خبز طابون مع فلافل وخضار وطحينة.",
             price: 8,
             image: "1565557623262-b51c2513a641",
             prep: 10,
           },
           {
-            name: "╪ص┘à╪╡ ╪ذ╪د┘╪╖╪ص┘è┘╪ر",
-            description: "╪ص┘à╪╡ ╪ذ┘╪»┘è ┘â╪▒┘è┘à┘è ╪ذ╪▓┘è╪ز ╪د┘╪▓┘è╪ز┘ê┘.",
+            name: "حمص بالطحينة",
+            description: "حمص بلدي كريمي بزيت الزيتون.",
             price: 9,
             image: "1546833999-b9f581a1996d",
             prep: 5,
           },
           {
-            name: "┘╪ز┘ç ╪ص┘à╪╡",
-            description: "╪«╪ذ╪▓ ┘à╪ص┘à┘ّ╪╡ ┘à╪╣ ╪ص┘à╪╡ ┘ê┘╪ذ┘ ┘ê╪│┘à┘╪ر ╪│╪د╪«┘╪ر.",
+            name: "فته حمص",
+            description: "خبز محمّص مع حمص ولبن وسمنة ساخنة.",
             price: 20,
             image: "1577805947697-89e18249d767",
             prep: 10,
@@ -437,44 +450,96 @@ const RESTAURANT_FIXTURES = [
   },
   {
     slug: "juices-al-bahr",
-    name: "╪╣╪╡╪د╪خ╪▒ ╪د┘╪ذ╪ص╪▒",
-    cuisine: "╪╣╪╡╪د╪خ╪▒ ╪╖╪د╪▓╪ش╪ر",
-    description: "╪╣╪╡╪د╪خ╪▒ ╪╖╪ذ┘è╪╣┘è╪ر ┘à╪╣╪╡┘ê╪▒╪ر ┘é╪»╪د┘à┘â ظ¤ ╪ذ╪▒╪ز┘é╪د┘ ┘ê┘à╪د┘╪ش┘ê ┘ê┘é╪╡╪ذ ┘ê┘â┘ê┘â╪ز┘è┘.",
+    name: "عصائر البحر",
+    cuisine: "عصائر طازجة",
+    description: "عصائر طبيعية معصورة قدامك — برتقال ومانجو وقصب وكوكتيل.",
     phone: "0592000008",
-    ownerEmail: "juices@wajba.com",
+    ownerEmail: "owner.juices@wajba.ps",
     ownerPhone: "0593000008",
-    ownerFirstName: "┘┘è╪د┘",
-    ownerLastName: "╪د┘╪ذ╪ص╪▒",
+    ownerFirstName: "ليان",
+    ownerLastName: "البحر",
     deliveryFee: 3,
     minimumOrder: 10,
     estimatedDeliveryTime: 15,
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪╖╪خ ╪║╪▓╪ر",
+    city: "غزة",
+    street: "شاطئ غزة",
     cover: "1600271886742-f049cd451bba",
     categories: [
       {
-        name: "╪╣╪╡╪د╪خ╪▒ ╪╖╪د╪▓╪ش╪ر",
+        name: "عصائر طازجة",
         items: [
           {
-            name: "╪╣╪╡┘è╪▒ ╪ذ╪▒╪ز┘é╪د┘ ╪╖╪د╪▓╪ش",
-            description: "╪ذ╪▒╪ز┘é╪د┘ ╪ذ┘╪»┘è ┘à╪╣╪╡┘ê╪▒ ┘é╪»╪د┘à┘â.",
+            name: "عصير برتقال طازج",
+            description: "برتقال بلدي معصور قدامك.",
             price: 8,
             image: "1600271886742-f049cd451bba",
             prep: 5,
           },
           {
-            name: "┘â┘ê┘â╪ز┘è┘ ┘┘ê╪د┘â┘ç",
-            description: "┘à┘â╪│ ┘à┘ê╪▓ ┘ê┘╪▒╪د┘ê┘╪ر ┘ê┘à╪د┘╪ش┘ê ╪ذ╪د┘╪ص┘┘è╪ذ.",
+            name: "كوكتيل فواكه",
+            description: "مكس موز وفراولة ومانجو بالحليب.",
             price: 12,
             image: "1507494924047-60b8ee826ca9",
             prep: 10,
           },
           {
-            name: "╪╣╪╡┘è╪▒ ┘é╪╡╪ذ",
-            description: "┘é╪╡╪ذ ╪ذ┘╪»┘è ┘à╪╣╪╡┘ê╪▒ ┘é╪»╪د┘à┘â.",
+            name: "عصير قصب",
+            description: "قصب بلدي معصور قدامك.",
             price: 5,
             image: "1546173159-315724a31696",
             prep: 5,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "al-zaman-al-jamil",
+    name: "حلويات الزمن الجميل",
+    cuisine: "حلويات شرقية",
+    description: "حلويات الزمن الجميل — كنافة وزنود الست ومعمول وكليجة.",
+    phone: "0592000009",
+    ownerEmail: "owner.zaman@wajba.ps",
+    ownerPhone: "0593000009",
+    ownerFirstName: "نور",
+    ownerLastName: "الزمن",
+    deliveryFee: 5,
+    minimumOrder: 20,
+    estimatedDeliveryTime: 25,
+    city: "غزة",
+    street: "وسط البلد",
+    cover: "1551024506-0bccd828d307",
+    categories: [
+      {
+        name: "حلويات شرقية",
+        items: [
+          {
+            name: "كنافة نابلسية",
+            description: "عجناط بالجبنة الحلوم والقطر والفستق.",
+            price: 18,
+            image: "1571115177098-24ec42ed204d",
+            prep: 15,
+          },
+          {
+            name: "زنود الست",
+            description: "رقائق محشية قشطة مقلية بالقطر.",
+            price: 14,
+            image: "1558642452-9d2a7deb7f62",
+            prep: 10,
+          },
+          {
+            name: "وربات معمول",
+            description: "معمول محشي عجوة أو فستق بالسميد.",
+            price: 12,
+            image: "1587314168485-3236d6710814",
+            prep: 10,
+          },
+          {
+            name: "كليجة",
+            description: "كليجة عجوة بالهيل — أكلة الأعياد.",
+            price: 10,
+            image: "1519915028121-7d3463d20b13",
+            prep: 10,
           },
         ],
       },
@@ -518,7 +583,7 @@ async function upsertRole(name) {
 }
 
 async function upsertUser({ email, roleId, ...data }) {
-  const hash = () => bcrypt.hash(data.password, 12);
+  const hash = () => bcrypt.hash(data.password, 10);
   const fields = {
     firstName: data.firstName,
     lastName: data.lastName,
@@ -583,13 +648,13 @@ async function main() {
     roleId: adminRole.id,
   });
 
-  // Demo customer ظ¤ the account used to explore the customer app.
+  // Demo customer — the account used to explore the customer app.
   const customer = await upsertUser({
-    email: "customer@wajba.com",
-    firstName: "╪ث╪ص┘à╪»",
-    lastName: "╪╡┘╪د╪ص",
+    email: "ahmad@wajba.com",
+    firstName: "أحمد",
+    lastName: "صلاح",
     phone: "0591234567",
-    password: "Customer$$1234",
+    password: "Ahmad$$1234",
     status: "ACTIVE",
     isVerified: true,
     roleId: customerRole.id,
@@ -599,28 +664,14 @@ async function main() {
   // APPROVED so the seeded driver can take deliveries; real signups start
   // PENDING and wait for admin approval.
   await upsertUser({
-    email: "driver@wajba.com",
-    firstName: "╪│╪د┘à╪▒",
-    lastName: "╪ث╪ذ┘ê ┘ç╪د╪┤┘à",
+    email: "samer@wajba.ps",
+    firstName: "سامر",
+    lastName: "أبو هاشم",
     phone: "0597771234",
-    password: "Driver$$1234",
+    password: "Samer$$1234",
     status: "ACTIVE",
     isVerified: true,
     driverStatus: "APPROVED",
-    roleId: driverRole.id,
-  });
-
-  // Second driver ظ¤ PENDING approval. The admin can review and approve
-  // this driver from /admin/users to test the driver approval workflow.
-  await upsertUser({
-    email: "driver2@wajba.com",
-    firstName: "┘à╪ص┘à╪»",
-    lastName: "╪د┘╪╣┘à┘ê╪▒┘è",
-    phone: "0598885678",
-    password: "Driver$$1234",
-    status: "ACTIVE",
-    isVerified: true,
-    driverStatus: "PENDING",
     roleId: driverRole.id,
   });
 
@@ -629,32 +680,32 @@ async function main() {
   await prisma.order.deleteMany({ where: { customerId: customer.id } });
 
   // Demo addresses. The customer's existing addresses are cleared first so the
-  // creates below are idempotent ظ¤ the account screen enforces a single default
+  // creates below are idempotent — the account screen enforces a single default
   // per user (Address_one_default_per_user), so a plain re-create would crash on
-  // a second "╪د┘╪ذ┘è╪ز" default and re-runs were already accumulating duplicate rows.
+  // a second "البيت" default and re-runs were already accumulating duplicate rows.
   await prisma.address.deleteMany({ where: { userId: customer.id } });
   const homeAddress = await upsertAddress({
     userId: customer.id,
-    label: "╪د┘╪ذ┘è╪ز",
-    city: "╪║╪▓╪ر",
-    street: "╪┤╪د╪▒╪╣ ╪د┘┘ê╪ص╪»╪ر",
-    building: "╪╣┘à╪د╪▒╪ر ┘ت┘ت",
-    details: "╪د┘╪╖╪د╪ذ┘é ╪د┘╪س╪د┘╪س ظ¤ ╪ش┘╪ذ ┘à╪│╪ش╪» ╪د┘╪│┘╪د┘à",
+    label: "البيت",
+    city: "غزة",
+    street: "شارع الوحدة",
+    building: "عمارة ٢٢",
+    details: "الطابق الثالث — جنب مسجد السلام",
     isDefault: true,
   });
   const workAddress = await upsertAddress({
     userId: customer.id,
-    label: "╪د┘╪┤╪║┘",
-    city: "╪د┘┘ê╪│╪╖┘ë",
-    street: "╪┤╪د╪▒╪╣ ╪د┘┘┘é╪د╪ذ╪ر",
-    details: "╪د┘┘à┘â╪ز╪ذ ╪د┘╪ز╪ش╪د╪▒┘è ظ¤ ╪د┘╪╖╪د╪ذ┘é ╪د┘╪ث┘ê┘",
+    label: "الشغل",
+    city: "الوسطى",
+    street: "شارع النقابة",
+    details: "المكتب التجاري — الطابق الأول",
     isDefault: false,
   });
 
   const createdRestaurants = new Map();
 
   // Meal id lookup keyed by `${restaurantId}::${mealName}` so the demo order
-  // fixtures below can link their items to real meals ظ¤ "╪د╪╖┘╪ذ ┘┘╪│ ╪د┘╪╖┘╪ذ┘è╪ر" needs
+  // fixtures below can link their items to real meals — "اطلب نفس الطلبية" needs
   // a real mealId to refill the server cart (an unlinked OrderItem has mealId null).
   const mealIdByRestaurantAndName = new Map();
 
@@ -673,8 +724,8 @@ async function main() {
     // The demo owner's addresses mirror the original "restaurant address" idea
     // (each restaurant gets its own city/street row under the owner's account).
     // When the restaurant already exists, update the address currently linked to
-    // it in place ظ¤ this keeps addressId stable and re-runs idempotent. A plain
-    // create here would accumulate a duplicate "┘à┘ê┘é╪╣ ╪د┘┘à╪╖╪╣┘à" row per re-run.
+    // it in place — this keeps addressId stable and re-runs idempotent. A plain
+    // create here would accumulate a duplicate "موقع المطعم" row per re-run.
     const existingRestaurant = await prisma.restaurant.findUnique({
       where: { slug: fixture.slug },
       select: { addressId: true },
@@ -683,7 +734,7 @@ async function main() {
       ? await prisma.address.update({
           where: { id: existingRestaurant.addressId },
           data: {
-            label: "┘à┘ê┘é╪╣ ╪د┘┘à╪╖╪╣┘à",
+            label: "موقع المطعم",
             city: fixture.city,
             street: fixture.street,
           },
@@ -691,7 +742,7 @@ async function main() {
       : await prisma.address.create({
           data: {
             userId: owner.id,
-            label: "┘à┘ê┘é╪╣ ╪د┘┘à╪╖╪╣┘à",
+            label: "موقع المطعم",
             city: fixture.city,
             street: fixture.street,
           },
@@ -728,7 +779,7 @@ async function main() {
     });
 
     // Rebuild meals/categories. Cart items pointing at these meals are removed
-    // first so the FK (CartItem.mealId ظْ onDelete Restrict) can't block the wipe;
+    // first so the FK (CartItem.mealId → onDelete Restrict) can't block the wipe;
     // past order items survive because OrderItem.mealId is SetNull.
     await prisma.cartItem.deleteMany({
       where: { meal: { restaurantId: restaurant.id } },
@@ -767,7 +818,7 @@ async function main() {
     }
 
     createdRestaurants.set(fixture.slug, restaurant);
-    console.log(`ظ£à Restaurant seeded: ${fixture.name} (${fixture.slug})`);
+    console.log(`✅ Restaurant seeded: ${fixture.name} (${fixture.slug})`);
   }
 
   // ========================
@@ -778,7 +829,7 @@ async function main() {
 
   const orderFixtures = [
     {
-      orderNumber: "ORD-20260818-0001",
+      orderNumber: "ORD-SEED-0001",
       restaurantSlug: "al-azli",
       addressId: homeAddress.id,
       status: "PENDING",
@@ -786,81 +837,78 @@ async function main() {
       createdAt: minutesAfter(now, -10),
       estimatedDeliveryAt: minutesAfter(now, 40),
       items: [
-        { name: "┘â╪ذ╪د╪ذ ┘à╪┤┘ê┘è", quantity: 2, price: 30 },
-        { name: "╪┤┘è╪┤ ╪╖╪د┘ê┘ê┘é", quantity: 1, price: 26 },
+        { name: "كباب مشوي", quantity: 2, price: 30 },
+        { name: "شيش طاووق", quantity: 1, price: 26 },
       ],
     },
     {
-      orderNumber: "ORD-20260813-0001",
+      orderNumber: "ORD-SEED-0002",
       restaurantSlug: "baladna",
       addressId: homeAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 5 * DAY),
       items: [
-        { name: "┘à╪│╪«┘ّ┘ ╪»╪ش╪د╪ش", quantity: 1, price: 38 },
-        { name: "┘à┘╪│┘", quantity: 1, price: 45 },
+        { name: "مسخّن دجاج", quantity: 1, price: 38 },
+        { name: "منسف", quantity: 1, price: 45 },
       ],
     },
     {
-      orderNumber: "ORD-20260803-0001",
-      restaurantSlug: "abu-saud",
+      orderNumber: "ORD-SEED-0003",
+      restaurantSlug: "al-zaman-al-jamil",
       addressId: homeAddress.id,
-      status: "DELIVERED",
-      paymentStatus: "PAID",
-      createdAt: new Date(now.getTime() - 15 * DAY),
-      items: [
-        { name: "┘â┘╪د┘╪ر ┘╪د╪ذ┘╪│┘è╪ر", quantity: 2, price: 18 },
-        { name: "╪ذ╪│╪ذ┘ê╪│╪ر", quantity: 1, price: 10 },
-      ],
+      status: "CANCELLED",
+      paymentStatus: "PENDING",
+      createdAt: new Date(now.getTime() - 20 * DAY),
+      items: [{ name: "كنافة نابلسية", quantity: 2, price: 18 }],
     },
     {
-      orderNumber: "ORD-20260806-0001",
+      orderNumber: "ORD-SEED-0004",
       restaurantSlug: "al-buhhar",
       addressId: workAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 12 * DAY),
-      items: [{ name: "╪╡┘è╪د╪»┘è╪ر", quantity: 2, price: 36 }],
+      items: [{ name: "صيادية", quantity: 2, price: 36 }],
     },
     {
-      orderNumber: "ORD-20260809-0001",
+      orderNumber: "ORD-SEED-0005",
       restaurantSlug: "roseeta-pizza",
       addressId: homeAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 9 * DAY),
       items: [
-        { name: "╪ذ┘è╪ز╪▓╪د ┘à╪د╪▒╪║╪▒┘è╪ز╪د", quantity: 1, price: 24 },
-        { name: "╪ذ┘è╪ز╪▓╪د ╪«╪╢╪د╪▒", quantity: 1, price: 26 },
+        { name: "بيتزا مارغريتا", quantity: 1, price: 24 },
+        { name: "بيتزا خضار", quantity: 1, price: 26 },
       ],
     },
     {
-      orderNumber: "ORD-20260812-0001",
+      orderNumber: "ORD-SEED-0006",
       restaurantSlug: "al-taj",
       addressId: workAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 6 * DAY),
-      items: [{ name: "╪┤╪د┘ê╪▒┘à╪د ╪»╪ش╪د╪ش", quantity: 2, price: 14 }],
+      items: [{ name: "شاورما دجاج", quantity: 2, price: 14 }],
     },
     {
-      orderNumber: "ORD-20260815-0001",
+      orderNumber: "ORD-SEED-0007",
       restaurantSlug: "ramal-falafel",
       addressId: homeAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 3 * DAY),
-      items: [{ name: "┘┘╪د┘┘ ╪╣╪▒╪ذ┘è", quantity: 4, price: 6 }],
+      items: [{ name: "فلافل عربي", quantity: 4, price: 6 }],
     },
     {
-      orderNumber: "ORD-20260816-0001",
+      orderNumber: "ORD-SEED-0008",
       restaurantSlug: "juices-al-bahr",
       addressId: homeAddress.id,
       status: "DELIVERED",
       paymentStatus: "PAID",
       createdAt: new Date(now.getTime() - 2 * DAY),
-      items: [{ name: "┘â┘ê┘â╪ز┘è┘ ┘┘ê╪د┘â┘ç", quantity: 2, price: 12 }],
+      items: [{ name: "كوكتيل فواكه", quantity: 2, price: 12 }],
     },
   ];
 
@@ -921,43 +969,38 @@ async function main() {
     createdOrders.push({ order, restaurant });
   }
 
-  console.log(`ظ£à ${createdOrders.length} orders seeded for demo customer.`);
+  console.log(`✅ ${createdOrders.length} orders seeded for demo customer.`);
 
   const REVIEWS = [
     {
-      orderNumber: "ORD-20260813-0001",
+      orderNumber: "ORD-SEED-0002",
       rating: 4.5,
-      comment: "╪د┘╪ث┘â┘ ┘à┘à╪ز╪د╪▓ ╪ذ╪│ ╪د┘╪ز┘ê╪╡┘è┘ ╪ز╪ث╪«╪▒ ╪┤┘ê┘è.",
+      comment: "الأكل ممتاز بس التوصيل تأخر شوي.",
     },
     {
-      orderNumber: "ORD-20260803-0001",
+      orderNumber: "ORD-SEED-0004",
       rating: 5.0,
-      comment: "╪د┘┘â┘╪د┘╪ر ╪╖╪د╪▓╪ش╪ر ┘ê╪د┘╪ذ╪│╪ذ┘ê╪│╪ر ┘╪░┘è╪░╪ر ظ¤ ╪ث╪ص┘┘ê┘è╪د╪ز┘ç┘à ┘à┘ ╪ث┘╪╢┘ ┘à╪د ╪ش╪▒╪ذ╪ز.",
+      comment: "أطيب صيادية بغزة، سعر ممتاز.",
     },
     {
-      orderNumber: "ORD-20260806-0001",
-      rating: 5.0,
-      comment: "╪ث╪╖┘è╪ذ ╪╡┘è╪د╪»┘è╪ر ╪ذ╪║╪▓╪ر╪î ╪│╪╣╪▒ ┘à┘à╪ز╪د╪▓.",
-    },
-    {
-      orderNumber: "ORD-20260809-0001",
+      orderNumber: "ORD-SEED-0005",
       rating: 4.0,
-      comment: "╪ذ┘è╪ز╪▓╪د ┘╪░┘è╪░╪ر ┘ê╪د┘╪╣╪ش┘è┘╪ر ╪«┘┘è┘╪ر.",
+      comment: "بيتزا لذيذة والعجينة خفيفة.",
     },
     {
-      orderNumber: "ORD-20260812-0001",
+      orderNumber: "ORD-SEED-0006",
       rating: 4.8,
-      comment: "╪┤╪د┘ê╪▒┘à╪د ┘à╪ص╪ز╪▒┘à╪ر ┘ê╪│╪▒┘è╪╣┘è┘.",
+      comment: "شاورما محترمة وسريعين.",
     },
     {
-      orderNumber: "ORD-20260815-0001",
+      orderNumber: "ORD-SEED-0007",
       rating: 4.6,
-      comment: "┘┘╪د┘┘ ╪╖╪د╪▓╪ر ┘ê╪╖╪╣┘à┘ç╪د ╪ذ┘╪»┘è.",
+      comment: "فلافل طازة وطعمها بلدي.",
     },
     {
-      orderNumber: "ORD-20260816-0001",
+      orderNumber: "ORD-SEED-0008",
       rating: 5.0,
-      comment: "╪╣╪╡╪د╪خ╪▒ ╪╖╪ذ┘è╪╣┘è╪ر ┘ة┘ب┘ب┘ز.",
+      comment: "عصائر طبيعية ١٠٠٪.",
     },
   ];
 
@@ -978,8 +1021,8 @@ async function main() {
     });
   }
 
-  console.log(`ظ£à ${REVIEWS.length} reviews seeded.`);
-  console.log("ظ£à Seed completed successfully.");
+  console.log(`✅ ${REVIEWS.length} reviews seeded.`);
+  console.log("✅ Seed completed successfully.");
 }
 
 main()
