@@ -1,0 +1,66 @@
+const express = require("express");
+const orderController = require("./order.controller");
+const validate = require("../../middlewares/validate");
+const {
+  createOrderSchema,
+  updateStatusSchema,
+  assignDriverSchema,
+  driverUpdateStatusSchema,
+} = require("./order.schemas");
+const { authenticate, authorize } = require("../../middlewares/auth.middleware");
+
+const router = express.Router();
+
+// SSE stream — registered before `authenticate` because EventSource can't set
+// an Authorization header; the handler validates `?token=` itself.
+router.get("/events", orderController.streamEvents);
+
+router.use(authenticate);
+
+router.post(
+  "/",
+  authorize("CUSTOMER"),
+  validate(createOrderSchema),
+  orderController.createOrder
+);
+
+router.get("/my", authorize("CUSTOMER"), orderController.getMyOrders);
+
+router.get(
+  "/restaurant/my",
+  authorize("OWNER"),
+  orderController.getRestaurantOrders
+);
+
+router.get(
+  "/driver/my",
+  authorize("DRIVER"),
+  orderController.getDriverOrders
+);
+
+router.get("/:id", orderController.getOrderById);
+
+router.patch(
+  "/:id/status",
+  authorize("OWNER"),
+  validate(updateStatusSchema),
+  orderController.updateOrderStatus
+);
+
+router.patch(
+  "/:id/driver-status",
+  authorize("DRIVER"),
+  validate(driverUpdateStatusSchema),
+  orderController.updateDriverStatus
+);
+
+router.patch(
+  "/:id/assign",
+  authorize("OWNER"),
+  validate(assignDriverSchema),
+  orderController.assignDriver
+);
+
+router.patch("/:id/cancel", authorize("CUSTOMER"), orderController.cancelOrder);
+
+module.exports = router;
