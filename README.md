@@ -32,8 +32,8 @@
 ### 1. Clone & Install
 
 ``bash
-git clone https://github.com/AbdullahAbuZaid04/food-delivery-system.git
-cd food-delivery-system
+git clone https://github.com/AbdullahAbuZaid04/wajba.git
+cd wajba
 
 # Server
 cd server && npm install
@@ -58,7 +58,7 @@ Copy `server/.env.example` to `server/.env` and fill in:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/food_delivery_system` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/wajba` |
 | `JWT_SECRET` | Access token secret (512-bit) | `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `JWT_REFRESH_SECRET` | Refresh token secret (different from above) | Same command |
 | `CORS_ORIGINS` | Comma-separated allowed origins | `http://localhost:3000` |
